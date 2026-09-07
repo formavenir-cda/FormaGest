@@ -55,7 +55,7 @@ Identifié comme acteur dans le cahier des charges, mais aucune fonctionnalité 
 
 Également identifié comme acteur sans fonctionnalité décrite. Deux pistes sont ouvertes : lui confier la gestion des comptes utilisateurs et des rôles, ce qui est cohérent avec l'exigence d'authentification, ou le fusionner avec la référente administrative. À arbitrer (§ 6).
 
-![Diagramme de cas d'utilisation système](/docs/diagramme-cas-utilisation-systeme.svg)
+![Diagramme de cas d'utilisation système](/docs/diagrams/diagramme-cas-utilisation-systeme.svg)
 ---
 
 ## 3. Règles métier
