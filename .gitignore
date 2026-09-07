@@ -126,6 +126,11 @@ application-secrets.properties
 src/main/resources/application-local.*
 
 ##############################
+# Diagrammes UML
+##############################
+*.uxf
+
+##############################
 # Divers
 ##############################
 *.tmp
