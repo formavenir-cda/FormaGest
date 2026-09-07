@@ -56,6 +56,9 @@ Identifié comme acteur dans le cahier des charges, mais aucune fonctionnalité 
 Également identifié comme acteur sans fonctionnalité décrite. Deux pistes sont ouvertes : lui confier la gestion des comptes utilisateurs et des rôles, ce qui est cohérent avec l'exigence d'authentification, ou le fusionner avec la référente administrative. À arbitrer (§ 6).
 
 ![Diagramme de cas d'utilisation système](/docs/diagrams/system-use-case-diagram.svg)
+
+![Diagramme de cas d'utilisation global](/docs/diagrams/global-use-case-diagram.svg)
+
 ---
 
 ## 3. Règles métier
@@ -106,6 +109,10 @@ L'accès aux fonctionnalités protégées nécessite une authentification par id
 
 **RG13 — Droits selon le rôle**
 Les fonctionnalités accessibles dépendent du rôle de l'utilisateur. Un utilisateur ne peut accéder qu'à celles autorisées pour son rôle. En particulier, l'élève dispose d'un accès en lecture seule sur son calendrier et ses inscriptions.
+
+Le diagramme de séquence ci-dessous détaille l'authentification (RG12) : saisie des identifiants dans `LoginPage`, appel HTTP vers le back, vérification du mot de passe haché, puis émission d'un token conservé côté client et réutilisé pour le contrôle des droits (RG13).
+
+![Diagramme de séquence — Authentification](/docs/diagrams/sequence-diagram-login.svg)
 
 ---
 
