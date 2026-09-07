@@ -55,7 +55,7 @@ Identifié comme acteur dans le cahier des charges, mais aucune fonctionnalité 
 
 Également identifié comme acteur sans fonctionnalité décrite. Deux pistes sont ouvertes : lui confier la gestion des comptes utilisateurs et des rôles, ce qui est cohérent avec l'exigence d'authentification, ou le fusionner avec la référente administrative. À arbitrer (§ 6).
 
-![Diagramme de cas d'utilisation système](/docs/diagrams/diagramme-cas-utilisation-systeme.svg)
+![Diagramme de cas d'utilisation système](/docs/diagrams/system-use-case-diagram.svg)
 ---
 
 ## 3. Règles métier
@@ -115,9 +115,9 @@ Les fonctionnalités accessibles dépendent du rôle de l'utilisateur. Un utilis
 |---|---|---|---|---|
 | Utilisateur | Personne disposant d'un compte et accédant à l'application | Entité | Identifiant, mot de passe, rôle. Généralise Élève, Formateur, Référente administrative et Administrateur | Authentification obligatoire (RG12) ; droits déterminés par le rôle (RG13) |
 | Élève | Utilisateur suivant des cours et consultant son calendrier | Entité | Spécialisation d'Utilisateur. Nom, prénom, date de naissance. Synonyme non retenu : stagiaire | Accès en lecture seule (RG13) |
-| Formateur | Utilisateur assurant les cours | Entité | Spécialisation d'Utilisateur. Périmètre à préciser | — |
+| Formateur | Utilisateur assurant les cours | Entité | Spécialisation d'Utilisateur. | — |
 | Référente administrative | Utilisateur en charge de la structure pédagogique et des inscriptions | Entité | Spécialisation d'Utilisateur | Seule habilitée à forcer une inscription (RG10) |
-| Administrateur | Utilisateur aux droits étendus | Entité | Spécialisation d'Utilisateur. Périmètre à arbitrer | — |
+| Administrateur | Utilisateur aux droits étendus | Entité | Spécialisation d'Utilisateur. | — |
 | Filière | Thématique principale de formation | Entité | Regroupe plusieurs cursus | RG01 |
 | Cursus | Parcours de formation composé de cours ordonnés | Entité | Rattaché à une filière | RG01, RG02 |
 | Cours | Matière enseignée, élément du catalogue | Entité | Appartient à un cursus et y occupe un rang | L'ordre traduit les prérequis (RG02) |
