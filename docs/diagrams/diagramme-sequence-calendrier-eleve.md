@@ -2,18 +2,15 @@
 
 ## Objectif
 
-Permettre à l'élève de consulter son calendrier personnel, en lecture seule.
-Aucune création, modification ou suppression de cours n'est proposée.
-
-Le calendrier réunit les **cours de sa promotion** et les **cours auxquels il
-est inscrit individuellement**. Il peut contenir l'une de ces sources, les deux,
-ou aucun cours.
+Permettre à un élève authentifié de consulter son calendrier personnel en
+lecture seule. Le calendrier regroupe les cours de sa promotion et les cours
+auxquels il est inscrit individuellement.
 
 ## Précondition
 
-L'élève est déjà authentifié et possède un token valide. Le back-end
-récupère son identifiant depuis l'utilisateur authentifié. L'authentification
-est documentée dans un diagramme séparé.
+L'élève est authentifié et possède un token JWT valide. Le système retrouve son
+identité à partir du contexte de sécurité, sans recevoir d'identifiant d'élève
+dans l'URL.
 
 ## Diagramme de séquence
 
@@ -22,126 +19,99 @@ est documentée dans un diagramme séparé.
 config:
   theme: base
   themeVariables:
+    background: "#FFFFFF"
+    mainBkg: "#FFFFFF"
+    textColor: "#0F172A"
     fontFamily: "Arial, sans-serif"
     fontSize: "14px"
-    primaryColor: "#FFFFFF"
-    primaryTextColor: "#1E293B"
-    primaryBorderColor: "#94A3B8"
-    lineColor: "#64748B"
-    actorBkg: "#FFFFFF"
-    actorBorder: "#94A3B8"
-    actorTextColor: "#0F172A"
-    actorLineColor: "#CBD5E1"
+    primaryColor: "#F8F7FF"
+    primaryTextColor: "#312E81"
+    primaryBorderColor: "#A78BFA"
+    lineColor: "#8B5CF6"
+    actorBkg: "#F8F7FF"
+    actorBorder: "#8B5CF6"
+    actorTextColor: "#312E81"
+    actorLineColor: "#A78BFA"
     signalColor: "#475569"
-    signalTextColor: "#1E293B"
-    noteBkgColor: "#F1F5F9"
-    noteBorderColor: "#CBD5E1"
-    noteTextColor: "#334155"
-    labelBoxBkgColor: "#FFFFFF"
-    labelBoxBorderColor: "#94A3B8"
-    labelTextColor: "#334155"
-    loopTextColor: "#334155"
-    activationBkgColor: "#E2E8F0"
-    activationBorderColor: "#94A3B8"
+    signalTextColor: "#334155"
+    noteBkgColor: "#F5F3FF"
+    noteBorderColor: "#A78BFA"
+    noteTextColor: "#3730A3"
+    labelBoxBkgColor: "#F8F7FF"
+    labelBoxBorderColor: "#A78BFA"
+    labelTextColor: "#3730A3"
+    loopTextColor: "#3730A3"
+    activationBkgColor: "#EDE9FE"
+    activationBorderColor: "#8B5CF6"
   sequence:
-    mirrorActors: false
-    actorMargin: 35
-    width: 150
+    mirrorActors: true
+    actorMargin: 60
+    width: 180
     height: 50
-    boxMargin: 12
-    boxTextMargin: 10
-    noteMargin: 12
-    messageMargin: 35
+    boxMargin: 30
+    noteMargin: 15
+    messageMargin: 40
     wrap: true
     rightAngles: true
 ---
 sequenceDiagram
-    actor Student as Élève
-
-    box rgb(239, 246, 255) Front - Angular
-        participant Page as CalendarPage
-        participant Api as CalendarApiService
+    box rgb(250, 250, 255) Utilisateur
+        actor Student as Élève
     end
 
-    box rgb(240, 253, 250) Back - Java / API et métier
+    box rgb(239, 246, 255) Front
+        participant Page as CalendarPage
+    end
+
+    box rgb(245, 243, 255) Back
         participant Controller as CalendarController
         participant Service as CalendarService
     end
 
-    box rgb(248, 250, 252) Back - Java / Accès aux données
-        participant StudentRepo as StudentRepository
-        participant PromotionRepo as PromotionRepository
-        participant CourseRepo as CourseRepository
-    end
-
-    Note over Student,Api: Précondition : élève authentifié<br/>avec un token valide
+    Note over Student,Page: Précondition<br/>Élève authentifié avec un JWT valide
 
     Student->>Page: Ouvrir « Mon calendrier »
-    Page->>Api: loadCalendar()
-    Api->>Controller: GET /api/me/calendar<br/>Authorization: Bearer token
+    activate Page
+    Page->>+Controller: GET /api/me/calendar<br/>Authorization: Bearer JWT
 
-    Note over Controller: Identifiant issu de<br/>l'utilisateur authentifié
-    Controller->>Service: getStudentCalendar(studentId)
+    Controller->>+Service: getCalendar(studentId)
 
-    Service->>+StudentRepo: findById(studentId)
-    StudentRepo-->>-Service: Élève ou aucun résultat
+    Note over Controller,Service: Requête unique avec jointures<br/>Promotion + inscriptions individuelles<br/>Sans doublon · Tri par date de début
 
-    alt Élève introuvable
-        rect rgb(254, 226, 226)
-            Service-->>Controller: StudentNotFoundException
-            Controller-->>Api: 404 Not Found
-            Api-->>Page: Erreur : élève introuvable
-            Page-->>Student: Afficher « Élève introuvable »
-        end
+    Service-->>-Controller: Cours planifiés triés et sans doublon
+    Controller-->>-Page: 200 OK + calendrier
 
-    else Élève trouvé
-
-        Note over Service,CourseRepo: 1. COURS DE LA PROMOTION<br/>Sans promotion, cette liste reste vide
-
-        Service->>+PromotionRepo: findPromotionByStudentId(studentId)
-        PromotionRepo-->>-Service: Promotion ou aucune
-
-        opt Une promotion est trouvée
-            Service->>+CourseRepo: findCoursesByPromotionId(promotionId)
-            CourseRepo-->>-Service: Cours de la promotion (ou liste vide)
-        end
-
-        Note over Service,CourseRepo: 2. COURS INDIVIDUELS<br/>Recherche effectuée avec ou sans promotion
-
-        Service->>+CourseRepo: findCoursesByStudentId(studentId)
-        CourseRepo-->>-Service: Cours directement liés à l'élève (ou liste vide)
-
-        Note over Service,CourseRepo: 3. CONSTRUCTION DU CALENDRIER<br/>Regrouper, supprimer les doublons et trier par date
-
-        Service->>Service: mergeCourses(<br/>promotionCourses, individualCourses)
-        Service->>Service: removeDuplicates(courses)
-        Service->>Service: sortByDate(courses)
-
-        Service-->>Controller: Liste des cours du calendrier
-        Controller-->>Api: 200 OK + calendrier
-        Api-->>Page: Calendrier de l'élève
-
-        Note over Page,Api: Si la liste est vide :<br/>afficher « Aucun cours planifié »
-        Page-->>Student: Afficher le calendrier
+    alt Calendrier disponible
+        Page-->>Student: Afficher les cours chronologiquement
+    else Calendrier vide
+        Page-->>Student: Afficher « Aucun cours planifié »
     end
+
+    deactivate Page
 ```
 
 ## Règles de fonctionnement
 
-La recherche des cours individuels est effectuée **avec ou sans promotion**.
-L'absence de promotion ou de cours n'est pas une erreur.
+Le système exécute une seule requête de lecture. Ses jointures permettent de
+récupérer simultanément :
 
-Les deux listes sont regroupées. Une même séance planifiée accessible par
-les deux sources n'apparaît qu'une fois. Les cours sont ensuite triés par date
-et heure de début.
+- les cours planifiés de la promotion de l'élève ;
+- les cours planifiés auxquels l'élève est inscrit individuellement.
+
+Le résultat de cette requête est directement dédoublonné et trié par date et
+heure de début. Le diagramme montre la responsabilité de chaque couche jusqu'au
+service métier, sans détailler les repositories ni les traitements techniques
+internes d'accès aux données.
+
+Le token JWT est transmis dans l'en-tête HTTP `Authorization` avec le schéma
+`Bearer`. Sa validité est contrôlée avant l'exécution du cas d'utilisation. Le
+contrôleur utilise ensuite l'identité authentifiée issue du contexte de sécurité,
+ce qui empêche l'élève de demander le calendrier d'un autre utilisateur en
+modifiant un identifiant dans l'URL.
 
 | Situation | Résultat attendu |
 | --- | --- |
-| Des cours de promotion et des cours individuels | Afficher les deux sources, sans doublons. |
+| Cours de promotion et cours individuels | Afficher les deux sources, sans doublon et par ordre chronologique. |
 | Uniquement des cours de promotion | Afficher les cours de la promotion. |
 | Uniquement des cours individuels | Afficher les cours individuels. |
-| Aucun cours dans les deux sources | Renvoyer `200 OK` avec `[]` et afficher « Aucun cours planifié ». |
-| Élève introuvable | Arrêter la consultation, renvoyer `404 Not Found` et afficher « Élève introuvable ». |
-
-Seul le cas « Élève introuvable » est représenté comme une erreur dans
-ce diagramme. Les autres erreurs techniques sont hors de son périmètre.
+| Aucun cours | Afficher « Aucun cours planifié ». |
