@@ -138,54 +138,75 @@ classDiagram
 
 ```
 
-Lecture du modèle
+## Explication du diagramme
 
-Comptes. User représente un compte de l'application. Role distingue
-les élèves, les formateurs, la référente administrative et l'administrateur.
-Les associations vers les inscriptions concernent uniquement les utilisateurs
-ayant le rôle STUDENT : elles représentent l'élève inscrit, pas la personne
-qui effectue l'inscription.
+Le diagramme représente les principales entités métier de l'application de gestion pédagogique.
 
-Pédagogie. TrainingTrack regroupe les cursus. Course définit un cours
-du catalogue et CursusCourse sa place dans un cursus, grâce à order.
+### Comptes utilisateurs
 
-Planification. Cohort représente une promotion. ScheduledCourse
-représente une occurrence datée d'un cours pour cette promotion.
+`User` représente un compte utilisateur de l'application.
 
-Inscriptions. CohortRegistration donne accès aux cours planifiés
-de la promotion. CourseRegistration associe directement l'élève à un
-cours planifié, sans l'inscrire à la promotion complète. Le calendrier
-regroupe les deux sources et n'est pas une entité persistée dans ce modèle.
+Le type d'utilisateur est défini par `Role`, qui permet de distinguer :
 
-Responsabilités
+- `STUDENT` : élève ;
+- `TRAINER` : formateur ;
+- `ADMINISTRATIVE_COORDINATOR` : référente administrative ;
+- `ADMINISTRATOR` : administrateur.
 
-L'administrateur gère les comptes utilisateurs de l'application.
-La référente administrative gère les données pédagogiques, la planification
-et les inscriptions des élèves à une promotion ou à un cours.
-L'élève dispose uniquement d'un accès en consultation.
+---
 
-Contraintes métier retenues
+### Structure pédagogique
 
-Double inscription : un élève ne peut pas être inscrit deux fois au
-même ScheduledCourse, y compris en combinant les deux sources. Le contrôle
-doit s'appliquer quel que soit l'ordre des inscriptions ; supprimer un
-doublon du calendrier ne remplace pas ce contrôle.
+`TrainingTrack` représente une filière.
 
-Ordre pédagogique : une inscription individuelle respecte l'ordre
-défini par CursusCourse.order, sauf forçage par la référente
-administrative (forced = true). Le forçage n'autorise jamais un doublon.
+Une filière regroupe plusieurs `Cursus`.
 
-Cohérence de planification : le CursusCourse d'un ScheduledCourse
-appartient au même Cursus que sa Cohort.
+`Course` représente un cours du catalogue pédagogique.
 
-Ces contraintes complètent les associations du diagramme et doivent être
-contrôlées dans l'application.
+`CursusCourse` permet d'associer un `Course` à un `Cursus` tout en conservant
+sa position dans la progression pédagogique grâce à l'attribut `order`.
 
-Choix de cardinalité
+Cette classe permet notamment à un même cours d'être utilisé dans plusieurs
+cursus ou à plusieurs positions différentes.
 
-Une promotion peut être créée avant la planification de ses cours : elle
-contient donc 0..* cours planifiés. Le cursus représenté est un programme
-constitué d'au moins une occurrence de cours (1..*).
+---
 
-La cardinalité 0..* des inscriptions aux promotions conserve le modèle
-retenu. Elle ne fixe pas à elle seule une limite de promotions simultanées.
+### Planification
+
+Un `Cursus` peut être planifié dans le temps afin de créer une `Cohort`,
+qui représente une promotion.
+
+Les cours réellement programmés pour cette promotion sont représentés par
+`ScheduledCourse`.
+
+Un `ScheduledCourse` contient notamment une date et une heure de début ainsi
+qu'une date et une heure de fin.
+
+---
+
+### Inscriptions pédagogiques
+
+Un élève peut être inscrit de deux manières.
+
+`CohortRegistration` représente l'inscription d'un élève à une promotion
+complète.
+
+`CourseRegistration` représente l'inscription d'un élève à un cours planifié
+spécifique.
+
+L'attribut `forced` permet d'indiquer qu'une inscription individuelle a été
+autorisée malgré le non-respect de l'ordre pédagogique.
+
+---
+
+### Calendrier de l'élève
+
+Le calendrier personnel de l'élève n'est pas stocké comme une entité.
+
+Il est construit à partir de deux sources :
+
+- les `ScheduledCourse` de la `Cohort` à laquelle l'élève est inscrit ;
+- les `ScheduledCourse` auxquels l'élève est inscrit individuellement.
+
+Le calendrier peut donc contenir des cours provenant de la promotion,
+des cours individuels, ou les deux.
