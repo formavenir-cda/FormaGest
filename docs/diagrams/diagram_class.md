@@ -136,7 +136,7 @@ classDiagram
     style CohortRegistration fill:#F5F3FF,stroke:#A78BFA,color:#0F172A
     style CourseRegistration fill:#F5F3FF,stroke:#A78BFA,color:#0F172A
 
-    ```
+```
 
 Lecture du modèle
 
