@@ -21,14 +21,14 @@ La référente administrative gère les inscriptions. Un élève peut être insc
 
 Chaque élève dispose d'un calendrier personnel regroupant les cours de sa promotion et ceux qu'il suit à l'unité. Son accès se limite à la consultation : il ne peut modifier ni son calendrier ni ses inscriptions.
 
-L'accès à l'application passe par une authentification sécurisée. Les utilisateurs se connectent avec un identifiant et un mot de passe, les échanges avec le serveur sont protégés par un token, et les fonctionnalités accessibles dépendent du rôle de l'utilisateur.
+L'accès à l'application passe par une authentification sécurisée. Les utilisateurs se connectent avec un identifiant et un mot de passe, les échanges avec le serveur sont protégés par un token, et les fonctionnalités accessibles dépendent du type concret de l'utilisateur.
 
 Le projet sera développé sous forme d'une application web avec un front-end Angular et un back-end Java.
 
 
 ## 2. Identification des acteurs
 
-Le cahier des charges identifie quatre acteurs. Tous accèdent à l'application via un compte utilisateur authentifié ; leurs droits diffèrent selon leur rôle.
+Le cahier des charges identifie quatre acteurs. Tous accèdent à l'application via un compte utilisateur authentifié. Ils sont modélisés par quatre spécialisations d'Utilisateur et disposent de droits différents.
 
 ### 2.1 Élève
 
@@ -53,7 +53,7 @@ Identifié comme acteur dans le cahier des charges, mais aucune fonctionnalité 
 
 ### 2.4 Administrateur
 
-Également identifié comme acteur sans fonctionnalité décrite. Deux pistes sont ouvertes : lui confier la gestion des comptes utilisateurs et des rôles, ce qui est cohérent avec l'exigence d'authentification, ou le fusionner avec la référente administrative. À arbitrer (§ 6).
+Également identifié comme acteur sans fonctionnalité décrite. Deux pistes sont ouvertes : lui confier la gestion des comptes utilisateurs et de leur type, ce qui est cohérent avec l'exigence d'authentification, ou le fusionner avec la référente administrative. À arbitrer (§ 6).
 
 ![Diagramme de cas d'utilisation système](/docs/diagrams/diagramme-cas-utilisation-systeme.svg)
 ---
@@ -104,8 +104,8 @@ Le calendrier personnel d'un élève regroupe les cours planifiés de sa promoti
 **RG12 — Authentification**
 L'accès aux fonctionnalités protégées nécessite une authentification par identifiant et mot de passe. Les échanges avec le serveur sont ensuite protégés par un token.
 
-**RG13 — Droits selon le rôle**
-Les fonctionnalités accessibles dépendent du rôle de l'utilisateur. Un utilisateur ne peut accéder qu'à celles autorisées pour son rôle. En particulier, l'élève dispose d'un accès en lecture seule sur son calendrier et ses inscriptions.
+**RG13 — Droits selon le type d'utilisateur**
+Les fonctionnalités accessibles dépendent de la spécialisation de l'utilisateur. Un utilisateur ne peut accéder qu'à celles autorisées pour son type. En particulier, l'élève dispose d'un accès en lecture seule sur son calendrier et ses inscriptions.
 
 ---
 
@@ -113,8 +113,8 @@ Les fonctionnalités accessibles dépendent du rôle de l'utilisateur. Un utilis
 
 | Nom | Description | Type | Commentaires | Contraintes, règles de calcul |
 |---|---|---|---|---|
-| Utilisateur | Personne disposant d'un compte et accédant à l'application | Entité | Identifiant, mot de passe, rôle. Généralise Élève, Formateur, Référente administrative et Administrateur | Authentification obligatoire (RG12) ; droits déterminés par le rôle (RG13) |
-| Élève | Utilisateur suivant des cours et consultant son calendrier | Entité | Spécialisation d'Utilisateur. Nom, prénom, date de naissance. Synonyme non retenu : stagiaire | Accès en lecture seule (RG13) |
+| Utilisateur | Personne disposant d'un compte et accédant à l'application | Entité abstraite | Identifiant, nom, prénom, courriel et mot de passe communs. Généralise Élève, Formateur, Référente administrative et Administrateur | Authentification obligatoire (RG12) ; droits déterminés par la spécialisation (RG13) |
+| Élève | Utilisateur suivant des cours et consultant son calendrier | Entité | Spécialisation d'Utilisateur. Date de naissance propre à l'élève ; nom et prénom hérités. Synonyme non retenu : stagiaire | Accès en lecture seule (RG13) |
 | Formateur | Utilisateur assurant les cours | Entité | Spécialisation d'Utilisateur. Périmètre à préciser | — |
 | Référente administrative | Utilisateur en charge de la structure pédagogique et des inscriptions | Entité | Spécialisation d'Utilisateur | Seule habilitée à forcer une inscription (RG10) |
 | Administrateur | Utilisateur aux droits étendus | Entité | Spécialisation d'Utilisateur. Périmètre à arbitrer | — |

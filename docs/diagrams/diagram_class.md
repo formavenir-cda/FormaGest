@@ -1,212 +1,65 @@
 # Diagramme de classes métier
 
+![Diagramme de classes métier de FormaGest](./diagramme-classes-metier.png)
 
-```mermaid
-classDiagram
-    direction TB
+## Présentation
 
-    %% =========================
-    %% COMPTES
-    %% =========================
+Ce diagramme représente les principales classes du domaine de FormaGest,
+leurs attributs et comportements métier ainsi que leurs relations. Les
+identifiants techniques et les détails de persistance n'y figurent pas.
 
-    class User {
-        Long id
-        String lastName
-        String firstName
-        String email
-        String password
-        Role role
-    }
+## Utilisateurs
 
-    class Role {
-        <<enumeration>>
-        STUDENT
-        TRAINER
-        ADMINISTRATIVE_COORDINATOR
-        ADMINISTRATOR
-    }
+`Utilisateur` est une classe abstraite contenant les informations communes à
+tous les comptes. Elle généralise quatre types d'utilisateurs :
 
+- `Eleve` ;
+- `Formateur` ;
+- `ReferenteAdmin` ;
+- `Admin`.
 
-    %% =========================
-    %% STRUCTURE PEDAGOGIQUE
-    %% =========================
+Le type de l'utilisateur est donc représenté par l'héritage et non par une
+énumération de rôles.
 
-    class TrainingTrack {
-        Long id
-        String name
-    }
+## Structure pédagogique
 
-    class Cursus {
-        Long id
-        String name
-    }
+Une `Filiere` regroupe plusieurs `Cursus`. Chaque cursus organise un ou
+plusieurs cours au moyen de `CursusCours`, qui porte leur ordre dans la
+progression pédagogique. Un même `Cours` peut ainsi être utilisé dans plusieurs
+cursus.
 
-    class Course {
-        Long id
-        String title
-    }
+La composition entre `Cursus` et `CursusCours` indique que l'élément ordonné
+n'existe que dans le contexte de son cursus.
 
-    class CursusCourse {
-        Long id
-        Integer order
-    }
+## Planification
 
+Un `Cursus` peut être planifié en plusieurs `Promotion`. Une promotion contient
+des `CoursPlanifié`, chacun associé à un cours positionné dans le cursus.
 
-    %% =========================
-    %% PLANIFICATION
-    %% =========================
+La composition entre `Promotion` et `CoursPlanifié` exprime qu'un cours
+planifié n'existe pas indépendamment de sa promotion. Un `Formateur` peut animer
+plusieurs cours planifiés et un cours planifié peut ne pas encore avoir de
+formateur ou en avoir un seul.
 
-    class Cohort {
-        Long id
-        String name
-        LocalDate startDate
-        LocalDate endDate
-    }
+## Inscriptions
 
-    class ScheduledCourse {
-        Long id
-        LocalDateTime startDateTime
-        LocalDateTime endDateTime
-    }
+`Inscription` est une classe abstraite spécialisée en :
 
+- `InscriptionPromotion`, qui concerne une `Promotion` ;
+- `InscriptionCours`, qui concerne un `CoursPlanifié` particulier.
 
-    %% =========================
-    %% INSCRIPTIONS
-    %% =========================
+Un `Eleve` peut posséder plusieurs inscriptions, mais chaque inscription
+appartient à un seul élève. L'attribut `force` de `InscriptionCours` indique que
+l'inscription a été autorisée malgré le non-respect de l'ordre pédagogique.
 
-    class CohortRegistration {
-        Long id
-        LocalDateTime registrationDate
-    }
+Le calendrier personnel n'est pas modélisé comme une classe persistante. Il
+est obtenu à partir des cours planifiés de la promotion de l'élève et de ses
+inscriptions individuelles.
 
-    class CourseRegistration {
-        Long id
-        LocalDateTime registrationDate
-        Boolean forced
-    }
+## Légende UML
 
-
-    %% =========================
-    %% STRUCTURE PEDAGOGIQUE
-    %% =========================
-
-    TrainingTrack "1" --> "0..*" Cursus : regroupe
-
-    Cursus "1" --> "1..*" CursusCourse : contient
-    Course "1" --> "0..*" CursusCourse : est utilisé dans
-
-
-    %% =========================
-    %% PLANIFICATION
-    %% =========================
-
-    Cursus "1" --> "0..*" Cohort : est planifié en
-
-    Cohort "1" --> "0..*" ScheduledCourse : contient
-
-    CursusCourse "1" --> "0..*" ScheduledCourse : est planifié en
-
-
-    %% =========================
-    %% INSCRIPTIONS
-    %% =========================
-
-    User "1" --> "0..*" CohortRegistration : possède
-    CohortRegistration "0..*" --> "1" Cohort : concerne
-
-    User "1" --> "0..*" CourseRegistration : possède
-    CourseRegistration "0..*" --> "1" ScheduledCourse : concerne
-
-
-    %% =========================
-    %% COULEURS
-    %% =========================
-
-    style User fill:#F1F5F9,stroke:#64748B,color:#0F172A
-    style Role fill:#F1F5F9,stroke:#64748B,color:#0F172A
-
-    style TrainingTrack fill:#EFF6FF,stroke:#60A5FA,color:#0F172A
-    style Cursus fill:#EFF6FF,stroke:#60A5FA,color:#0F172A
-    style Course fill:#EFF6FF,stroke:#60A5FA,color:#0F172A
-    style CursusCourse fill:#EFF6FF,stroke:#60A5FA,color:#0F172A
-
-    style Cohort fill:#F0FDFA,stroke:#2DD4BF,color:#0F172A
-    style ScheduledCourse fill:#F0FDFA,stroke:#2DD4BF,color:#0F172A
-
-    style CohortRegistration fill:#F5F3FF,stroke:#A78BFA,color:#0F172A
-    style CourseRegistration fill:#F5F3FF,stroke:#A78BFA,color:#0F172A
-
-```
-
-## Explication du diagramme
-
-Le diagramme représente les principales entités métier de l'application de gestion pédagogique.
-
-### Comptes utilisateurs
-
-`User` représente un compte utilisateur de l'application.
-
-Le type d'utilisateur est défini par `Role`, qui permet de distinguer :
-
-- `STUDENT` : élève ;
-- `TRAINER` : formateur ;
-- `ADMINISTRATIVE_COORDINATOR` : référente administrative ;
-- `ADMINISTRATOR` : administrateur.
-
----
-
-### Structure pédagogique
-
-`TrainingTrack` représente une filière.
-
-Une filière regroupe plusieurs `Cursus`.
-
-`Course` représente un cours du catalogue pédagogique.
-
-`CursusCourse` permet d'associer un `Course` à un `Cursus` tout en conservant
-sa position dans la progression pédagogique grâce à l'attribut `order`.
-
-Cette classe permet notamment à un même cours d'être utilisé dans plusieurs
-cursus ou à plusieurs positions différentes.
-
----
-
-### Planification
-
-Un `Cursus` peut être planifié dans le temps afin de créer une `Cohort`,
-qui représente une promotion.
-
-Les cours réellement programmés pour cette promotion sont représentés par
-`ScheduledCourse`.
-
-Un `ScheduledCourse` contient notamment une date et une heure de début ainsi
-qu'une date et une heure de fin.
-
----
-
-### Inscriptions pédagogiques
-
-Un élève peut être inscrit de deux manières.
-
-`CohortRegistration` représente l'inscription d'un élève à une promotion
-complète.
-
-`CourseRegistration` représente l'inscription d'un élève à un cours planifié
-spécifique.
-
-L'attribut `forced` permet d'indiquer qu'une inscription individuelle a été
-autorisée malgré le non-respect de l'ordre pédagogique.
-
----
-
-### Calendrier de l'élève
-
-Le calendrier personnel de l'élève n'est pas stocké comme une entité.
-
-Il est construit à partir de deux sources :
-
-- les `ScheduledCourse` de la `Cohort` à laquelle l'élève est inscrit ;
-- les `ScheduledCourse` auxquels l'élève est inscrit individuellement.
-
-Le calendrier peut donc contenir des cours provenant de la promotion,
-des cours individuels, ou les deux.
+- triangle blanc : généralisation ou héritage ;
+- losange blanc : agrégation ;
+- losange noir : composition ;
+- trait continu : association ;
+- `1`, `0..1`, `0..*` et `1..*` : multiplicités.
