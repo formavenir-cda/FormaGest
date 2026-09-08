@@ -1,81 +1,147 @@
-# Diagramme de séquence
+# Consultation du calendrier d'un élève
 
-## Consultation du calendrier d'un élève
+## Objectif
 
-### Précondition
+Permettre à l'élève de consulter son calendrier personnel, en lecture seule.
+Aucune création, modification ou suppression de cours n'est proposée.
 
-L'élève est déjà authentifié et possède un token valide.
+Le calendrier réunit les **cours de sa promotion** et les **cours auxquels il
+est inscrit individuellement**. Il peut contenir l'une de ces sources, les deux,
+ou aucun cours.
 
-L'authentification n'est pas détaillée dans ce diagramme, car elle fait l'objet d'un diagramme de séquence séparé.
+## Précondition
 
----
-
-## Scénario nominal
-
-1. L'élève ouvre la page **Mon calendrier**.
-2. L'application Angular demande le calendrier de l'utilisateur authentifié.
-3. Le back-end identifie l'élève à partir de son authentification.
-4. Le service recherche si l'élève est inscrit à une promotion.
-5. Si une promotion existe, les cours planifiés de cette promotion sont récupérés.
-6. Le service recherche ensuite les cours auxquels l'élève est inscrit à l'unité.
-7. Les deux listes de cours sont regroupées.
-8. Les éventuels doublons sont supprimés.
-9. Les cours sont triés par date.
-10. Le calendrier est renvoyé à l'application Angular.
-11. Angular affiche le calendrier à l'élève.
-
-L'élève dispose uniquement d'un accès en consultation. Aucune opération de modification n'est proposée.
-
----
+L'élève est déjà authentifié et possède un token valide. Le back-end
+récupère son identifiant depuis l'utilisateur authentifié. L'authentification
+est documentée dans un diagramme séparé.
 
 ## Diagramme de séquence
 
 ```mermaid
+---
+config:
+  theme: base
+  themeVariables:
+    fontFamily: "Arial, sans-serif"
+    fontSize: "14px"
+    primaryColor: "#FFFFFF"
+    primaryTextColor: "#1E293B"
+    primaryBorderColor: "#94A3B8"
+    lineColor: "#64748B"
+    actorBkg: "#FFFFFF"
+    actorBorder: "#94A3B8"
+    actorTextColor: "#0F172A"
+    actorLineColor: "#CBD5E1"
+    signalColor: "#475569"
+    signalTextColor: "#1E293B"
+    noteBkgColor: "#F1F5F9"
+    noteBorderColor: "#CBD5E1"
+    noteTextColor: "#334155"
+    labelBoxBkgColor: "#FFFFFF"
+    labelBoxBorderColor: "#94A3B8"
+    labelTextColor: "#334155"
+    loopTextColor: "#334155"
+    activationBkgColor: "#E2E8F0"
+    activationBorderColor: "#94A3B8"
+  sequence:
+    mirrorActors: false
+    actorMargin: 35
+    width: 150
+    height: 50
+    boxMargin: 12
+    boxTextMargin: 10
+    noteMargin: 12
+    messageMargin: 35
+    wrap: true
+    rightAngles: true
+---
 sequenceDiagram
+    actor Student as Élève
 
-    actor Eleve
-    participant Angular as Application Angular
-    participant Controller as CalendrierController
-    participant Service as CalendrierService
-    participant RepoPromo as InscriptionPromotionRepository
-    participant RepoCours as CoursPlanifieRepository
-    participant RepoUnitaire as InscriptionCoursRepository
-    participant BDD as Base de données
-
-    Note over Eleve,Angular: Précondition : élève authentifié avec un token valide
-
-    Eleve->>Angular: Accéder à "Mon calendrier"
-
-    Angular->>Controller: GET /api/me/calendrier + token
-
-    Controller->>Service: consulterCalendrier(eleveAuthentifie)
-
-    Service->>RepoPromo: rechercherParEleve(idEleve)
-    RepoPromo->>BDD: Rechercher l'inscription à une promotion
-    BDD-->>RepoPromo: InscriptionPromotion ou aucune
-    RepoPromo-->>Service: Résultat
-
-    alt Élève inscrit à une promotion
-        Service->>RepoCours: rechercherParPromotion(idPromotion)
-        RepoCours->>BDD: Rechercher les cours planifiés
-        BDD-->>RepoCours: Liste des cours planifiés
-        RepoCours-->>Service: Cours de la promotion
+    box rgb(239, 246, 255) Front - Angular
+        participant Page as CalendarPage
+        participant Api as CalendarApiService
     end
 
-    Service->>RepoUnitaire: rechercherParEleve(idEleve)
-    RepoUnitaire->>BDD: Rechercher les inscriptions à l'unité
-    BDD-->>RepoUnitaire: Liste des inscriptions
-    RepoUnitaire-->>Service: Cours suivis à l'unité
+    box rgb(240, 253, 250) Back - Java / API et métier
+        participant Controller as CalendarController
+        participant Service as CalendarService
+    end
 
-    Service->>Service: Regrouper les cours
-    Service->>Service: Supprimer les doublons
-    Service->>Service: Trier par date
+    box rgb(248, 250, 252) Back - Java / Accès aux données
+        participant StudentRepo as StudentRepository
+        participant PromotionRepo as PromotionRepository
+        participant CourseRepo as CourseRepository
+    end
 
-    Service-->>Controller: Calendrier personnel
-    Controller-->>Angular: 200 OK + calendrier
-    Angular-->>Eleve: Afficher le calendrier
+    Note over Student,Api: Précondition : élève authentifié<br/>avec un token valide
+
+    Student->>Page: Ouvrir « Mon calendrier »
+    Page->>Api: loadCalendar()
+    Api->>Controller: GET /api/me/calendar<br/>Authorization: Bearer token
+
+    Note over Controller: Identifiant issu de<br/>l'utilisateur authentifié
+    Controller->>Service: getStudentCalendar(studentId)
+
+    Service->>+StudentRepo: findById(studentId)
+    StudentRepo-->>-Service: Élève ou aucun résultat
+
+    alt Élève introuvable
+        rect rgb(254, 226, 226)
+            Service-->>Controller: StudentNotFoundException
+            Controller-->>Api: 404 Not Found
+            Api-->>Page: Erreur : élève introuvable
+            Page-->>Student: Afficher « Élève introuvable »
+        end
+
+    else Élève trouvé
+
+        Note over Service,CourseRepo: 1. COURS DE LA PROMOTION<br/>Sans promotion, cette liste reste vide
+
+        Service->>+PromotionRepo: findPromotionByStudentId(studentId)
+        PromotionRepo-->>-Service: Promotion ou aucune
+
+        opt Une promotion est trouvée
+            Service->>+CourseRepo: findCoursesByPromotionId(promotionId)
+            CourseRepo-->>-Service: Cours de la promotion (ou liste vide)
+        end
+
+        Note over Service,CourseRepo: 2. COURS INDIVIDUELS<br/>Recherche effectuée avec ou sans promotion
+
+        Service->>+CourseRepo: findCoursesByStudentId(studentId)
+        CourseRepo-->>-Service: Cours directement liés à l'élève (ou liste vide)
+
+        Note over Service,CourseRepo: 3. CONSTRUCTION DU CALENDRIER<br/>Regrouper, supprimer les doublons et trier par date
+
+        Service->>Service: mergeCourses(<br/>promotionCourses, individualCourses)
+        Service->>Service: removeDuplicates(courses)
+        Service->>Service: sortByDate(courses)
+
+        Service-->>Controller: Liste des cours du calendrier
+        Controller-->>Api: 200 OK + calendrier
+        Api-->>Page: Calendrier de l'élève
+
+        Note over Page,Api: Si la liste est vide :<br/>afficher « Aucun cours planifié »
+        Page-->>Student: Afficher le calendrier
+    end
 ```
 
----
+## Règles de fonctionnement
 
+La recherche des cours individuels est effectuée **avec ou sans promotion**.
+L'absence de promotion ou de cours n'est pas une erreur.
 
+Les deux listes sont regroupées. Une même séance planifiée accessible par
+les deux sources n'apparaît qu'une fois. Les cours sont ensuite triés par date
+et heure de début.
+
+| Situation | Résultat attendu |
+| --- | --- |
+| Des cours de promotion et des cours individuels | Afficher les deux sources, sans doublons. |
+| Uniquement des cours de promotion | Afficher les cours de la promotion. |
+| Uniquement des cours individuels | Afficher les cours individuels. |
+| Aucun cours dans les deux sources | Renvoyer `200 OK` avec `[]` et afficher « Aucun cours planifié ». |
+| Élève introuvable | Arrêter la consultation, renvoyer `404 Not Found` et afficher « Élève introuvable ». |
+
+Seul le cas « Élève introuvable » est représenté comme une erreur dans
+ce diagramme. Les autres erreurs techniques sont hors de son périmètre.
