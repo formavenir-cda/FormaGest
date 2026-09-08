@@ -1,8 +1,6 @@
 # Analyse
 
 **Projet :** Gestion d'un service pédagogique
-**Statut :** en cours de rédaction, voir § 6 pour les points à arbitrer
-
 ---
 
 ## 1. Description du besoin
@@ -49,17 +47,15 @@ Acteur principal de la gestion pédagogique et des inscriptions. Elle peut :
 
 ### 2.3 Formateur
 
-Identifié comme acteur dans le cahier des charges, mais aucune fonctionnalité ne lui est associée dans l'énoncé. L'hypothèse de travail retenue est qu'il consulte les promotions dont il a la charge et les cours qu'il anime, sans droit de modification. À confirmer (§ 6).
+Identifié comme acteur dans le cahier des charges, mais aucune fonctionnalité ne lui est associée dans l'énoncé. L'hypothèse de travail retenue est qu'il consulte les promotions dont il a la charge et les cours qu'il anime, sans droit de modification.
 
 ### 2.4 Administrateur
 
-Également identifié comme acteur sans fonctionnalité décrite. Deux pistes sont ouvertes : lui confier la gestion des comptes utilisateurs et des rôles, ce qui est cohérent avec l'exigence d'authentification, ou le fusionner avec la référente administrative. À arbitrer (§ 6).
+Également identifié comme acteur sans fonctionnalité décrite. Deux pistes sont ouvertes : lui confier la gestion des comptes utilisateurs et des rôles, ce qui est cohérent avec l'exigence d'authentification, ou le fusionner avec la référente administrative.
 
 Le diagramme ci-dessous situe l'application dans son environnement : les quatre acteurs, l'acteur générique `Utilisateur` dont ils héritent, et le système FormaGest, l'ensemble dans le périmètre de l'organisme Form'Avenir.
 
 ![Diagramme de cas d'utilisation système, export UMLet](diagrams/system-use-case-diagram.svg)
-
-Le diagramme de cas d'utilisation global, qui reprend chaque acteur et détaille les cas d'utilisation associés, est présenté à part dans [`docs/diagrams/global-use-case-diagram.md`](/docs/diagrams/global-use-case-diagram.md).
 
 ---
 
@@ -112,25 +108,23 @@ L'accès aux fonctionnalités protégées nécessite une authentification par id
 **RG13 — Droits selon le rôle**
 Les fonctionnalités accessibles dépendent du rôle de l'utilisateur. Un utilisateur ne peut accéder qu'à celles autorisées pour son rôle. En particulier, l'élève dispose d'un accès en lecture seule sur son calendrier et ses inscriptions.
 
-Un diagramme de séquence dédié détaille l'authentification (RG12) : saisie des identifiants dans `LoginPage`, appel HTTP vers le back, vérification du mot de passe haché, puis émission d'un token conservé côté client et réutilisé pour le contrôle des droits (RG13). Il se trouve, avec sa description, dans [`docs/diagrams/sequence-diagram-login.md`](/docs/diagrams/sequence-diagram-login.md).
-
 ---
 
 ## 4. Dictionnaire des données
 
-| Nom | Description | Type | Commentaires | Contraintes, règles de calcul |
-|---|---|---|---|---|
-| Utilisateur | Personne disposant d'un compte et accédant à l'application | Entité | Identifiant, mot de passe, rôle. Généralise Élève, Formateur, Référente administrative et Administrateur | Authentification obligatoire (RG12) ; droits déterminés par le rôle (RG13) |
-| Élève | Utilisateur suivant des cours et consultant son calendrier | Entité | Spécialisation d'Utilisateur. Nom, prénom, date de naissance. Synonyme non retenu : stagiaire | Accès en lecture seule (RG13) |
-| Formateur | Utilisateur assurant les cours | Entité | Spécialisation d'Utilisateur. | — |
-| Référente administrative | Utilisateur en charge de la structure pédagogique et des inscriptions | Entité | Spécialisation d'Utilisateur | Seule habilitée à forcer une inscription (RG10) |
-| Administrateur | Utilisateur aux droits étendus | Entité | Spécialisation d'Utilisateur. | — |
-| Filière | Thématique principale de formation | Entité | Regroupe plusieurs cursus | RG01 |
-| Cursus | Parcours de formation composé de cours ordonnés | Entité | Rattaché à une filière | RG01, RG02 |
-| Cours | Matière enseignée, élément du catalogue | Entité | Appartient à un cursus et y occupe un rang | L'ordre traduit les prérequis (RG02) |
-| Promotion | Cursus planifié sur une période | Entité | Rattachée à un cursus. Date de début, date de fin | Naît de la planification d'un cursus (RG03, RG04) |
-| Cours planifié | Occurrence d'un cours à une date précise dans une promotion | Entité | Rattaché à un cours et à une promotion. Date, horaires | Un cours peut être planifié dans plusieurs promotions (RG04). C'est cette entité qui alimente le calendrier |
-| Inscription | Rattachement d'un élève à une promotion ou à un cours planifié | Entité | Date d'inscription, indicateur de forçage | Unicité par élève et par cours (RG08) ; contrôle d'ordre (RG09) ; forçage possible (RG10) |
-| Calendrier personnel | Vue des cours planifiés d'un élève | — | Résultat de l'agrégation des inscriptions, pas une donnée stockée | RG11 |
+| Nom | Description                                                           | Type | Commentaires | Contraintes, règles de calcul                                                                               |
+|---|-----------------------------------------------------------------------|---|---|-------------------------------------------------------------------------------------------------------------|
+| Utilisateur | Personne disposant d'un compte et accédant à l'application            | Entité | Identifiant, mot de passe, rôle. Généralise Élève, Formateur, Référente administrative et Administrateur | Authentification obligatoire (RG12) ; droits déterminés par le rôle (RG13)                                  |
+| Élève | Utilisateur suivant des cours et consultant son calendrier            | Entité | Spécialisation d'Utilisateur. Nom, prénom, date de naissance. Synonyme non retenu : stagiaire | Accès en lecture seule (RG13)                                                                               |
+| Formateur | Utilisateur assurant les cours                                        | Entité | Spécialisation d'Utilisateur. | —                                                                                                           |
+| Référente administrative | Utilisateur en charge de la structure pédagogique et des inscriptions | Entité | Spécialisation d'Utilisateur | Seule habilitée à forcer une inscription (RG10)                                                             |
+| Administrateur | Utilisateur qui créé d'autres utilisateurs.                           | Entité | Spécialisation d'Utilisateur. | N'a accès qu'à la création et la suppression des utilisateurs.                                              |
+| Filière | Thématique principale de formation                                    | Entité | Regroupe plusieurs cursus | RG01                                                                                                        |
+| Cursus | Parcours de formation composé de cours ordonnés                       | Entité | Rattaché à une filière | RG01, RG02                                                                                                  |
+| Cours | Matière enseignée, élément du catalogue                               | Entité | Appartient à un cursus et y occupe un rang | L'ordre traduit les prérequis (RG02)                                                                        |
+| Promotion | Cursus planifié sur une période                                       | Entité | Rattachée à un cursus. Date de début, date de fin | Naît de la planification d'un cursus (RG03, RG04)                                                           |
+| Cours planifié | Occurrence d'un cours à une date précise dans une promotion           | Entité | Rattaché à un cours et à une promotion. Date, horaires | Un cours peut être planifié dans plusieurs promotions (RG04). C'est cette entité qui alimente le calendrier |
+| Inscription | Rattachement d'un élève à une promotion ou à un cours planifié        | Entité | Date d'inscription, indicateur de forçage | Unicité par élève et par cours (RG08) ; contrôle d'ordre (RG09) ; forçage possible (RG10)                   |
+| Calendrier personnel | Vue des cours planifiés d'un élève                                    | — | Résultat de l'agrégation des inscriptions, pas une donnée stockée | RG11                                                                                                        |
 
 ---
