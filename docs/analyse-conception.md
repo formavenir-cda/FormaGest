@@ -57,32 +57,6 @@ Identifié comme acteur dans le cahier des charges, mais aucune fonctionnalité 
 
 Le diagramme ci-dessous situe l'application dans son environnement : les quatre acteurs, l'acteur générique `Utilisateur` dont ils héritent, et le système FormaGest, l'ensemble dans le périmètre de l'organisme Form'Avenir.
 
-```mermaid
-flowchart TB
-    classDef actor fill:#f5f5f5,stroke:#333,stroke-width:1px
-
-    Eleve["Élève"]:::actor
-    Formateur["Formateur"]:::actor
-    Referente["Référente administrative"]:::actor
-    Admin["Administrateur"]:::actor
-    Utilisateur["Utilisateur"]:::actor
-
-    subgraph FormaAvenir["«Form'Avenir» — Organisme de formation"]
-        App["Application FormaGest"]
-    end
-
-    Eleve --- App
-    Formateur --- App
-    Referente --- App
-    Admin --- App
-    Utilisateur --- App
-
-    Eleve -.->|généralise| Utilisateur
-    Formateur -.->|généralise| Utilisateur
-    Referente -.->|généralise| Utilisateur
-    Admin -.->|généralise| Utilisateur
-```
-
 ![Diagramme de cas d'utilisation système, export UMLet](diagrams/system-use-case-diagram.svg)
 
 Le diagramme de cas d'utilisation global, qui reprend chaque acteur et détaille les cas d'utilisation associés, est présenté à part dans [`docs/diagrams/global-use-case-diagram.md`](/docs/diagrams/global-use-case-diagram.md).
