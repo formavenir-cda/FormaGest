@@ -130,6 +130,9 @@ src/main/resources/application-local.*
 ##############################
 *.uxf
 
+# Diagramme de séquence : seul le .md (mermaid) est versionné, pas le SVG exporté
+docs/diagrams/sequence-diagram-login.svg
+
 ##############################
 # Divers
 ##############################

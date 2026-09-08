@@ -1,7 +1,7 @@
 # Analyse
 
 **Projet :** Gestion d'un service pédagogique
-**Statut :** en cours de rédaction — voir § 6 pour les points à arbitrer
+**Statut :** en cours de rédaction, voir § 6 pour les points à arbitrer
 
 ---
 
@@ -55,9 +55,37 @@ Identifié comme acteur dans le cahier des charges, mais aucune fonctionnalité 
 
 Également identifié comme acteur sans fonctionnalité décrite. Deux pistes sont ouvertes : lui confier la gestion des comptes utilisateurs et des rôles, ce qui est cohérent avec l'exigence d'authentification, ou le fusionner avec la référente administrative. À arbitrer (§ 6).
 
-![Diagramme de cas d'utilisation système](/docs/diagrams/system-use-case-diagram.svg)
+Le diagramme ci-dessous situe l'application dans son environnement : les quatre acteurs, l'acteur générique `Utilisateur` dont ils héritent, et le système FormaGest, l'ensemble dans le périmètre de l'organisme Form'Avenir.
 
-![Diagramme de cas d'utilisation global](/docs/diagrams/global-use-case-diagram.svg)
+```mermaid
+flowchart TB
+    classDef actor fill:#f5f5f5,stroke:#333,stroke-width:1px
+
+    Eleve["Élève"]:::actor
+    Formateur["Formateur"]:::actor
+    Referente["Référente administrative"]:::actor
+    Admin["Administrateur"]:::actor
+    Utilisateur["Utilisateur"]:::actor
+
+    subgraph FormaAvenir["«Form'Avenir» — Organisme de formation"]
+        App["Application FormaGest"]
+    end
+
+    Eleve --- App
+    Formateur --- App
+    Referente --- App
+    Admin --- App
+    Utilisateur --- App
+
+    Eleve -.->|généralise| Utilisateur
+    Formateur -.->|généralise| Utilisateur
+    Referente -.->|généralise| Utilisateur
+    Admin -.->|généralise| Utilisateur
+```
+
+![Diagramme de cas d'utilisation système, export UMLet](diagrams/system-use-case-diagram.svg)
+
+Le diagramme de cas d'utilisation global, qui reprend chaque acteur et détaille les cas d'utilisation associés, est présenté à part dans [`docs/diagrams/global-use-case-diagram.md`](/docs/diagrams/global-use-case-diagram.md).
 
 ---
 
@@ -110,9 +138,7 @@ L'accès aux fonctionnalités protégées nécessite une authentification par id
 **RG13 — Droits selon le rôle**
 Les fonctionnalités accessibles dépendent du rôle de l'utilisateur. Un utilisateur ne peut accéder qu'à celles autorisées pour son rôle. En particulier, l'élève dispose d'un accès en lecture seule sur son calendrier et ses inscriptions.
 
-Le diagramme de séquence ci-dessous détaille l'authentification (RG12) : saisie des identifiants dans `LoginPage`, appel HTTP vers le back, vérification du mot de passe haché, puis émission d'un token conservé côté client et réutilisé pour le contrôle des droits (RG13).
-
-![Diagramme de séquence — Authentification](/docs/diagrams/sequence-diagram-login.svg)
+Un diagramme de séquence dédié détaille l'authentification (RG12) : saisie des identifiants dans `LoginPage`, appel HTTP vers le back, vérification du mot de passe haché, puis émission d'un token conservé côté client et réutilisé pour le contrôle des droits (RG13). Il se trouve, avec sa description, dans [`docs/diagrams/sequence-diagram-login.md`](/docs/diagrams/sequence-diagram-login.md).
 
 ---
 
