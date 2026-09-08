@@ -34,7 +34,7 @@ sequenceDiagram
     alt identifiants valides
         AM-->>AC: token (role, expiry)
         AC-->>AS: 200 OK { token, role }
-        AS-->>LP: authentification réussie (token conservé côté client)
+        AS-->>LP: authentification réussie (token stocké dans cookie)
         LP-->>User: redirection vers l'espace du rôle
     else identifiants invalides
         AM-->>AC: échec d'authentification
