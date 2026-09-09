@@ -4,25 +4,38 @@ labels: ["user-story"]
 body:
   - type: input
     id: role
-    attributes: { label: "En tant que", placeholder: "élève" }
-    validations: { required: true }
+    attributes:
+      label: "En tant que"
+      placeholder: "élève"
+    validations:
+      required: true
   - type: input
     id: besoin
-    attributes: { label: "je veux", placeholder: "consulter mon agenda" }
-    validations: { required: true }
+    attributes:
+      label: "je veux"
+      placeholder: "consulter mon agenda"
+    validations:
+      required: true
   - type: input
     id: benefice
-    attributes: { label: "afin de", placeholder: "connaître mes dates de cours" }
+    attributes:
+      label: "afin de"
+      placeholder: "connaître mes dates de cours"
   - type: textarea
     id: acceptation
     attributes:
-    label: Critères d'acceptation
-    value: "- [ ] Étant donné … quand … alors …"
+      label: Critères d'acceptation
+      value: "- [ ] Étant donné … quand … alors …"
   - type: textarea
     id: taches
     attributes:
-    label: Tâches par couche
-    value: |
-      - [ ] modèle + migration
-      - [ ] repository
-      - [ ] service + règle métier
+      label: Tâches par couche
+      value: |
+        - [ ] modèle + migration
+        - [ ] repository
+        - [ ] service + règle métier
+        - [ ] controller + DTO
+        - [ ] tests back
+        - [ ] service Angular
+        - [ ] composant + route/guard
+        - [ ] tests front

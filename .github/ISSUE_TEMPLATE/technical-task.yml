@@ -1,0 +1,39 @@
+name: Tâche technique
+description: Tâche de socle ou d'infrastructure
+labels: ["tache-technique", "socle"]
+body:
+  - type: input
+    id: objectif
+    attributes:
+      label: Objectif
+      placeholder: "Exposer un endpoint protégé qui renvoie l'utilisateur courant"
+    validations:
+      required: true
+  - type: textarea
+    id: contexte
+    attributes:
+      label: Contexte
+      description: Pourquoi cette tâche, ce dont elle dépend côté métier ou archi
+      placeholder: "Le front a besoin de connaître le rôle de l'utilisateur pour afficher le bon menu."
+  - type: textarea
+    id: reference
+    attributes:
+      label: Ressources
+      description: Documentations, liens utiles, références diverses... (laisser vide si non applicable)
+      placeholder: "Doc officielle, page du support de cours, fichier déjà écrit à réutiliser…"
+  - type: textarea
+    id: etapes
+    attributes:
+      label: Étapes
+      description: Découpage indicatif, à cocher au fur et à mesure
+      value: |
+        - [ ]
+        - [ ]
+  - type: textarea
+    id: fin
+    attributes:
+      label: Critères de fin
+      value: |
+        - [ ] le code compile, l'appli démarre
+        - [ ] testé à la main
+        - [ ] relu par le binôme
