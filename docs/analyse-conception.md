@@ -112,19 +112,59 @@ Les fonctionnalités accessibles dépendent du rôle de l'utilisateur. Un utilis
 
 ## 4. Dictionnaire des données
 
-| Nom | Description                                                           | Type | Commentaires | Contraintes, règles de calcul                                                                               |
-|---|-----------------------------------------------------------------------|---|---|-------------------------------------------------------------------------------------------------------------|
-| Utilisateur | Personne disposant d'un compte et accédant à l'application            | Entité | Identifiant, mot de passe, rôle. Généralise Élève, Formateur, Référente administrative et Administrateur | Authentification obligatoire (RG12) ; droits déterminés par le rôle (RG13)                                  |
-| Élève | Utilisateur suivant des cours et consultant son calendrier            | Entité | Spécialisation d'Utilisateur. Nom, prénom, date de naissance. Synonyme non retenu : stagiaire | Accès en lecture seule (RG13)                                                                               |
-| Formateur | Utilisateur assurant les cours                                        | Entité | Spécialisation d'Utilisateur. | —                                                                                                           |
-| Référente administrative | Utilisateur en charge de la structure pédagogique et des inscriptions | Entité | Spécialisation d'Utilisateur | Seule habilitée à forcer une inscription (RG10)                                                             |
-| Administrateur | Utilisateur qui créé d'autres utilisateurs.                           | Entité | Spécialisation d'Utilisateur. | N'a accès qu'à la création et la suppression des utilisateurs.                                              |
-| Filière | Thématique principale de formation                                    | Entité | Regroupe plusieurs cursus | RG01                                                                                                        |
-| Cursus | Parcours de formation composé de cours ordonnés                       | Entité | Rattaché à une filière | RG01, RG02                                                                                                  |
-| Cours | Matière enseignée, élément du catalogue                               | Entité | Appartient à un cursus et y occupe un rang | L'ordre traduit les prérequis (RG02)                                                                        |
-| Promotion | Cursus planifié sur une période                                       | Entité | Rattachée à un cursus. Date de début, date de fin | Naît de la planification d'un cursus (RG03, RG04)                                                           |
-| Cours planifié | Occurrence d'un cours à une date précise dans une promotion           | Entité | Rattaché à un cours et à une promotion. Date, horaires | Un cours peut être planifié dans plusieurs promotions (RG04). C'est cette entité qui alimente le calendrier |
-| Inscription | Rattachement d'un élève à une promotion ou à un cours planifié        | Entité | Date d'inscription, indicateur de forçage | Unicité par élève et par cours (RG08) ; contrôle d'ordre (RG09) ; forçage possible (RG10)                   |
-| Calendrier personnel | Vue des cours planifiés d'un élève                                    | — | Résultat de l'agrégation des inscriptions, pas une donnée stockée | RG11                                                                                                        |
+| Nom                    | Description                                                               | Type | Commentaires | Contraintes, règles de calcul                                                                            |
+|------------------------|---------------------------------------------------------------------------|---|---|----------------------------------------------------------------------------------------------------------|
+| Utilisateur            | Personne disposant d'un compte et accédant à l'application                | Entité | Identifiant, mot de passe, rôle. Généralise Élève, Formateur, Référente administrative et Administrateur | Authentification obligatoire (RG12) ; droits déterminés par le rôle (RG13)                               |
+| Élève                  | Utilisateur suivant des cours et consultant son calendrier                | Entité | Spécialisation d'Utilisateur. Nom, prénom, date de naissance. Synonyme non retenu : stagiaire | Accès en lecture seule (RG13)                                                                            |
+| Formateur              | Utilisateur assurant les cours                                            | Entité | Spécialisation d'Utilisateur. | —                                                                                                        |
+| Référent administratif | Utilisateur en charge de la structure pédagogique et des inscriptions     | Entité | Spécialisation d'Utilisateur | Seule habilitée à forcer une inscription (RG10)                                                          |
+| Administrateur         | Utilisateur qui créé, modifie, désactive, supprime d'autres utilisateurs. | Entité | Spécialisation d'Utilisateur. | N'a accès qu'à la création, modification, désactivation et suppression des utilisateurs.                 |
+| Filière                | Thématique principale de formation                                        | Entité | Regroupe plusieurs cursus | RG01                                                                                                     |
+| Cursus                 | Parcours de formation composé de cours ordonnés                           | Entité | Rattaché à une filière | RG01, RG02                                                                                               |
+| Cours                  | Matière enseignée, élément du catalogue                                   | Entité | Appartient à un cursus et y occupe un rang | L'ordre traduit les prérequis (RG02)                                                                     |
+| Promotion              | Cursus planifié sur une période                                           | Entité | Rattachée à un cursus. Date de début, date de fin | Naît de la planification d'un cursus (RG03, RG04)                                                        |
+| Cours planifié         | Occurrence d'un cours à une date précise dans une promotion               | Entité | Rattaché à un cours et à une promotion. Date, horaires | Un cours peut être planifié dans plusieurs promotions (RG04). C'est cette entité qui alimente le calendrier |
+| Inscription            | Rattachement d'un élève à une promotion ou à un cours planifié            | Entité | Date d'inscription, indicateur de forçage | Unicité par élève et par cours (RG08) ; contrôle d'ordre (RG09) ; forçage possible (RG10)                |
+| Calendrier personnel   | Vue des cours planifiés d'un élève                                        | — | Résultat de l'agrégation des inscriptions, pas une donnée stockée | RG11                                                                                                     |
+
+---
+
+## 5. User stories
+
+**US01** — En tant qu'utilisateur, je veux me connecter avec mon identifiant et mon mot de passe, puis pouvoir me déconnecter, afin d'accéder aux seules fonctionnalités autorisées pour mon rôle. *(RG12, RG13)*
+
+**US02** — En tant que référent administratif, je veux créer et modifier les filières afin de tenir à jour la structure pédagogique. *(RG01)*
+
+**US03** — En tant que référent administratif, je veux créer et modifier les cursus et les rattacher à une filière afin de décrire les parcours de formation. *(RG01)*
+
+**US04** — En tant que référent administratif, je veux créer et modifier les cours afin d'alimenter le catalogue. *(RG02)*
+
+**US05** — En tant que référent administratif, je veux composer un cursus en ordonnant ses cours afin de matérialiser les prérequis et la progression pédagogique. *(RG02)*
+
+**US06** — En tant que référent administratif, je veux planifier un cursus sur une période afin de créer une promotion. *(RG03, RG04)*
+
+**US07** — En tant que référent administratif, je veux affecter à chaque cours d'une promotion une date, des horaires et un formateur afin de constituer son calendrier et de désigner l'intervenant. *(RG04 ; établit l'association formateur–cours planifié utilisée par US14)*
+
+**US08** — En tant que référent administratif, je veux inscrire un élève à une promotion complète afin qu'il suive l'ensemble de ses cours planifiés. *(RG06)*
+
+**US09** — En tant que référent administratif, je veux inscrire un élève à un cours planifié isolé afin qu'il le suive sans être inscrit à toute la promotion. *(RG07)*
+
+**US10** — En tant que référent administratif, je veux que chaque inscription soit contrôlée (unicité, ordre pédagogique) et que le motif d'un refus me soit indiqué afin de corriger la saisie ou de décider d'un forçage. *(RG08, RG09)*
+
+**US11** — En tant que référent administratif, je veux forcer une inscription qui enfreint l'ordre pédagogique afin de traiter un cas justifié ; le forçage est une action explicite et reste sans effet sur la règle d'unicité. *(RG10)*
+
+**US12** — En tant qu'utilisateur connecté, je veux consulter les promotions planifiées, en liste puis dans le détail (cursus associé, période, cours planifiés), afin de situer une promotion. *(RG05, §4.1)*
+
+**US13** — En tant qu'élève, je veux consulter mon calendrier personnel afin de connaître les dates et horaires de tous mes cours, qu'ils relèvent de ma promotion ou d'une inscription à l'unité. *(RG11, §4.2)*
+
+**US14** — En tant que formateur, je veux consulter les promotions et les cours dont j'ai la charge afin de visualiser mon activité, sans droit de modification. *(§2.3 ; s'appuie sur l'association posée par US07)*
+
+**US15** — En tant qu'administrateur, je veux créer, modifier et désactiver les comptes utilisateurs et leur affecter un rôle afin de gérer les accès à l'application. *(RG13, §2.4)*
+
+**US16** — En tant que référent administratif, je veux désactiver une filière, un cursus ou un cours devenu obsolète afin de le retirer du catalogue sans casser les promotions et inscriptions existantes. *(extension de §4.3, qui ne prévoit que la création et la modification ; règle d'intégrité à cadrer)*
+
+**US17** — En tant que référent administratif, je veux modifier ou annuler l'inscription d'un élève afin de corriger une erreur ou de gérer un abandon. *(désinscription absente du cahier des charges, point ouvert §6)*
+
+**US18** — En tant qu'utilisateur, je veux consulter et mettre à jour mes informations personnelles afin de les tenir à jour. *(hors cahier des charges ; incompatible avec l'accès en lecture seule de l'élève, RG13)*
 
 ---
