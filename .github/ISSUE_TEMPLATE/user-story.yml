@@ -39,8 +39,3 @@ body:
         - [ ] service Angular
         - [ ] composant + route/guard
         - [ ] tests front
-  - type: dropdown
-    id: points
-    attributes:
-      label: Estimation
-      options: ["1", "2", "3", "5", "8"]
