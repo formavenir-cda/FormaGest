@@ -6,15 +6,15 @@ Le dépôt est un mono-repo : le back-end Java Spring Boot dans `backend/`, le f
 
 ## Stack et versions
 
-| Brique | Version |
-|--------|-------|
-| Java (JDK) | 21 (LTS) |
+| Brique | Version                |
+|--------|------------------------|
+| Java (JDK) | 21 (LTS)               |
 | Build back-end | Gradle 9.4.1 (wrapper) |
-| Spring Boot | 4.0.5 |
-| MySQL | 8.4 |
-| Node | 22 |
-| Angular | 21.2 |
-| TypeScript | 5.9 |
+| Spring Boot | 4.1.0                  |
+| MySQL | 8.4                    |
+| Node | 22                     |
+| Angular | 21.2                   |
+| TypeScript | 5.9                    |
 
 ## Prérequis
 
