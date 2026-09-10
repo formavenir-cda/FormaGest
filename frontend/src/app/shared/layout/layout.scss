@@ -1,0 +1,19 @@
+@use '../../../styles/tokens' as t;
+
+.app-layout {
+  display: flex;
+  height: 100dvh;
+  overflow: hidden;
+  background: t.$fg-background;
+}
+
+.app-main {
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
+  padding: t.$fg-space-lg;
+}
+
+.app-main__content {
+  min-height: 0;
+}

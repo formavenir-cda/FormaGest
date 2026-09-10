@@ -1,0 +1,24 @@
+<aside class="fg-sidenav">
+  <div class="fg-sidenav__brand">
+    <span class="fg-sidenav__logo">F</span>
+    <span>FormaGest</span>
+  </div>
+
+  <nav class="fg-sidenav__nav" aria-label="Navigation principale">
+    @for (item of mainNavItems; track item.label) {
+      <button class="fg-sidenav__item" type="button">
+        <span class="material-icons">{{ item.icon }}</span>
+        <span>{{ item.label }}</span>
+      </button>
+    }
+  </nav>
+
+  <button class="fg-sidenav__profile" type="button" aria-label="Voir mon profil">
+    <span class="fg-sidenav__avatar">
+      <span class="material-icons">person</span>
+    </span>
+
+
+    <span class="material-icons fg-sidenav__profile-chevron">expand_more</span>
+  </button>
+</aside>
