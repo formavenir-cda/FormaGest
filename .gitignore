@@ -134,6 +134,13 @@ src/main/resources/application-local.*
 docs/diagrams/sequence-diagram-login.svg
 
 ##############################
+# Docker
+##############################
+# Surcharge locale de la configuration Compose, propre à chaque poste
+docker-compose.override.yml
+compose.override.yml
+
+##############################
 # Divers
 ##############################
 *.tmp
