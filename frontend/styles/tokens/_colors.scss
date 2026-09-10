@@ -1,0 +1,54 @@
+// FormaGest — tokens/colors
+// Source unique de vérité des couleurs. Aucun HEX ailleurs dans l'app.
+
+// Primary
+$fg-primary:            #2B4ACB;
+$fg-primary-dark:       #1D3399; // hover / focus text
+$fg-primary-pressed:    #16257A;
+$fg-primary-container:  #E4E9FF;
+$fg-primary-outline:    #C7D2FF;
+$fg-on-primary:         #FFFFFF;
+$fg-on-primary-container: #1D3399;
+
+// Secondary / accent
+$fg-secondary:          #0F7A6C;
+$fg-secondary-container:#DCF1EC;
+$fg-accent:             #C77700;
+$fg-accent-container:   #FBEEDA;
+
+// Neutres
+$fg-background:         #F7F8FC;
+$fg-surface:            #FFFFFF;
+$fg-surface-variant:    #EEF1F8;
+$fg-text-primary:       #12172B; 
+$fg-text-secondary:     #5A6178; 
+$fg-text-disabled:      #8B90A0;
+$fg-border:             #DDE2ED;
+$fg-divider:            #E6EAF2;
+$fg-scrim:              rgba(18, 23, 43, 0.45);
+
+// Sémantique (toujours accompagnée d'une icône + d'un libellé)
+$fg-success:            #136B44;  $fg-success-container: #E7F5EF;
+$fg-warning:            #8A5300;  $fg-warning-container: #FDF1DC;
+$fg-error:              #C62828;  $fg-error-container:   #FCE9E9;
+$fg-info:               #0F5FA6;  $fg-info-container:    #E6F1FA;
+
+// États
+$fg-focus-ring:         #0F5FA6;
+$fg-hover-overlay:      rgba(43, 74, 203, 0.08);
+$fg-pressed-overlay:    rgba(43, 74, 203, 0.16);
+$fg-disabled-surface:   #E1E4EC;
+
+:root {
+  --fg-primary: #{$fg-primary};
+  --fg-primary-dark: #{$fg-primary-dark};
+  --fg-primary-container: #{$fg-primary-container};
+  --fg-background: #{$fg-background};
+  --fg-surface: #{$fg-surface};
+  --fg-surface-variant: #{$fg-surface-variant};
+  --fg-text-primary: #{$fg-text-primary};
+  --fg-text-secondary: #{$fg-text-secondary};
+  --fg-border: #{$fg-border};
+  --fg-divider: #{$fg-divider};
+  --fg-focus-ring: #{$fg-focus-ring};
+}

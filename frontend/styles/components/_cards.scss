@@ -1,0 +1,32 @@
+@use '../tokens' as t;
+
+// Carte d'accès rapide — même composant partout, layout adaptatif
+.fg-quick-access {
+  display: flex;
+  flex-direction: column;
+  gap: t.$fg-space-sm + 2px;
+  padding: t.$fg-space-md;
+  min-height: 84px;
+  background: t.$fg-surface;
+  border: 1px solid t.$fg-border;
+  border-radius: t.$fg-radius-lg;
+  box-shadow: t.$fg-elev-1;
+  text-decoration: none;
+
+  &:hover { border-color: t.$fg-primary; box-shadow: t.$fg-elev-primary-hover; }
+  &:active { background: t.$fg-surface-variant; }
+
+  &__icon {
+    width: 40px; height: 40px;
+    border-radius: t.$fg-radius-md;
+    background: t.$fg-primary-container;
+    color: t.$fg-on-primary-container;
+    display: flex; align-items: center; justify-content: center;
+  }
+  &__label { font-size: 15px; font-weight: 600; color: t.$fg-text-primary; }
+
+  @include t.fg-desktop-up {
+    flex-direction: row; align-items: center; gap: t.$fg-space-md; padding: 20px;
+    &__icon { width: 48px; height: 48px; border-radius: 14px; }
+  }
+}

@@ -1,0 +1,27 @@
+// FormaGest — tokens/spacing (base 4px)
+$fg-space-xs:  4px;
+$fg-space-sm:  8px;
+$fg-space-md:  16px;
+$fg-space-lg:  24px;
+$fg-space-xl:  32px;
+$fg-space-2xl: 48px;
+
+// Marges d'écran & gouttières par breakpoint
+$fg-gutter-mobile:  12px;
+$fg-gutter-tablet:  16px;
+$fg-gutter-desktop: 20px;
+$fg-margin-mobile:  16px;
+$fg-margin-tablet:  32px;
+$fg-margin-desktop: 40px;
+
+// Largeurs
+$fg-content-max:  1120px;
+$fg-measure-max:  62ch;
+
+// Navigation
+$fg-bottom-nav-height: 80px;
+$fg-rail-width:        88px;
+$fg-sidenav-width:     256px;
+$fg-toolbar-height:    64px;
+$fg-toolbar-height-lg: 68px;
+$fg-touch-target:      48px;

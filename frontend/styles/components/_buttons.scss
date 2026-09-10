@@ -1,0 +1,30 @@
+@use '../tokens' as t;
+
+// Rayon, hauteurs et états communs à tous les boutons FormaGest
+.mat-mdc-button, .mat-mdc-unelevated-button, .mat-mdc-outlined-button {
+  --mdc-shape-small: #{t.$fg-radius-pill};
+  min-height: t.$fg-btn-default;
+  font-weight: 600;
+}
+
+.fg-btn-primary   { background: t.$fg-primary; color: t.$fg-on-primary;
+  &:hover  { background: t.$fg-primary-dark; }
+  &:active { background: t.$fg-primary-pressed; }
+  &[disabled] { background: t.$fg-disabled-surface; color: t.$fg-text-disabled; }
+}
+.fg-btn-secondary { border: 1.5px solid t.$fg-primary-outline; color: t.$fg-primary-dark;
+  &:hover { background: t.$fg-primary-container; border-color: t.$fg-primary-dark; }
+}
+.fg-btn-text      { color: t.$fg-primary;
+  &:hover { background: t.$fg-primary-container; color: t.$fg-primary-dark; }
+}
+.fg-icon-button   { width: t.$fg-touch-target; height: t.$fg-touch-target;
+  border-radius: t.$fg-radius-pill; color: #3B4256;
+  &:hover { background: t.$fg-surface-variant; }
+}
+
+// Focus visible universel
+:where(a, button, [role='button'], .mat-mdc-list-item):focus-visible {
+  outline: 3px solid t.$fg-focus-ring;
+  outline-offset: 2px;
+}

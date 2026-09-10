@@ -1,0 +1,18 @@
+// FormaGest — tokens/typography
+$fg-font-display: 'Plus Jakarta Sans', system-ui, sans-serif; // titres
+$fg-font-body:    'Source Sans 3', system-ui, sans-serif;     // textes & UI
+$fg-font-mono:    'IBM Plex Mono', ui-monospace, monospace;   // données, horaires
+
+// size, weight, line-height
+$fg-type: (
+  display:  (40px, 800, 1.12),
+  h1:       (28px, 700, 1.20),   // 36px >= desktop
+  h1-lg:    (36px, 700, 1.12),
+  h2:       (17px, 700, 1.30),   // 20px >= desktop
+  h2-lg:    (20px, 700, 1.30),
+  h3:       (17px, 600, 1.30),
+  body:     (16px, 400, 1.50),
+  body-sm:  (15px, 400, 1.50),
+  small:    (13px, 600, 1.40),   // méta, dates (uppercase + letter-spacing .03em)
+  label:    (15px, 600, 1.20)    // boutons, liens, nav
+);

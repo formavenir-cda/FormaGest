@@ -1,0 +1,30 @@
+@use '../tokens' as t;
+
+// Élément d'actualité — list-item (mobile/desktop), card (tablette)
+.fg-news-item {
+  display: flex;
+  gap: t.$fg-space-md - 2px;
+  padding: 9px 0;
+  border-bottom: 1px solid t.$fg-divider;
+  &:last-child { border-bottom: 0; }
+
+  &__thumb {
+    flex: none; width: 68px; height: 68px;
+    border-radius: t.$fg-radius-md;
+    background: t.$fg-surface-variant;
+    object-fit: cover;
+  }
+  &__meta  { font-size: 13px; font-weight: 600; color: t.$fg-text-secondary; letter-spacing: .03em; }
+  &__title { font-family: t.$fg-font-display; font-size: 15px; font-weight: 600; line-height: 1.3; color: t.$fg-text-primary; }
+  &__excerpt {
+    font-size: 13.5px; line-height: 1.4; color: t.$fg-text-secondary;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+
+  @include t.fg-desktop-up {
+    padding: 20px;
+    &__thumb { width: 132px; height: 92px; }
+    &__title { font-size: 18px; font-weight: 700; }
+    &__excerpt { font-size: 15px; line-height: 1.55; max-width: t.$fg-measure-max; }
+  }
+}
