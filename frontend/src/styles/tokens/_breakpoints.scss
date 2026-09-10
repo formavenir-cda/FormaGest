@@ -1,0 +1,6 @@
+// FormaGest — tokens/breakpoints (conventions Material)
+$fg-bp-tablet:  600px;   // >= : navigation rail
+$fg-bp-desktop: 1240px;  // >= : sidenav étendue
+
+@mixin fg-tablet-up  { @media (min-width: $fg-bp-tablet)  { @content; } }
+@mixin fg-desktop-up { @media (min-width: $fg-bp-desktop) { @content; } }

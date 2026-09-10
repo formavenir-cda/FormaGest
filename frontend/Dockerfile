@@ -20,8 +20,8 @@ FROM nginx:alpine AS runtime
 # Configuration avec repli SPA vers index.html.
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Angular 21 place la sortie du build dans dist/<projet>/browser.
-# Le nom du projet doit correspondre à celui du `ng new` (formagest).
-COPY --from=build /app/dist/formagest/browser /usr/share/nginx/html
+# Angular place la sortie du build dans dist/<projet>/browser.
+# <projet> = nom du projet dans angular.json / package.json (ici : frontend).
+COPY --from=build /app/dist/frontend/browser /usr/share/nginx/html
 
 EXPOSE 80

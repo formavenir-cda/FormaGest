@@ -10,15 +10,16 @@ Le dépôt est un mono-repo : le back-end Java Spring Boot dans `backend/`, le f
 |--------|------------------------|
 | Java (JDK) | 21 (LTS)               |
 | Build back-end | Gradle 9.4.1 (wrapper) |
-| Spring Boot | 4.1.0                  |
-| MySQL | 8.4                    |
-| Node | 22                     |
-| Angular | 21.2                   |
-| TypeScript | 5.9                    |
+| Spring Boot | 4.1.0 |
+| MySQL | 8.4 |
+| Node | 22 (≥ 22.22.3) |
+| Angular | 22.1 |
+| TypeScript | 6.0 |
+| Angular Material | 22.1 (thème Material 3) |
 
 ## Prérequis
 
-Pour le lancement conteneurisé, Docker et le plugin Compose suffisent. Pour développer hors conteneur, il faut en plus un JDK 21, Node 22 et un client MySQL.
+Pour le lancement conteneurisé, Docker et le plugin Compose suffisent. Pour développer hors conteneur, il faut en plus un JDK 21, Node 22 (au moins 22.22.3, exigé par le CLI Angular) et un client MySQL.
 
 ## Arborescence
 

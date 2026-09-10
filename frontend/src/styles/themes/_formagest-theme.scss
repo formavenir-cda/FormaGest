@@ -1,0 +1,24 @@
+// FormaGest — configuration du thème Angular Material 3
+@use '@angular/material' as mat;
+
+// Material 3, thème clair. La palette intégrée « azure » est le bleu
+// Material le plus proche du bleu de marque FormaGest (#2B4ACB).
+// Les composants FormaGest sur mesure restent pilotés par
+// src/styles/tokens/* : ce thème ne concerne que les composants Material.
+// Pour aligner exactement la marque sur les composants Material,
+// générer une palette dédiée :
+//   ng generate @angular/material:theme-color
+$fg-theme: (
+  color: (
+    theme-type: light,
+    primary: mat.$azure-palette,
+    tertiary: mat.$blue-palette,
+  ),
+  typography: (
+    plain-family: 'Source Sans 3',
+    brand-family: 'Plus Jakarta Sans',
+  ),
+  density: (
+    scale: 0,
+  ),
+);

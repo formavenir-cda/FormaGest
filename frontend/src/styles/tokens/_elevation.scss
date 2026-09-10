@@ -1,0 +1,17 @@
+// FormaGest — tokens/elevation (usage modéré)
+$fg-elev-0: none;
+$fg-elev-1: 0 1px 2px rgba(18, 23, 43, 0.05);   // cards au repos
+$fg-elev-2: 0 4px 12px rgba(18, 23, 43, 0.10);  // hover
+$fg-elev-3: 0 12px 28px rgba(18, 23, 43, 0.16); // drawer, menus, dialogs
+$fg-elev-primary-hover: 0 4px 14px rgba(43, 74, 203, 0.14);
+
+// Icônes
+$fg-icon-sm: 18px;
+$fg-icon-md: 22px;
+$fg-icon-lg: 24px;
+$fg-icon-xl: 26px;
+
+// Hauteurs de boutons
+$fg-btn-compact: 40px;
+$fg-btn-default: 44px;
+$fg-btn-large:   48px;
