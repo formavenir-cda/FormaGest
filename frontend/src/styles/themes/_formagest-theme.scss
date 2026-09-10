@@ -1,31 +1,24 @@
-// FormaGest — thème Angular Material 3
+// FormaGest — configuration du thème Angular Material 3
 @use '@angular/material' as mat;
-@use '../tokens' as t;
 
-$fg-primary-palette: mat.m2-define-palette((
-  50: #EEF1FF, 100: #E4E9FF, 200: #C7D2FF, 300: #9AAEFF, 400: #6C86F0,
-  500: #2B4ACB, 600: #2440B8, 700: #1D3399, 800: #16257A, 900: #101B57,
-  contrast: (
-    50: t.$fg-text-primary, 100: t.$fg-text-primary, 200: t.$fg-text-primary,
-    300: t.$fg-text-primary, 400: #FFFFFF, 500: #FFFFFF, 600: #FFFFFF,
-    700: #FFFFFF, 800: #FFFFFF, 900: #FFFFFF
-  )
-), 500, 200, 700);
-
-$fg-typography: mat.m2-define-typography-config(
-  $font-family: t.$fg-font-body,
-  $headline-4:  mat.m2-define-typography-level(36px, 40px, 700, t.$fg-font-display),
-  $headline-5:  mat.m2-define-typography-level(28px, 34px, 700, t.$fg-font-display),
-  $headline-6:  mat.m2-define-typography-level(20px, 26px, 700, t.$fg-font-display),
-  $subtitle-1:  mat.m2-define-typography-level(17px, 22px, 600, t.$fg-font-display),
-  $body-1:      mat.m2-define-typography-level(16px, 24px, 400),
-  $body-2:      mat.m2-define-typography-level(15px, 22px, 400),
-  $caption:     mat.m2-define-typography-level(13px, 18px, 600),
-  $button:      mat.m2-define-typography-level(15px, 18px, 600)
+// Material 3, thème clair. La palette intégrée « azure » est le bleu
+// Material le plus proche du bleu de marque FormaGest (#2B4ACB).
+// Les composants FormaGest sur mesure restent pilotés par
+// src/styles/tokens/* : ce thème ne concerne que les composants Material.
+// Pour aligner exactement la marque sur les composants Material,
+// générer une palette dédiée :
+//   ng generate @angular/material:theme-color
+$fg-theme: (
+  color: (
+    theme-type: light,
+    primary: mat.$azure-palette,
+    tertiary: mat.$blue-palette,
+  ),
+  typography: (
+    plain-family: 'Source Sans 3',
+    brand-family: 'Plus Jakarta Sans',
+  ),
+  density: (
+    scale: 0,
+  ),
 );
-
-$fg-theme: mat.m2-define-light-theme((
-  color: (primary: $fg-primary-palette, accent: $fg-primary-palette, warn: mat.$m2-red-palette),
-  typography: $fg-typography,
-  density: 0
-));

@@ -1,13 +1,19 @@
-// FormaGest — point d'entrée global (angular.json > styles)
+// FormaGest — point d'entrée des styles globaux (déclaré dans angular.json > styles)
 @use '@angular/material' as mat;
 @use 'themes/formagest-theme' as theme;
 @use 'tokens' as t;
 @use 'components';
 
-@include mat.core();
-@include mat.all-component-themes(theme.$fg-theme);
+// Thème Material 3 : génère les variables système --mat-sys-* consommées
+// par les composants Material et réutilisables par les composants FormaGest.
+html {
+  color-scheme: light;
+  @include mat.theme(theme.$fg-theme);
+}
 
-html, body {
+// Socle FormaGest
+html,
+body {
   margin: 0;
   min-height: 100%;
   background: t.$fg-background;
@@ -16,6 +22,13 @@ html, body {
   -webkit-font-smoothing: antialiased;
 }
 
-a { color: t.$fg-primary; text-decoration: none;
-  &:hover { color: t.$fg-primary-dark; text-decoration: underline; text-underline-offset: 3px; }
+a {
+  color: t.$fg-primary;
+  text-decoration: none;
+
+  &:hover {
+    color: t.$fg-primary-dark;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
 }
