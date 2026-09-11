@@ -1,12 +1,12 @@
 package com.eni.formagest.bo.users;
 
 import com.eni.formagest.bo.training.Sector;
-import com.eni.formagest.dal.AdministrativeManagerRepository;
-import com.eni.formagest.dal.AdministratorRepository;
-import com.eni.formagest.dal.SectorRepository;
-import com.eni.formagest.dal.StudentRepository;
-import com.eni.formagest.dal.TeacherRepository;
-import com.eni.formagest.dal.UserRepository;
+import com.eni.formagest.dal.users.AdministrativeManagerRepository;
+import com.eni.formagest.dal.users.AdministratorRepository;
+import com.eni.formagest.dal.training.SectorRepository;
+import com.eni.formagest.dal.users.StudentRepository;
+import com.eni.formagest.dal.users.TeacherRepository;
+import com.eni.formagest.dal.users.UserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;

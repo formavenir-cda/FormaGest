@@ -1,4 +1,4 @@
-package com.eni.formagest.dal;
+package com.eni.formagest.dal.users;
 
 import com.eni.formagest.bo.users.AdministrativeManager;
 import org.springframework.data.jpa.repository.JpaRepository;
