@@ -161,10 +161,8 @@ Les fonctionnalités accessibles dépendent du rôle de l'utilisateur. Un utilis
 
 **US15** — En tant qu'administrateur, je veux créer, modifier et désactiver les comptes utilisateurs et leur affecter un rôle afin de gérer les accès à l'application. *(RG13, §2.4)*
 
-**US16** — En tant que référent administratif, je veux désactiver une filière, un cursus ou un cours devenu obsolète afin de le retirer du catalogue sans casser les promotions et inscriptions existantes. *(extension de §4.3, qui ne prévoit que la création et la modification ; règle d'intégrité à cadrer)*
+**US16** — En tant que référent administratif, je veux désactiver une filière, un cursus ou un cours devenu obsolète afin de le retirer du catalogue sans casser les promotions et inscriptions existantes.
 
-**US17** — En tant que référent administratif, je veux modifier ou annuler l'inscription d'un élève afin de corriger une erreur ou de gérer un abandon. *(désinscription absente du cahier des charges, point ouvert §6)*
-
-**US18** — En tant qu'utilisateur, je veux consulter et mettre à jour mes informations personnelles afin de les tenir à jour. *(hors cahier des charges ; incompatible avec l'accès en lecture seule de l'élève, RG13)*
+**US17** — En tant que référent administratif, je veux modifier ou annuler l'inscription d'un élève afin de corriger une erreur ou de gérer un abandon.
 
 ---
