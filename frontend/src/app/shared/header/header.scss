@@ -1,0 +1,9 @@
+@use '../../../styles/tokens' as t;
+
+.app-header {
+  min-height: t.$fg-toolbar-height;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: t.$fg-space-lg;
+}
