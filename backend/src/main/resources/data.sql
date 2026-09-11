@@ -14,7 +14,6 @@ INSERT IGNORE INTO app_user (id, email, lastname, firstname, password, active) V
     (4, 'admin.demo@formagest.fr', 'Petit', 'Thomas', '$2y$10$kHbMLD9R1wnMcSKfvMgxROTzgWf/4bjsDuAzIHgFp0C.uwW60p3na', TRUE);
 
 INSERT IGNORE INTO student (id, birth_date) VALUES (1, '2000-04-12');
-INSERT IGNORE INTO teacher (id) VALUES (2);
 INSERT IGNORE INTO administrative_manager (id) VALUES (3);
 INSERT IGNORE INTO administrator (id) VALUES (4);
 
@@ -24,6 +23,9 @@ INSERT IGNORE INTO administrator (id) VALUES (4);
 
 -- --- Filière ---
 INSERT IGNORE INTO sector (name) VALUES ('Développement');
+INSERT IGNORE INTO sector (name) VALUES ('Système et réseaux');
+
+INSERT IGNORE INTO teacher (id, sector_id) VALUES (2, 1);
 
 -- --- Cursus ---
 INSERT IGNORE INTO track (name, sector_id)

@@ -1,5 +1,6 @@
 package com.eni.formagest.bo.users;
 
+import com.eni.formagest.bo.training.CohortStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -33,4 +34,8 @@ public abstract class User {
 
     @Column(name = "ACTIVE", nullable = false)
     private boolean active;
+
+    @Column(name = "ROLE", nullable = false, length = 20)
+    @Enumerated(EnumType.STRING)
+    private UserRole role;
 }
