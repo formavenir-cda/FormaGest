@@ -21,4 +21,8 @@ public class ScheduledCourseEnrollment extends Enrollment {
     @Column(name = "FORCED", nullable = false)
     @ToString.Include
     private boolean force;
+
+    @Column(name = "JUSTIFICATION_FORCED", length = 200)
+    @ToString.Include
+    private String justificationForced;
 }

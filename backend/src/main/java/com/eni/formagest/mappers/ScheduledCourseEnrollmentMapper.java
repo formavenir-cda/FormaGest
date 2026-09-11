@@ -15,9 +15,15 @@ public final class ScheduledCourseEnrollmentMapper {
         return ScheduledCourseEnrollmentDto.builder()
                 .id(enrollment.getId())
                 .enrollmentDate(enrollment.getEnrollmentDate())
+                .enrollmentStatus(enrollment.getEnrollmentStatus())
+                .cancelledDate(enrollment.getCancelledDate())
+                .cancelledReason(enrollment.getCancelledReason())
+                .cancelledById(enrollment.getCancelledBy() != null ? enrollment.getCancelledBy().getId() : null)
+                .forced(enrollment.isForce())
+                .justificationForced(enrollment.getJustificationForced())
                 .studentId(enrollment.getStudent().getId())
+                .createdById(enrollment.getCreatedBy().getId())
                 .scheduledCourseId(enrollment.getScheduledCourse().getId())
-                .force(enrollment.isForce())
                 .build();
     }
 
