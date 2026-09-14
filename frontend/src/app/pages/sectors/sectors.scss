@@ -1,0 +1,113 @@
+@use '../../../styles/tokens' as t;
+
+:host {
+  display: block;
+}
+
+.sectors-page {
+  max-width: t.$fg-content-max;
+  margin-inline: auto;
+
+  h1 {
+    margin: 0;
+    font-family: t.$fg-font-display;
+    font-size: 2rem;
+    font-weight: 700;
+  }
+
+  h2 {
+    margin: 0 0 t.$fg-space-lg;
+    font-family: t.$fg-font-display;
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  p {
+    color: t.$fg-text-secondary;
+    line-height: 1.5;
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-block: t.$fg-space-lg;
+
+    button {
+      min-height: t.$fg-touch-target;
+      padding-inline: t.$fg-space-lg;
+      border-radius: t.$fg-radius-sm;
+    }
+
+    .material-icons {
+      margin-right: t.$fg-space-sm;
+      vertical-align: middle;
+    }
+  }
+
+  &__content {
+    display: grid;
+    grid-template-columns: 1fr;
+    border: 1px solid t.$fg-border;
+    border-radius: t.$fg-radius-md;
+    overflow: hidden;
+    background: t.$fg-surface;
+  }
+}
+
+.sectors-list,
+.sector-details {
+  min-width: 0;
+  padding: t.$fg-space-lg;
+}
+
+.sectors-list {
+  background: t.$fg-surface-variant;
+  border-bottom: 1px solid t.$fg-border;
+}
+
+.sector-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: t.$fg-space-md;
+  width: 100%;
+  min-height: 80px;
+  margin-bottom: t.$fg-space-md;
+  padding: t.$fg-space-md;
+  border: 1px solid transparent;
+  border-radius: t.$fg-radius-sm;
+  background: transparent;
+  color: t.$fg-text-primary;
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+
+  &:hover {
+    background: t.$fg-surface;
+    border-color: t.$fg-primary-outline;
+  }
+
+  .material-icons {
+    flex-shrink: 0;
+    color: t.$fg-primary;
+  }
+}
+
+@include t.fg-desktop-up {
+  .sectors-page__content {
+    grid-template-columns: minmax(280px, 2fr) minmax(0, 3fr);
+    min-height: 500px;
+  }
+
+  .sectors-list {
+    border-bottom: none;
+    border-right: 1px solid t.$fg-border;
+  }
+
+  .sectors-list,
+  .sector-details {
+    padding: t.$fg-space-xl;
+  }
+}
