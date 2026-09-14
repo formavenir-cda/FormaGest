@@ -1,0 +1,35 @@
+<section class="sectors-page">
+  <h1>Filières</h1>
+
+  <div class="sectors-page__actions">
+    <button mat-flat-button class="fg-btn-primary" type="button">
+      <span class="material-icons" aria-hidden="true">add_circle_outline</span>
+      Nouvelle filière
+    </button>
+  </div>
+
+  <div class="sectors-page__content">
+    <aside class="sectors-list">
+      <h2>Les filières</h2>
+      @if (loading()) {
+        <p>Chargement des filières…</p>
+      } @else if (error()) {
+        <p role="alert">{{ error() }}</p>
+      } @else {
+        @for (sector of sectors(); track sector.id) {
+          <button class="sector-item" type="button">
+            <span>{{ sector.name }}</span>
+            <span class="material-icons" aria-hidden="true">chevron_right</span>
+          </button>
+        } @empty {
+          <p>Aucune filière enregistrée.</p>
+        }
+      }
+    </aside>
+
+    <section class="sector-details">
+      <h2>Filière sélectionnée</h2>
+      <p>Sélectionnez une filière pour consulter ses cursus.</p>
+    </section>
+  </div>
+</section>
