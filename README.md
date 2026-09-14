@@ -60,3 +60,21 @@ cd frontend && npm install && npm start
 ```
 
 Le serveur de dev Angular tourne sur http://localhost:4200 avec rechargement à chaud. Il appelle l'API sur http://localhost:8080 ; la configuration correspondante se fait dans `frontend/src/environments/`.
+
+Le fichier `.env` n'est lu que par Docker Compose. Pour lancer le back-end directement depuis un IDE (sans passer par `docker compose up db` puis `bootRun`/le bouton Run), il faut renseigner `APP_JWT_SECRET` dans la configuration d'exécution (variables d'environnement), sans quoi l'application ne démarre pas.
+
+## Authentification
+
+Connexion par identifiant (email) et mot de passe, sur `POST /api/auth/login`. La réponse contient un token et le profil de l'utilisateur ; le token est ensuite à transmettre dans l'en-tête `Authorization: Bearer <token>` sur les routes protégées.
+
+```
+curl -X POST http://localhost:8080/api/auth/login \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"referente.demo@formagest.fr","password":"Formagest2026!"}'
+```
+
+`GET /api/auth/me` renvoie l'utilisateur courant à partir du token et sert à vérifier qu'il est toujours valide :
+
+```
+curl http://localhost:8080/api/auth/me -H "Authorization: Bearer <token>"
+```
