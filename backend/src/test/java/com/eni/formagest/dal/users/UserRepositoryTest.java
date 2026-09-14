@@ -1,40 +1,27 @@
-package com.eni.formagest.bo.users;
+package com.eni.formagest.dal.users;
 
 import com.eni.formagest.bo.training.Sector;
-import com.eni.formagest.dal.users.AdministrativeManagerRepository;
-import com.eni.formagest.dal.users.AdministratorRepository;
+import com.eni.formagest.bo.users.AdministrativeManager;
+import com.eni.formagest.bo.users.Administrator;
+import com.eni.formagest.bo.users.Student;
+import com.eni.formagest.bo.users.Teacher;
+import com.eni.formagest.bo.users.User;
+import com.eni.formagest.bo.users.UserRole;
 import com.eni.formagest.dal.training.SectorRepository;
-import com.eni.formagest.dal.users.StudentRepository;
-import com.eni.formagest.dal.users.TeacherRepository;
-import com.eni.formagest.dal.users.UserRepository;
-import lombok.extern.slf4j.Slf4j;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.security.core.GrantedAuthority;
 
 import java.time.LocalDate;
 import java.util.List;
 
 @DataJpaTest
-@Slf4j
-class TestHeritageUser {
-
+public class UserRepositoryTest {
     @Autowired
     private UserRepository userRepository;
-
-    @Autowired
-    private StudentRepository studentRepository;
-
-    @Autowired
-    private TeacherRepository teacherRepository;
-
-    @Autowired
-    private AdministrativeManagerRepository administrativeManagerRepository;
-
-    @Autowired
-    private AdministratorRepository administratorRepository;
 
     @Autowired
     private SectorRepository sectorRepository;
@@ -85,37 +72,33 @@ class TestHeritageUser {
     }
 
     @Test
-    void test_findAll() {
+    void findAll_renvoieLes4UtilisateursAvecLeurTypeConcret() {
         List<User> users = userRepository.findAll();
 
-        log.info(users.toString());
-
         Assertions.assertThat(users).hasSize(4);
+        Assertions.assertThat(users).hasAtLeastOneElementOfType(Student.class);
+        Assertions.assertThat(users).hasAtLeastOneElementOfType(Teacher.class);
+        Assertions.assertThat(users).hasAtLeastOneElementOfType(AdministrativeManager.class);
+        Assertions.assertThat(users).hasAtLeastOneElementOfType(Administrator.class);
     }
 
     @Test
-    void test_findAllStudent() {
-        List<Student> students = studentRepository.findAll();
+    void findByEmail_surUnTeacher_renvoieUnUserDeTypeTeacher() {
+        User user = userRepository.findByEmail("formateur@test.fr").orElseThrow();
 
-        Assertions.assertThat(students).hasSize(1);
-        Assertions.assertThat(students.get(0).getBirthDate()).isEqualTo(LocalDate.of(2000, 4, 12));
+        Assertions.assertThat(user).isInstanceOf(Teacher.class);
+        Assertions.assertThat(((Teacher) user).getSector().getName()).isEqualTo("Développement");
     }
 
     @Test
-    void test_findAllTeacher() {
-        List<Teacher> teachers = teacherRepository.findAll();
-
-        Assertions.assertThat(teachers).hasSize(1);
-        Assertions.assertThat(teachers.get(0).getSector().getName()).isEqualTo("Développement");
-    }
-
-    @Test
-    void test_findAllAdministrativeManager() {
-        Assertions.assertThat(administrativeManagerRepository.findAll()).hasSize(1);
-    }
-
-    @Test
-    void test_findAllAdministrator() {
-        Assertions.assertThat(administratorRepository.findAll()).hasSize(1);
+    void chaqueSousType_porteLeRoleAttendu() {
+        Assertions.assertThat(userRepository.findByEmail("eleve@test.fr").orElseThrow().getRole())
+                .isEqualTo(UserRole.STUDENT);
+        Assertions.assertThat(userRepository.findByEmail("formateur@test.fr").orElseThrow().getRole())
+                .isEqualTo(UserRole.TEACHER);
+        Assertions.assertThat(userRepository.findByEmail("referente@test.fr").orElseThrow().getRole())
+                .isEqualTo(UserRole.ADMINISTRATIVE_MANAGER);
+        Assertions.assertThat(userRepository.findByEmail("admin@test.fr").orElseThrow().getRole())
+                .isEqualTo(UserRole.ADMINISTRATOR);
     }
 }

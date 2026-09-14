@@ -55,24 +55,24 @@ public abstract class User implements UserDetails {
         return Arrays.asList(new SimpleGrantedAuthority("ROLE_" + role.name()));
     }
 
-//    @Override
-//    public boolean isEnabled() {
-//        return active;
-//    }
-//
-//    // Etat du compte utilisateur – compte non expiré ?
-//    @Override
-//    public boolean isAccountNonExpired() {
-//        return true;
-//    }
-//    // Etat du compte utilisateur – non verrouillé ?
-//    @Override
-//    public boolean isAccountNonLocked() {
-//        return true;
-//    }
-//    // Indique si les informations d’identification sont non expirées ?
-//    @Override
-//    public boolean isCredentialsNonExpired() {
-//        return true;
-//    }
+    @Override
+    public boolean isEnabled() {
+        return active;
+    }
+
+    // Etat du compte utilisateur – compte non expiré ?
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+    // Etat du compte utilisateur – non verrouillé ?
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+    // Indique si les informations d’identification sont non expirées ?
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
 }
