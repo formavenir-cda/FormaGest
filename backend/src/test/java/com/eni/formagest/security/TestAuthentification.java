@@ -23,8 +23,7 @@ import javax.crypto.SecretKey;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -76,7 +75,7 @@ public class TestAuthentification {
                               {"email":"active@test.fr","password":"Formagest2026!"}
                               """))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").isNotEmpty())
+                .andExpect(cookie().exists("formagest_token"))
                 .andExpect(jsonPath("$.user.role").value("ADMINISTRATOR"));
     }
 
@@ -117,7 +116,7 @@ public class TestAuthentification {
                 .signWith(key, Jwts.SIG.HS256)
                 .compact();
 
-        mockMvc.perform(get("/api/auth/me").header("Authorization", "Bearer " + tokenExpire))
+        mockMvc.perform(get("/api/auth/me").cookie(new jakarta.servlet.http.Cookie("formagest_token", tokenExpire)))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -126,7 +125,7 @@ public class TestAuthentification {
         User user = userRepository.findByEmail("active@test.fr").orElseThrow();
         String token = jwtService.generateToken(user);
 
-        mockMvc.perform(get("/api/auth/me").header("Authorization", "Bearer " + token))
+        mockMvc.perform(get("/api/auth/me").cookie(new jakarta.servlet.http.Cookie("formagest_token", token)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.email").value("active@test.fr"));
     }

@@ -1,6 +1,8 @@
 import { Routes } from '@angular/router';
 import {Sectors} from './pages/sectors/sectors';
 import {Login} from './pages/login/login';
+import {Layout} from './shared/layout/layout';
+import {authGuard} from './guards/auth.guard';
 
 export const routes: Routes = [
   {
@@ -8,8 +10,12 @@ export const routes: Routes = [
     component: Login
   },
   {
-    path: 'filieres',
-    component: Sectors,
+    path: '',
+    component: Layout,
+    canActivate: [authGuard],
+    children: [
+      { path: 'filieres', component: Sectors }
+    ]
   },
 
 ];

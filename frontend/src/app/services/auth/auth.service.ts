@@ -6,12 +6,10 @@ import type {User} from '../../models/users/user.model';
 
 
 interface LoginResponse {
-  token: string;
   user: User;
 }
 
 const STORAGE_KEY = 'currentUser';
-const TOKEN_KEY = 'authToken';
 
 @Service()
 export class AuthService {
@@ -23,8 +21,7 @@ export class AuthService {
 
   login(email: string, password: string): Observable<LoginResponse> {
     return this.http.post<LoginResponse>(`${this.apiUrl}/login`, { email, password }).pipe(
-      tap(({ token, user }) => {
-        sessionStorage.setItem(TOKEN_KEY, token);
+      tap(({ user }) => {
         sessionStorage.setItem(STORAGE_KEY, JSON.stringify(user));
         this.userSubject.next(user);
       }),
@@ -32,13 +29,9 @@ export class AuthService {
   }
 
   logout(): void {
-    sessionStorage.removeItem(TOKEN_KEY);
+    this.http.post(`${this.apiUrl}/logout`, {}).subscribe();
     sessionStorage.removeItem(STORAGE_KEY);
     this.userSubject.next(null);
-  }
-
-  getToken(): string | null {
-    return sessionStorage.getItem(TOKEN_KEY);
   }
 
   private readStoredUser(): User | null {

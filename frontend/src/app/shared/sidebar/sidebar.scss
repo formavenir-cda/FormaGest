@@ -1,3 +1,5 @@
+@use '../../../styles/tokens' as t;
+
 .fg-sidenav {
   min-height: 100vh;
   padding: 24px 16px;
@@ -7,4 +9,13 @@ nav {
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+// Le menu profil s'affiche dans l'overlay CDK, en dehors de ce composant :
+// ::ng-deep est nécessaire pour styler ses items depuis ici.
+::ng-deep .mat-mdc-menu-item .material-icons {
+  margin-right: t.$fg-space-sm;
+  font-size: t.$fg-icon-md;
+  vertical-align: middle;
+  color: t.$fg-text-secondary;
 }
