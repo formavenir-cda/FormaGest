@@ -3,6 +3,7 @@ import {Sectors} from './pages/sectors/sectors';
 import {Login} from './pages/login/login';
 import {Layout} from './shared/layout/layout';
 import {authGuard} from './guards/auth.guard';
+import { Tracks } from './pages/tracks/tracks';
 
 export const routes: Routes = [
   {
@@ -17,5 +18,6 @@ export const routes: Routes = [
       { path: 'filieres', component: Sectors, title: 'Filières' }
     ]
   },
+
 
 ];

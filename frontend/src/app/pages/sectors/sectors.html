@@ -28,7 +28,7 @@
             type="button"
             [class.sector-item--selected]="selectedSector()?.id === sector.id"
             [attr.aria-pressed]="selectedSector()?.id === sector.id"
-            (click)="selectedSector.set(sector)"
+            (click)="selectSector(sector)"
           >
             <span>{{ sector.name }}</span>
             <span class="material-icons" aria-hidden="true">
@@ -71,6 +71,72 @@
             </button>
           </div>
         </div>
+
+        <section class="tracks-panel">
+          <div class="tracks-panel__heading">
+            <h3>Cursus</h3>
+
+            <button
+              mat-stroked-button
+              class="track-create-button"
+              type="button"
+              (click)="openCreateTrackForm(createTrackDialog)"
+            >
+              <span class="material-icons" aria-hidden="true">
+                add_circle_outline
+              </span>
+              Nouveau cursus
+            </button>
+          </div>
+
+          @if (tracksLoading()) {
+            <p>Chargement des cursus...</p>
+          } @else if (tracksError()) {
+            <p role="alert">{{ tracksError() }}</p>
+          } @else {
+            <div class="tracks-list">
+              @for (track of tracks(); track track.id) {
+                <div
+                  class="track-item"
+                  [class.track-item--selected]="selectedTrack()?.id === track.id"
+                  (click)="selectedTrack.set(track)"
+                >
+                  <span class="track-item__main">
+                    <span>{{ track.name }}</span>
+                    <span class="track-item__count">
+                      {{ track.courses.length }} cours
+                    </span>
+                  </span>
+
+                  <span class="track-item__actions">
+                    <button
+                      mat-icon-button
+                      type="button"
+                      aria-label="Modifier le cursus"
+                      matTooltip="Modifier"
+                      (click)="selectedTrack.set(track); openEditTrackForm(createTrackDialog); $event.stopPropagation()"
+                    >
+                      <span class="material-icons" aria-hidden="true">edit</span>
+                    </button>
+
+                    <button
+                      mat-icon-button
+                      class="sector-delete-icon"
+                      type="button"
+                      aria-label="Supprimer le cursus"
+                      matTooltip="Supprimer"
+                      (click)="selectedTrack.set(track); openDeleteTrackForm(deleteTrackDialog); $event.stopPropagation()"
+                    >
+                      <span class="material-icons" aria-hidden="true">delete_outline</span>
+                    </button>
+                  </span>
+                </div>
+              } @empty {
+                <p>Aucun cursus enregistré pour cette filière.</p>
+              }
+            </div>
+          }
+        </section>
       } @else {
         <p>Sélectionnez une filière pour consulter ses cursus.</p>
       }
@@ -130,6 +196,101 @@
       </button>
     </mat-dialog-actions>
   </form>
+</ng-template>
+
+<ng-template #createTrackDialog>
+  <h2 mat-dialog-title>
+    {{ editingTrack() ? 'Modifier le cursus' : 'Nouveau cursus' }}
+  </h2>
+
+  <form (ngSubmit)="submitTrackForm()">
+    <mat-dialog-content>
+      <p>Renseignez le nom du cursus.</p>
+
+      <mat-form-field appearance="outline" class="sector-name-field">
+        <mat-label>Nom du cursus</mat-label>
+
+        <input
+          matInput
+          name="newTrackName"
+          required
+          maxlength="255"
+          [disabled]="creatingTrack()"
+          [ngModel]="newTrackName()"
+          (ngModelChange)="newTrackName.set($event)"
+        />
+      </mat-form-field>
+
+      @if (createTrackError()) {
+        <p class="create-error" role="alert">{{ createTrackError() }}</p>
+      }
+    </mat-dialog-content>
+
+    <mat-dialog-actions align="end">
+      <button
+        mat-button
+        type="button"
+        [disabled]="creatingTrack()"
+        (click)="cancelTrackForm()"
+      >
+        Annuler
+      </button>
+
+      <button
+        mat-flat-button
+        class="fg-btn-primary"
+        type="submit"
+        [disabled]="creatingTrack() || !newTrackName().trim()"
+      >
+        {{
+          creatingTrack()
+            ? 'Enregistrement...'
+            : (editingTrack() ? 'Modifier' : 'Créer')
+        }}
+      </button>
+    </mat-dialog-actions>
+  </form>
+</ng-template>
+
+<ng-template #deleteTrackDialog>
+  <h2 mat-dialog-title>Supprimer le cursus</h2>
+
+  <mat-dialog-content>
+    <p>
+      Voulez-vous supprimer le cursus
+      <strong>{{ trackToDelete()?.name }}</strong> ?
+    </p>
+
+    <p>Cette action est définitive.</p>
+
+    @if (deleteTrackError()) {
+      <p class="create-error" role="alert">
+        {{ deleteTrackError() }}
+      </p>
+    }
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button
+      mat-button
+      type="button"
+      data-cancel-delete-track
+      [disabled]="deletingTrack()"
+      (click)="cancelDeleteTrack()"
+    >
+      Annuler
+    </button>
+
+    <button
+      mat-stroked-button
+      class="sector-delete-button"
+      type="button"
+      [disabled]="deletingTrack()"
+      (click)="confirmDeleteTrack()"
+    >
+      {{ deletingTrack() ? 'Suppression...' : 'Supprimer' }}
+    </button>
+  </mat-dialog-actions>
 </ng-template>
 
 <ng-template #deleteSectorDialog>

@@ -6,10 +6,61 @@
 
   <nav class="fg-sidenav__nav" aria-label="Navigation principale">
     @for (item of visibleNavItems(); track item.label) {
-      <a class="fg-sidenav__item" [routerLink]="item.route" routerLinkActive="fg-sidenav__item--active">
-        <span class="material-icons">{{ item.icon }}</span>
-        <span>{{ item.label }}</span>
-      </a>
+      @if (item.children?.length) {
+        <button
+          class="fg-sidenav__item fg-sidenav__item--group"
+          [class.fg-sidenav__item--active]="isGroupActive(item)"
+          type="button"
+          [attr.aria-expanded]="openedGroup === item.label"
+          (click)="toggleGroup(item.label)"
+        >
+          <span class="material-icons">{{ item.icon }}</span>
+          <span>{{ item.label }}</span>
+          <span class="material-icons fg-sidenav__chevron">
+            {{ openedGroup === item.label ? 'expand_less' : 'expand_more' }}
+          </span>
+        </button>
+
+        @if (openedGroup === item.label) {
+          <div class="fg-sidenav__children">
+            @for (child of item.children; track child.label) {
+              @if (child.route) {
+                <a
+                  class="fg-sidenav__item fg-sidenav__item--child"
+                  [routerLink]="child.route"
+                  routerLinkActive="fg-sidenav__item--active"
+                  [routerLinkActiveOptions]="{ exact: true }"
+                >
+                  <span class="material-icons">{{ child.icon }}</span>
+                  <span>{{ child.label }}</span>
+                </a>
+              } @else {
+                <button
+                  class="fg-sidenav__item fg-sidenav__item--child"
+                  type="button"
+                >
+                  <span class="material-icons">{{ child.icon }}</span>
+                  <span>{{ child.label }}</span>
+                </button>
+              }
+            }
+          </div>
+        }
+      } @else if (item.route) {
+        <a
+          class="fg-sidenav__item"
+          [routerLink]="item.route"
+          routerLinkActive="fg-sidenav__item--active"
+        >
+          <span class="material-icons">{{ item.icon }}</span>
+          <span>{{ item.label }}</span>
+        </a>
+      } @else {
+        <button class="fg-sidenav__item" type="button">
+          <span class="material-icons">{{ item.icon }}</span>
+          <span>{{ item.label }}</span>
+        </button>
+      }
     }
   </nav>
 
@@ -17,6 +68,7 @@
     <span class="fg-sidenav__avatar">
       <span class="material-icons">person</span>
     </span>
+
 
     <span class="material-icons fg-sidenav__profile-chevron">expand_more</span>
       @if (user(); as u) {
