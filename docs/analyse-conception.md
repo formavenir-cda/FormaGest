@@ -105,6 +105,8 @@ Le calendrier personnel d'un élève regroupe les cours planifiés de sa promoti
 **RG12 — Authentification**
 L'accès aux fonctionnalités protégées nécessite une authentification par identifiant et mot de passe. Les échanges avec le serveur sont ensuite protégés par un token.
 
+Ce token est transmis par un cookie `HttpOnly` plutôt que conservé côté client en JavaScript, pour se prémunir du vol par une faille XSS : un script injecté ne peut pas lire un cookie `HttpOnly`. Cette transmission automatique par le navigateur expose en théorie à une attaque CSRF (une requête forgée depuis un autre site, envoyée avec le cookie sans action volontaire de l'utilisateur), mais deux caractéristiques cumulées du projet neutralisent ce risque sans recourir à un jeton CSRF explicite : l'API n'accepte que des corps JSON, un type de contenu qu'un formulaire HTML classique — seul vecteur d'attaque qui échappe au contrôle d'origine imposé par CORS — ne peut pas produire sans JavaScript ; et le cookie est posé avec l'attribut `SameSite=Lax`, qui empêche déjà son envoi lors d'une requête initiée depuis un autre site.
+
 **RG13 — Droits selon le rôle**
 Les fonctionnalités accessibles dépendent du rôle de l'utilisateur. Un utilisateur ne peut accéder qu'à celles autorisées pour son rôle. En particulier, l'élève dispose d'un accès en lecture seule sur son calendrier et ses inscriptions.
 

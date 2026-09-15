@@ -23,15 +23,19 @@ public class AuthenticationService {
 
     @Transactional(readOnly = true)
     public LoginResponse authenticate(LoginRequest request) {
-        // Lève BadCredentialsException si le mot de passe est faux,
-        // DisabledException si le compte est inactif : dans les deux cas, pas de token.
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
 
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new UsernameNotFoundException("Utilisateur introuvable"));
 
-        return new LoginResponse(jwtService.generateToken(user), UserMapper.toDto(user));
+        return new LoginResponse(UserMapper.toDto(user));
+    }
+
+    @Transactional(readOnly = true)
+    public User findByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("Utilisateur introuvable"));
     }
 
     @Transactional(readOnly = true)

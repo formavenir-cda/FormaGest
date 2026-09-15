@@ -1,0 +1,64 @@
+@use '../../../styles/tokens' as t;
+
+:host {
+  display: block;
+}
+
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: t.$fg-space-lg;
+  background: t.$fg-background;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 360px;
+  padding: t.$fg-space-xl;
+  background: t.$fg-surface;
+  border: 1px solid t.$fg-border;
+  border-radius: t.$fg-radius-lg;
+  box-shadow: t.$fg-elev-1;
+  text-align: center;
+
+  h1 {
+    margin: 0;
+    font-family: t.$fg-font-display;
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: t.$fg-primary;
+  }
+
+  &__subtitle {
+    margin: t.$fg-space-sm 0 t.$fg-space-xl;
+    color: t.$fg-text-secondary;
+  }
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: t.$fg-space-sm;
+  text-align: left;
+
+  mat-form-field {
+    width: 100%;
+  }
+
+  &__error {
+    margin: 0;
+    padding: t.$fg-space-sm t.$fg-space-md;
+    background: t.$fg-error-container;
+    color: t.$fg-error;
+    border-radius: t.$fg-radius-sm;
+    font-size: 14px;
+  }
+
+  button {
+    min-height: t.$fg-btn-default;
+    border-radius: t.$fg-radius-pill;
+    margin-top: t.$fg-space-sm;
+  }
+}

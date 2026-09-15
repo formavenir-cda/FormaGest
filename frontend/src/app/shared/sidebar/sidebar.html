@@ -5,20 +5,33 @@
   </div>
 
   <nav class="fg-sidenav__nav" aria-label="Navigation principale">
-    @for (item of mainNavItems; track item.label) {
-      <button class="fg-sidenav__item" type="button">
+    @for (item of visibleNavItems(); track item.label) {
+      <a class="fg-sidenav__item" [routerLink]="item.route" routerLinkActive="fg-sidenav__item--active">
         <span class="material-icons">{{ item.icon }}</span>
         <span>{{ item.label }}</span>
-      </button>
+      </a>
     }
   </nav>
 
-  <button class="fg-sidenav__profile" type="button" aria-label="Voir mon profil">
+  <button class="fg-sidenav__profile" type="button" aria-label="Menu du compte" [matMenuTriggerFor]="profileMenu">
     <span class="fg-sidenav__avatar">
       <span class="material-icons">person</span>
     </span>
 
-
     <span class="material-icons fg-sidenav__profile-chevron">expand_more</span>
+      @if (user(); as u) {
+        <span>{{ u.firstName }} {{ u.lastName }}</span>
+      }
   </button>
+
+  <mat-menu #profileMenu="matMenu">
+    <button mat-menu-item disabled>
+      <span class="material-icons">person</span>
+      <span>Profil</span>
+    </button>
+    <button mat-menu-item (click)="logout()">
+      <span class="material-icons">logout</span>
+      <span>Déconnexion</span>
+    </button>
+  </mat-menu>
 </aside>

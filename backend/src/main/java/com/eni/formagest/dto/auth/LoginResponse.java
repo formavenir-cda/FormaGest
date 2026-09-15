@@ -11,6 +11,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @EqualsAndHashCode
 public class LoginResponse {
-    private String token;
     private UserDto user;
 }

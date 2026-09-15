@@ -1,8 +1,8 @@
 import { Component } from '@angular/core';
-import { Layout } from './shared/layout/layout';
+import { RouterOutlet } from '@angular/router';
 
 @Component({
-  imports: [Layout],
+  imports: [RouterOutlet],
   selector: 'app-root',
   styleUrl: './app.scss',
   templateUrl: './app.html',
