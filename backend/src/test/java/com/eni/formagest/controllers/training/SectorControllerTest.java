@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,19 +36,35 @@ class SectorControllerTest {
     private EntityManager entityManager;
 
     @Test
+    @WithMockUser(roles = "ADMINISTRATIVE_MANAGER")
     void findAllReturnsOkWithSectors() throws Exception {
         Sector sector = sectorRepository.save(Sector.builder()
                 .name("Design")
                 .build());
+        entityManager.persist(Track.builder()
+                .name("Designer UX")
+                .sector(sector)
+                .build());
+        entityManager.flush();
+        entityManager.clear();
 
         mockMvc.perform(get("/api/sectors"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].id").value(sector.getId()))
-                .andExpect(jsonPath("$[0].name").value("Design"));
+                .andExpect(jsonPath("$[0].name").value("Design"))
+                .andExpect(jsonPath("$[0].trackCount").value(1));
     }
 
     @Test
+    @WithMockUser(roles = "STUDENT")
+    void findAllReturnsForbiddenForUnauthorizedRole() throws Exception {
+        mockMvc.perform(get("/api/sectors"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMINISTRATIVE_MANAGER")
     void createReturnsCreatedWithSector() throws Exception {
         mockMvc.perform(post("/api/sectors")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -60,6 +77,7 @@ class SectorControllerTest {
     }
 
     @ParameterizedTest
+    @WithMockUser(roles = "ADMINISTRATIVE_MANAGER")
     @ValueSource(strings = {
             "{}",
             "{\"name\": null}",
@@ -77,6 +95,7 @@ class SectorControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "ADMINISTRATIVE_MANAGER")
     void createRejectsNameLongerThan255Characters() throws Exception {
         String body = "{\"name\":\"" + "a".repeat(256) + "\"}";
 
@@ -90,6 +109,7 @@ class SectorControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "ADMINISTRATIVE_MANAGER")
     void createReturnsConflictWithDuplicateMessage() throws Exception {
         sectorRepository.save(Sector.builder()
                 .name("Design")
@@ -107,6 +127,7 @@ class SectorControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "ADMINISTRATIVE_MANAGER")
     void updateReturnsUpdatedSector() throws Exception {
         Sector sector = sectorRepository.save(Sector.builder()
                 .name("Ancien nom")
@@ -123,6 +144,7 @@ class SectorControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "ADMINISTRATIVE_MANAGER")
     void updateRejectsBlankName() throws Exception {
         Sector sector = sectorRepository.save(Sector.builder()
                 .name("Design")
@@ -140,6 +162,7 @@ class SectorControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "ADMINISTRATIVE_MANAGER")
     void updateReturnsNotFoundWithMessage() throws Exception {
         mockMvc.perform(put("/api/sectors/42")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -151,6 +174,7 @@ class SectorControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "ADMINISTRATIVE_MANAGER")
     void updateReturnsConflictWithDuplicateMessage() throws Exception {
         Sector sector = sectorRepository.save(Sector.builder()
                 .name("Developpement")
@@ -171,6 +195,7 @@ class SectorControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "ADMINISTRATIVE_MANAGER")
     void deleteReturnsNoContent() throws Exception {
         Sector sector = sectorRepository.saveAndFlush(Sector.builder()
                 .name("Design")
@@ -184,6 +209,7 @@ class SectorControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "ADMINISTRATIVE_MANAGER")
     void deleteReturnsNotFoundWithMessage() throws Exception {
         mockMvc.perform(delete("/api/sectors/42"))
                 .andExpect(status().isNotFound())
@@ -191,6 +217,7 @@ class SectorControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "ADMINISTRATIVE_MANAGER")
     void deleteReturnsConflictWhenSectorIsReferenced() throws Exception {
         Sector sector = sectorRepository.saveAndFlush(Sector.builder()
                 .name("Developpement")

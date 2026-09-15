@@ -2,12 +2,65 @@
 
 .fg-sidenav {
   min-height: 100vh;
-  padding: 24px 16px;
+  padding: 18px 12px;
+  overflow-x: hidden;
 }
 
 nav {
   display: flex;
   flex-direction: column;
+  gap: 4px;
+  overflow-x: hidden;
+}
+
+.fg-sidenav__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 38px;
+  padding: 7px 10px;
+  border: 0;
+  border-left: 3px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.fg-sidenav__item:hover,
+.fg-sidenav__item--active {
+  background: t.$fg-primary-container;
+  color: t.$fg-on-primary-container;
+  border-left-color: t.$fg-primary;
+}
+
+.fg-sidenav__item--group {
+  font-weight: 600;
+}
+
+.fg-sidenav__chevron {
+  margin-left: auto;
+}
+
+.fg-sidenav__children {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding-left: 10px;
+  overflow-x: hidden;
+}
+
+.fg-sidenav__item--child {
+  min-height: 28px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  font-weight: 400;
   gap: 8px;
 }
 
@@ -18,4 +71,12 @@ nav {
   font-size: t.$fg-icon-md;
   vertical-align: middle;
   color: t.$fg-text-secondary;
+}
+
+.fg-sidenav__item--child .material-icons {
+  font-size: 16px;
+}
+
+.fg-sidenav__item--child.fg-sidenav__item--active {
+  font-weight: 600;
 }

@@ -32,15 +32,22 @@ class SectorServiceTest {
 
     @Test
     void findAllReturnsSectors() {
-        sectorRepository.save(Sector.builder()
+        Sector sector = sectorRepository.save(Sector.builder()
                 .name("Developpement")
                 .build());
+        entityManager.persist(Track.builder()
+                .name("Concepteur developpeur")
+                .sector(sector)
+                .build());
+        entityManager.flush();
+        entityManager.clear();
 
         List<SectorDto> result = sectorService.findAll();
 
         assertEquals(1, result.size());
         assertNotNull(result.getFirst().getId());
         assertEquals("Developpement", result.getFirst().getName());
+        assertEquals(1, result.getFirst().getTrackCount());
     }
 
     @Test

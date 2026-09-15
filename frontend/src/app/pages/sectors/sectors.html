@@ -13,48 +13,45 @@
     </button>
   </div>
 
-  <div class="sectors-page__content">
-    <aside class="sectors-list">
-      <h2>Les filières</h2>
+  <section class="sectors-toolbar">
+    <mat-form-field appearance="outline">
+      <mat-label>Rechercher</mat-label>
 
-      @if (loading()) {
-        <p>Chargement des filières…</p>
-      } @else if (error()) {
-        <p role="alert">{{ error() }}</p>
-      } @else {
-        @for (sector of sectors(); track sector.id) {
-          <button
-            class="sector-item"
-            type="button"
-            [class.sector-item--selected]="selectedSector()?.id === sector.id"
-            [attr.aria-pressed]="selectedSector()?.id === sector.id"
-            (click)="selectedSector.set(sector)"
-          >
-            <span>{{ sector.name }}</span>
-            <span class="material-icons" aria-hidden="true">
-              chevron_right
-            </span>
-          </button>
-        } @empty {
-          <p>Aucune filière enregistrée.</p>
-        }
-      }
-    </aside>
+      <input
+        matInput
+        name="sectorSearch"
+        [ngModel]="search()"
+        (ngModelChange)="search.set($event)"
+      />
+    </mat-form-field>
+  </section>
 
-    <section class="sector-details">
-      <h2>Filière sélectionnée</h2>
+  <section class="sectors-table" aria-label="Liste des filières">
+    <div class="sectors-table__header">
+      <span>Nom</span>
+      <span>Cursus</span>
+      <span>Actions</span>
+    </div>
 
-      @if (selectedSector(); as sector) {
-        <div class="sector-details__heading">
-          <h3>{{ sector.name }}</h3>
-
-          <div class="sector-details__actions">
+    @if (loading()) {
+      <p>Chargement des filières...</p>
+    } @else if (error()) {
+      <p role="alert">{{ error() }}</p>
+    } @else {
+      @for (sector of filteredSectors(); track sector.id) {
+        <div
+          class="sectors-table__row"
+          (click)="openSectorTracks(sector)"
+        >
+          <span class="sectors-table__name">{{ sector.name }}</span>
+          <span>{{ sector.trackCount }}</span>
+          <span class="sectors-table__actions">
             <button
               mat-icon-button
               type="button"
               aria-label="Modifier la filière"
               matTooltip="Modifier"
-              (click)="openEditForm(createSectorDialog)"
+              (click)="editSector(sector, createSectorDialog); $event.stopPropagation()"
             >
               <span class="material-icons" aria-hidden="true">edit</span>
             </button>
@@ -65,17 +62,17 @@
               type="button"
               aria-label="Supprimer la filière"
               matTooltip="Supprimer"
-              (click)="openDeleteForm(deleteSectorDialog)"
+              (click)="deleteSector(sector, deleteSectorDialog); $event.stopPropagation()"
             >
               <span class="material-icons" aria-hidden="true">delete_outline</span>
             </button>
-          </div>
+          </span>
         </div>
-      } @else {
-        <p>Sélectionnez une filière pour consulter ses cursus.</p>
+      } @empty {
+        <p>Aucune filière trouvée.</p>
       }
-    </section>
-  </div>
+    }
+  </section>
 </section>
 
 <ng-template #createSectorDialog>
@@ -85,8 +82,6 @@
 
   <form (ngSubmit)="submitForm()">
     <mat-dialog-content>
-      <p>Renseignez le nom de la filière.</p>
-
       <mat-form-field appearance="outline" class="sector-name-field">
         <mat-label>Nom de la filière</mat-label>
 
@@ -124,7 +119,7 @@
       >
         {{
           creating()
-            ? 'Enregistrement…'
+            ? 'Enregistrement...'
             : (editingSector() ? 'Modifier' : 'Créer')
         }}
       </button>
@@ -168,7 +163,7 @@
       [disabled]="deleting()"
       (click)="confirmDelete()"
     >
-      {{ deleting() ? 'Suppression…' : 'Supprimer' }}
+      {{ deleting() ? 'Suppression...' : 'Supprimer' }}
     </button>
   </mat-dialog-actions>
 </ng-template>

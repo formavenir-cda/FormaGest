@@ -1,0 +1,56 @@
+@use '../../../styles/tokens' as t;
+
+:host {
+  display: block;
+}
+
+.formation-page {
+  max-width: t.$fg-content-max;
+  margin-inline: auto;
+}
+
+.formation-page__header {
+  margin-bottom: t.$fg-space-xl;
+
+  h1 {
+    margin: 0 0 t.$fg-space-lg;
+    font-family: t.$fg-font-display;
+    font-size: 2rem;
+    font-weight: 700;
+  }
+}
+
+.formation-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: t.$fg-space-sm;
+  border-bottom: 1px solid t.$fg-divider;
+}
+
+.formation-tabs__item {
+  min-height: 40px;
+  padding: 0 t.$fg-space-md;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  background: transparent;
+  color: t.$fg-text-secondary;
+  font: inherit;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.formation-tabs__item:hover {
+  color: t.$fg-primary-dark;
+}
+
+.formation-tabs__item--active {
+  color: t.$fg-primary;
+  border-bottom-color: t.$fg-primary;
+}
+
+.formation-tabs__item--disabled {
+  color: t.$fg-text-secondary;
+  cursor: not-allowed;
+  opacity: 0.55;
+}

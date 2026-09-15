@@ -6,10 +6,22 @@
 
   <nav class="fg-sidenav__nav" aria-label="Navigation principale">
     @for (item of visibleNavItems(); track item.label) {
-      <a class="fg-sidenav__item" [routerLink]="item.route" routerLinkActive="fg-sidenav__item--active">
-        <span class="material-icons">{{ item.icon }}</span>
-        <span>{{ item.label }}</span>
-      </a>
+      @if (item.route) {
+        <a
+          class="fg-sidenav__item"
+          [routerLink]="item.route"
+          routerLinkActive="fg-sidenav__item--active"
+          [routerLinkActiveOptions]="{ exact: false }"
+        >
+          <span class="material-icons">{{ item.icon }}</span>
+          <span>{{ item.label }}</span>
+        </a>
+      } @else {
+        <button class="fg-sidenav__item" type="button">
+          <span class="material-icons">{{ item.icon }}</span>
+          <span>{{ item.label }}</span>
+        </button>
+      }
     }
   </nav>
 
@@ -19,9 +31,9 @@
     </span>
 
     <span class="material-icons fg-sidenav__profile-chevron">expand_more</span>
-      @if (user(); as u) {
-        <span>{{ u.firstName }} {{ u.lastName }}</span>
-      }
+    @if (user(); as u) {
+      <span>{{ u.firstName }} {{ u.lastName }}</span>
+    }
   </button>
 
   <mat-menu #profileMenu="matMenu">

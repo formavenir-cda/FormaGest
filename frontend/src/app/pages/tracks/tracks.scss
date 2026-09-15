@@ -4,9 +4,16 @@
   display: block;
 }
 
-.sectors-page {
+.tracks-page {
   max-width: t.$fg-content-max;
   margin-inline: auto;
+
+  h1 {
+    margin: 0;
+    font-family: t.$fg-font-display;
+    font-size: 2rem;
+    font-weight: 700;
+  }
 
   p {
     color: t.$fg-text-secondary;
@@ -14,9 +21,12 @@
   }
 }
 
-.sectors-page__actions {
+.tracks-page__heading {
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: t.$fg-space-md;
   margin-bottom: t.$fg-space-lg;
 
   button {
@@ -31,29 +41,30 @@
   }
 }
 
-.sectors-toolbar {
+.tracks-toolbar {
   display: grid;
   grid-template-columns: 1fr;
+  gap: t.$fg-space-md;
   margin-bottom: t.$fg-space-lg;
 }
 
-.sectors-table {
+.tracks-table {
   border: 1px solid t.$fg-border;
   border-radius: t.$fg-radius-md;
   background: t.$fg-surface;
   overflow: hidden;
 }
 
-.sectors-table__header,
-.sectors-table__row {
+.tracks-table__header,
+.tracks-table__row {
   display: grid;
-  grid-template-columns: minmax(180px, 1fr) 96px 104px;
+  grid-template-columns: minmax(180px, 2fr) minmax(160px, 1.4fr) 80px 104px;
   align-items: center;
   gap: t.$fg-space-md;
   padding: t.$fg-space-md t.$fg-space-lg;
 }
 
-.sectors-table__header {
+.tracks-table__header {
   background: t.$fg-surface-variant;
   color: t.$fg-text-secondary;
   font-size: 0.8125rem;
@@ -61,23 +72,18 @@
   text-transform: uppercase;
 }
 
-.sectors-table__row {
+.tracks-table__row {
   min-height: 64px;
   border-top: 1px solid t.$fg-divider;
   color: t.$fg-text-primary;
-  cursor: pointer;
-
-  &:hover {
-    background: t.$fg-surface-variant;
-  }
 }
 
-.sectors-table__name {
+.tracks-table__name {
   font-weight: 600;
   overflow-wrap: anywhere;
 }
 
-.sectors-table__actions {
+.tracks-table__actions {
   display: flex;
   gap: t.$fg-space-xs;
 
@@ -96,37 +102,38 @@
     color: t.$fg-primary;
   }
 
-  .sector-delete-icon:hover {
+  .track-delete-icon:hover {
     color: t.$fg-error;
   }
 }
 
-.sector-name-field {
+.track-field {
   width: 100%;
   margin-top: t.$fg-space-sm;
 }
 
-.create-error {
+.form-error {
   color: t.$fg-error;
 }
 
-.sector-delete-button {
+.track-delete-button {
   color: t.$fg-error;
 }
 
 @include t.fg-tablet-up {
-  .sectors-toolbar {
-    grid-template-columns: minmax(240px, 360px);
+  .tracks-toolbar {
+    grid-template-columns: minmax(240px, 1fr) 260px;
+    align-items: start;
   }
 }
 
-@media (max-width: 640px) {
-  .sectors-table {
+@media (max-width: 760px) {
+  .tracks-table {
     overflow-x: auto;
   }
 
-  .sectors-table__header,
-  .sectors-table__row {
-    min-width: 520px;
+  .tracks-table__header,
+  .tracks-table__row {
+    min-width: 680px;
   }
 }

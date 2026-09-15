@@ -1,11 +1,13 @@
 import {
   Component,
+  computed,
   inject,
   OnInit,
   signal,
   TemplateRef,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import {
   MatDialog,
@@ -14,10 +16,10 @@ import {
 } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatTooltip } from '@angular/material/tooltip';
 
 import { SectorService } from '../../services/training/sector.service';
 import type { Sector } from '../../models/training/sector.model';
-import {MatTooltip, MatTooltipModule} from '@angular/material/tooltip';
 
 @Component({
   selector: 'app-sectors',
@@ -35,6 +37,7 @@ import {MatTooltip, MatTooltipModule} from '@angular/material/tooltip';
 export class Sectors implements OnInit {
   private readonly sectorService = inject(SectorService);
   private readonly dialog = inject(MatDialog);
+  private readonly router = inject(Router);
 
   private createDialogRef?: MatDialogRef<unknown>;
   private deleteDialogRef?: MatDialogRef<unknown>;
@@ -43,6 +46,7 @@ export class Sectors implements OnInit {
   readonly selectedSector = signal<Sector | null>(null);
   readonly loading = signal(true);
   readonly error = signal('');
+  readonly search = signal('');
 
   readonly newSectorName = signal('');
   readonly createError = signal('');
@@ -51,6 +55,14 @@ export class Sectors implements OnInit {
   readonly sectorToDelete = signal<Sector | null>(null);
   readonly deleting = signal(false);
   readonly deleteError = signal('');
+
+  readonly filteredSectors = computed(() => {
+    const search = this.normalizeSearch(this.search());
+
+    return this.sectors().filter((sector) =>
+      search ? this.normalizeSearch(sector.name).includes(search) : true
+    );
+  });
 
   ngOnInit(): void {
     this.sectorService.findAll().subscribe({
@@ -62,6 +74,12 @@ export class Sectors implements OnInit {
         this.error.set('Impossible de charger les filières.');
         this.loading.set(false);
       },
+    });
+  }
+
+  openSectorTracks(sector: Sector): void {
+    this.router.navigate(['/formation/cursus'], {
+      queryParams: { sectorId: sector.id },
     });
   }
 
@@ -93,9 +111,7 @@ export class Sectors implements OnInit {
     }
 
     if (name.length > 255) {
-      this.createError.set(
-        'Le nom ne doit pas dépasser 255 caractères.',
-      );
+      this.createError.set('Le nom ne doit pas dépasser 255 caractères.');
       return;
     }
 
@@ -155,6 +171,11 @@ export class Sectors implements OnInit {
     });
   }
 
+  editSector(sector: Sector, template: TemplateRef<unknown>): void {
+    this.selectedSector.set(sector);
+    this.openEditForm(template);
+  }
+
   openDeleteForm(template: TemplateRef<unknown>): void {
     const sector = this.selectedSector();
 
@@ -168,6 +189,11 @@ export class Sectors implements OnInit {
       maxWidth: '95vw',
       autoFocus: '[data-cancel-delete]',
     });
+  }
+
+  deleteSector(sector: Sector, template: TemplateRef<unknown>): void {
+    this.selectedSector.set(sector);
+    this.openDeleteForm(template);
   }
 
   cancelDelete(): void {
@@ -214,5 +240,13 @@ export class Sectors implements OnInit {
         }
       },
     });
+  }
+
+  private normalizeSearch(value: string): string {
+    return value
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
   }
 }
