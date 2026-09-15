@@ -15,6 +15,7 @@ public final class SectorMapper {
         return SectorDto.builder()
                 .id(sector.getId())
                 .name(sector.getName())
+                .trackCount(sector.getTracks().size())
                 .build();
     }
 

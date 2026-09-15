@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,6 +44,7 @@ class TrackControllerTest {
     private EntityManager entityManager;
 
     @Test
+    @WithMockUser(roles = "ADMINISTRATIVE_MANAGER")
     void findAllReturnsOkWithTracks() throws Exception {
         Sector sector = saveSector("Informatique");
         Track track = trackRepository.save(Track.builder()
@@ -59,6 +61,14 @@ class TrackControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "STUDENT")
+    void findAllReturnsForbiddenForUnauthorizedRole() throws Exception {
+        mockMvc.perform(get("/api/tracks"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMINISTRATIVE_MANAGER")
     void findBySectorReturnsOkWithSectorTracks() throws Exception {
         Sector informatique = saveSector("Informatique");
         Sector design = saveSector("Design");
@@ -81,6 +91,7 @@ class TrackControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "ADMINISTRATIVE_MANAGER")
     void findBySectorReturnsNotFoundWithMessage() throws Exception {
         mockMvc.perform(get("/api/tracks")
                         .param("sectorId", "42"))
@@ -89,6 +100,7 @@ class TrackControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "ADMINISTRATIVE_MANAGER")
     void createReturnsCreatedWithTrack() throws Exception {
         Sector sector = saveSector("Informatique");
 
@@ -104,6 +116,7 @@ class TrackControllerTest {
     }
 
     @ParameterizedTest
+    @WithMockUser(roles = "ADMINISTRATIVE_MANAGER")
     @ValueSource(strings = {
             "{}",
             "{\"name\": null, \"sectorId\": 1}",
@@ -121,6 +134,7 @@ class TrackControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "ADMINISTRATIVE_MANAGER")
     void createRejectsMissingSectorId() throws Exception {
         mockMvc.perform(post("/api/tracks")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -134,6 +148,7 @@ class TrackControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "ADMINISTRATIVE_MANAGER")
     void createRejectsNameLongerThan255Characters() throws Exception {
         Sector sector = saveSector("Informatique");
         String body = """
@@ -150,6 +165,7 @@ class TrackControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "ADMINISTRATIVE_MANAGER")
     void createReturnsConflictWithDuplicateMessage() throws Exception {
         Sector sector = saveSector("Informatique");
         trackRepository.save(Track.builder()
@@ -169,6 +185,7 @@ class TrackControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "ADMINISTRATIVE_MANAGER")
     void createReturnsNotFoundWhenSectorDoesNotExist() throws Exception {
         mockMvc.perform(post("/api/tracks")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -180,6 +197,7 @@ class TrackControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "ADMINISTRATIVE_MANAGER")
     void updateReturnsUpdatedTrack() throws Exception {
         Sector oldSector = saveSector("Informatique");
         Sector newSector = saveSector("Design");
@@ -200,6 +218,7 @@ class TrackControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "ADMINISTRATIVE_MANAGER")
     void updateRejectsBlankName() throws Exception {
         Sector sector = saveSector("Informatique");
         Track track = trackRepository.save(Track.builder()
@@ -219,6 +238,7 @@ class TrackControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "ADMINISTRATIVE_MANAGER")
     void updateReturnsNotFoundWithMessage() throws Exception {
         Sector sector = saveSector("Informatique");
 
@@ -232,6 +252,7 @@ class TrackControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "ADMINISTRATIVE_MANAGER")
     void updateReturnsNotFoundWhenSectorDoesNotExist() throws Exception {
         Sector sector = saveSector("Informatique");
         Track track = trackRepository.save(Track.builder()
@@ -249,6 +270,7 @@ class TrackControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "ADMINISTRATIVE_MANAGER")
     void updateReturnsConflictWithDuplicateMessage() throws Exception {
         Sector sector = saveSector("Informatique");
         Track track = trackRepository.save(Track.builder()
@@ -272,6 +294,7 @@ class TrackControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "ADMINISTRATIVE_MANAGER")
     void deleteReturnsNoContent() throws Exception {
         Sector sector = saveSector("Informatique");
         Track track = trackRepository.saveAndFlush(Track.builder()
@@ -287,6 +310,7 @@ class TrackControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "ADMINISTRATIVE_MANAGER")
     void deleteReturnsNotFoundWithMessage() throws Exception {
         mockMvc.perform(delete("/api/tracks/42"))
                 .andExpect(status().isNotFound())
@@ -294,6 +318,7 @@ class TrackControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "ADMINISTRATIVE_MANAGER")
     void deleteReturnsConflictWhenTrackIsReferenced() throws Exception {
         Sector sector = saveSector("Informatique");
         Track track = trackRepository.saveAndFlush(Track.builder()

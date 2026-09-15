@@ -28,8 +28,8 @@ public class SecurityConfig {
         http.authorizeHttpRequests(auth -> {
             auth
                     .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/logout").permitAll()
-                    // TODO: restreindre les permissions une fois qu'il y aura des users avec roles
-                    .requestMatchers(HttpMethod.GET,"/api/sectors/**").permitAll()
+                    .requestMatchers("/api/sectors/**").hasRole("ADMINISTRATIVE_MANAGER")
+                    .requestMatchers("/api/tracks/**").hasRole("ADMINISTRATIVE_MANAGER")
                     .anyRequest().authenticated();
         });
 

@@ -15,4 +15,6 @@ public class SectorDto {
     @NotBlank(message = "Le nom de la filière est obligatoire.")
     @Size(max = 255, message = "Le nom ne doit pas dépasser 255 caractères.")
     private String name;
+
+    private Integer trackCount;
 }

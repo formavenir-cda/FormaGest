@@ -7,6 +7,7 @@ import {
   TemplateRef,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import {
   MatDialog,
@@ -41,6 +42,7 @@ export class Tracks implements OnInit {
   private readonly trackService = inject(TrackService);
   private readonly sectorService = inject(SectorService);
   private readonly dialog = inject(MatDialog);
+  private readonly route = inject(ActivatedRoute);
 
   private formDialogRef?: MatDialogRef<unknown>;
   private deleteDialogRef?: MatDialogRef<unknown>;
@@ -64,12 +66,12 @@ export class Tracks implements OnInit {
   readonly deleteError = signal('');
 
   readonly filteredTracks = computed(() => {
-    const search = this.search().trim().toLowerCase();
+    const search = this.normalizeSearch(this.search());
     const sectorId = this.selectedSectorFilter();
 
     return this.tracks().filter((track) => {
       const matchesSearch = search
-        ? track.name.toLowerCase().includes(search)
+        ? this.normalizeSearch(track.name).includes(search)
         : true;
       const matchesSector = sectorId
         ? track.sectorId === sectorId
@@ -80,6 +82,13 @@ export class Tracks implements OnInit {
   });
 
   ngOnInit(): void {
+    this.route.queryParamMap.subscribe((params) => {
+      const sectorId = Number(params.get('sectorId'));
+      this.selectedSectorFilter.set(Number.isFinite(sectorId) && sectorId > 0
+        ? sectorId
+        : null);
+    });
+
     this.loadData();
   }
 
@@ -277,5 +286,13 @@ export class Tracks implements OnInit {
         this.loading.set(false);
       },
     });
+  }
+
+  private normalizeSearch(value: string): string {
+    return value
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
   }
 }
