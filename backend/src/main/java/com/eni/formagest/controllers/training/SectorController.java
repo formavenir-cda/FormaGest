@@ -6,6 +6,7 @@ import com.eni.formagest.dto.training.SectorDto;
 import jakarta.validation.Valid;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -30,6 +31,7 @@ public class SectorController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasRole('ADMINISTRATIVE_MANAGER')")
     public SectorDto create(@Valid @RequestBody SectorDto dto) {
         try {
             return sectorService.create(dto);
@@ -43,6 +45,7 @@ public class SectorController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMINISTRATIVE_MANAGER')")
     public SectorDto update(
             @PathVariable Long id,
             @Valid @RequestBody SectorDto dto) {
@@ -65,6 +68,7 @@ public class SectorController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMINISTRATIVE_MANAGER')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {
         try {
