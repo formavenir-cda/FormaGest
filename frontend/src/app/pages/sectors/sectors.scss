@@ -110,4 +110,47 @@
   .sector-details {
     padding: t.$fg-space-xl;
   }
+
+  .sector-item--selected,
+  .sector-item--selected:hover {
+    background: t.$fg-surface;
+    border-color: t.$fg-primary;
+    color: t.$fg-primary;
+  }
+
+  .sector-details__heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: t.$fg-space-md;
+    padding-bottom: t.$fg-space-lg;
+    border-bottom: 1px solid t.$fg-divider;
+
+    h3 {
+      margin: 0;
+      font-family: t.$fg-font-display;
+      font-size: 1.5rem;
+      overflow-wrap: anywhere;
+    }
+  }
+
+  .sector-name-field {
+    width: 100%;
+    margin-top: t.$fg-space-sm;
+  }
+
+  .create-error {
+    color: t.$fg-error;
+  }
+
+  .sector-details__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: t.$fg-space-sm;
+  }
+
+  .sector-delete-icon .material-icons {
+    color: t.$fg-error;
+  }
 }
