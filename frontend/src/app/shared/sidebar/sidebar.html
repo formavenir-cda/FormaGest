@@ -5,7 +5,7 @@
   </div>
 
   <nav class="fg-sidenav__nav" aria-label="Navigation principale">
-    @for (item of mainNavItems; track item.label) {
+    @for (item of visibleNavItems(); track item.label) {
       <a class="fg-sidenav__item" [routerLink]="item.route" routerLinkActive="fg-sidenav__item--active">
         <span class="material-icons">{{ item.icon }}</span>
         <span>{{ item.label }}</span>
@@ -19,6 +19,9 @@
     </span>
 
     <span class="material-icons fg-sidenav__profile-chevron">expand_more</span>
+      @if (user(); as u) {
+        <span>{{ u.firstName }} {{ u.lastName }}</span>
+      }
   </button>
 
   <mat-menu #profileMenu="matMenu">

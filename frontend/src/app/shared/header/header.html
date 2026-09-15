@@ -1,3 +1,7 @@
 <header class="app-header">
-  <ng-content></ng-content>
+  <h1>@if (pageTitle()) {
+    {{ pageTitle() }}
+  } @else {
+   Bonjour {{ user()?.firstName }},
+  }</h1>
 </header>
