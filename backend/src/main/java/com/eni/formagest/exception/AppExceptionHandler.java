@@ -8,6 +8,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.stream.Collectors;
 
@@ -34,5 +35,14 @@ public class AppExceptionHandler {
                 .collect(Collectors.joining(" - "));
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(message);
+    }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<String> capturerStatutHttp(
+            ResponseStatusException e) {
+
+        return ResponseEntity
+                .status(e.getStatusCode())
+                .body(e.getReason());
     }
 }

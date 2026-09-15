@@ -28,6 +28,8 @@ public class SecurityConfig {
         http.authorizeHttpRequests(auth -> {
             auth
                     .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/logout").permitAll()
+                    // TODO: restreindre les permissions une fois qu'il y aura des users avec roles
+                    .requestMatchers("/api/sectors/**").permitAll()
                     .anyRequest().authenticated();
         });
 

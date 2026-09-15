@@ -2,8 +2,15 @@
   <h1>Filières</h1>
 
   <div class="sectors-page__actions">
-    <button mat-flat-button class="fg-btn-primary" type="button">
-      <span class="material-icons" aria-hidden="true">add_circle_outline</span>
+    <button
+      mat-flat-button
+      class="fg-btn-primary"
+      type="button"
+      (click)="openCreateForm(createSectorDialog)"
+    >
+      <span class="material-icons" aria-hidden="true">
+        add_circle_outline
+      </span>
       Nouvelle filière
     </button>
   </div>
@@ -11,15 +18,24 @@
   <div class="sectors-page__content">
     <aside class="sectors-list">
       <h2>Les filières</h2>
+
       @if (loading()) {
         <p>Chargement des filières…</p>
       } @else if (error()) {
         <p role="alert">{{ error() }}</p>
       } @else {
         @for (sector of sectors(); track sector.id) {
-          <button class="sector-item" type="button">
+          <button
+            class="sector-item"
+            type="button"
+            [class.sector-item--selected]="selectedSector()?.id === sector.id"
+            [attr.aria-pressed]="selectedSector()?.id === sector.id"
+            (click)="selectedSector.set(sector)"
+          >
             <span>{{ sector.name }}</span>
-            <span class="material-icons" aria-hidden="true">chevron_right</span>
+            <span class="material-icons" aria-hidden="true">
+              chevron_right
+            </span>
           </button>
         } @empty {
           <p>Aucune filière enregistrée.</p>
@@ -29,7 +45,132 @@
 
     <section class="sector-details">
       <h2>Filière sélectionnée</h2>
-      <p>Sélectionnez une filière pour consulter ses cursus.</p>
+
+      @if (selectedSector(); as sector) {
+        <div class="sector-details__heading">
+          <h3>{{ sector.name }}</h3>
+
+          <div class="sector-details__actions">
+            <button
+              mat-icon-button
+              type="button"
+              aria-label="Modifier la filière"
+              matTooltip="Modifier"
+              (click)="openEditForm(createSectorDialog)"
+            >
+              <span class="material-icons" aria-hidden="true">edit</span>
+            </button>
+
+            <button
+              mat-icon-button
+              class="sector-delete-icon"
+              type="button"
+              aria-label="Supprimer la filière"
+              matTooltip="Supprimer"
+              (click)="openDeleteForm(deleteSectorDialog)"
+            >
+              <span class="material-icons" aria-hidden="true">delete_outline</span>
+            </button>
+          </div>
+        </div>
+      } @else {
+        <p>Sélectionnez une filière pour consulter ses cursus.</p>
+      }
     </section>
   </div>
 </section>
+
+<ng-template #createSectorDialog>
+  <h2 mat-dialog-title>
+    {{ editingSector() ? 'Modifier la filière' : 'Nouvelle filière' }}
+  </h2>
+
+  <form (ngSubmit)="submitForm()">
+    <mat-dialog-content>
+      <p>Renseignez le nom de la filière.</p>
+
+      <mat-form-field appearance="outline" class="sector-name-field">
+        <mat-label>Nom de la filière</mat-label>
+
+        <input
+          matInput
+          name="newSectorName"
+          required
+          maxlength="255"
+          [disabled]="creating()"
+          [ngModel]="newSectorName()"
+          (ngModelChange)="newSectorName.set($event)"
+        />
+      </mat-form-field>
+
+      @if (createError()) {
+        <p class="create-error" role="alert">{{ createError() }}</p>
+      }
+    </mat-dialog-content>
+
+    <mat-dialog-actions align="end">
+      <button
+        mat-button
+        type="button"
+        [disabled]="creating()"
+        (click)="cancelCreate()"
+      >
+        Annuler
+      </button>
+
+      <button
+        mat-flat-button
+        class="fg-btn-primary"
+        type="submit"
+        [disabled]="creating() || !newSectorName().trim()"
+      >
+        {{
+          creating()
+            ? 'Enregistrement…'
+            : (editingSector() ? 'Modifier' : 'Créer')
+        }}
+      </button>
+    </mat-dialog-actions>
+  </form>
+</ng-template>
+
+<ng-template #deleteSectorDialog>
+  <h2 mat-dialog-title>Supprimer la filière</h2>
+
+  <mat-dialog-content>
+    <p>
+      Voulez-vous supprimer la filière
+      <strong>{{ sectorToDelete()?.name }}</strong> ?
+    </p>
+
+    <p>Cette action est définitive.</p>
+
+    @if (deleteError()) {
+      <p class="create-error" role="alert">
+        {{ deleteError() }}
+      </p>
+    }
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button
+      mat-button
+      type="button"
+      data-cancel-delete
+      [disabled]="deleting()"
+      (click)="cancelDelete()"
+    >
+      Annuler
+    </button>
+
+    <button
+      mat-stroked-button
+      class="sector-delete-button"
+      type="button"
+      [disabled]="deleting()"
+      (click)="confirmDelete()"
+    >
+      {{ deleting() ? 'Suppression…' : 'Supprimer' }}
+    </button>
+  </mat-dialog-actions>
+</ng-template>
