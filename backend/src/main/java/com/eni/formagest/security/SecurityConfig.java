@@ -37,6 +37,11 @@ public class SecurityConfig {
                 new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)
         ));
 
+        // Désactivé volontairement malgré le token en cookie (donc envoyé automatiquement
+        // par le navigateur) : l'API n'accepte que du JSON, qu'un <form> HTML classique ne
+        // peut pas produire sans JavaScript (donc bloqué par CORS) ; et le cookie est posé en
+        // SameSite=Lax (cf. JwtService.generateJwtCookie), qui empêche déjà son envoi lors
+        // d'une requête initiée depuis un autre site.
         http.csrf(csrf -> csrf.disable());
 
         http.authenticationProvider(authenticationProvider);
