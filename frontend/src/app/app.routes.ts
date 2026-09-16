@@ -11,6 +11,7 @@ import { Students } from './pages/users/students/students';
 import { Teachers } from './pages/users/teachers/teachers';
 import { AdministrativeManagers } from './pages/users/administrative-managers/administrative-managers';
 import { Administrators } from './pages/users/administrators/administrators';
+import { Home } from './pages/home/home';
 
 export const routes: Routes = [
   {
@@ -22,6 +23,9 @@ export const routes: Routes = [
     component: Layout,
     canActivate: [authGuard],
     children: [
+      {
+        path: '', component: Home, pathMatch: 'full'
+      },
       {
         path: 'formation',
         component: Formation,
@@ -56,6 +60,9 @@ export const routes: Routes = [
       { path: 'students', redirectTo: 'users/students' },
       { path: 'administrative-managers', redirectTo: 'users/administrative-managers' },
       { path: 'administrators', redirectTo: 'users/administrators' },
+      {
+        path: 'home', component: Home,
+      }
     ],
   },
 ];
