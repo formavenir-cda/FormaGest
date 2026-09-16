@@ -5,6 +5,7 @@ import { Layout } from './shared/layout/layout';
 import { authGuard } from './guards/auth.guard';
 import { Tracks } from './pages/tracks/tracks';
 import { Formation } from './pages/formation/formation';
+import { Courses } from './pages/courses/courses';
 
 export const routes: Routes = [
   {
@@ -26,10 +27,12 @@ export const routes: Routes = [
           { path: '', redirectTo: 'filieres', pathMatch: 'full' },
           { path: 'filieres', component: Sectors },
           { path: 'cursus', component: Tracks },
+          { path: 'cours', component: Courses },
         ],
       },
       { path: 'filieres', redirectTo: 'formation/filieres' },
       { path: 'cursus', redirectTo: 'formation/cursus' },
+      { path: 'cours', redirectTo: 'formation/cours' },
     ],
   },
 ];

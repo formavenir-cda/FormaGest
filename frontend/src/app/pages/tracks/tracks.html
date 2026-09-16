@@ -61,7 +61,10 @@
       <p role="alert">{{ error() }}</p>
     } @else {
       @for (track of filteredTracks(); track track.id) {
-        <div class="tracks-table__row">
+        <div
+          class="tracks-table__row"
+          (click)="openTrackCourses(track)"
+        >
           <span class="tracks-table__name">{{ track.name }}</span>
           <span>{{ sectorName(track.sectorId) }}</span>
           <span>{{ track.courses.length }}</span>
@@ -71,7 +74,7 @@
               type="button"
               aria-label="Modifier le cursus"
               matTooltip="Modifier"
-              (click)="editTrack(track, trackDialog)"
+              (click)="editTrack(track, trackDialog); $event.stopPropagation()"
             >
               <span class="material-icons" aria-hidden="true">edit</span>
             </button>
@@ -82,7 +85,7 @@
               type="button"
               aria-label="Supprimer le cursus"
               matTooltip="Supprimer"
-              (click)="deleteTrack(track, deleteTrackDialog)"
+              (click)="deleteTrack(track, deleteTrackDialog); $event.stopPropagation()"
             >
               <span class="material-icons" aria-hidden="true">delete_outline</span>
             </button>

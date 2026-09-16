@@ -3,6 +3,9 @@ package com.eni.formagest.bo.training;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
@@ -20,4 +23,8 @@ public class Course {
 
     @Column(name = "NAME", nullable = false, unique = true)
     private String name;
+
+    @OneToMany(mappedBy = "course")
+    @Builder.Default
+    private List<TrackCourse> trackCourses = new ArrayList<>();
 }

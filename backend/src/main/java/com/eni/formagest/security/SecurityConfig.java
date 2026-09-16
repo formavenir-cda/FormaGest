@@ -30,6 +30,7 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/logout").permitAll()
                     .requestMatchers("/api/sectors/**").hasRole("ADMINISTRATIVE_MANAGER")
                     .requestMatchers("/api/tracks/**").hasRole("ADMINISTRATIVE_MANAGER")
+                    .requestMatchers("/api/courses/**").hasRole("ADMINISTRATIVE_MANAGER")
                     .anyRequest().authenticated();
         });
 
