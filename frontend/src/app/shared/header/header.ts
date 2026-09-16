@@ -16,16 +16,20 @@ export class Header {
 
   protected readonly pageTitle = toSignal(this.router.events.pipe(
     filter(e => e instanceof NavigationEnd),
-    map(() => this.deepestTitle()),
-    startWith(this.deepestTitle())
+    map(() => this.currentTitle()),
+    startWith(this.currentTitle())
   ),
   );
 
-  private deepestTitle(): string | undefined {
+  private currentTitle(): string | undefined {
     let route = this.router.routerState.snapshot.root;
+    let title = route.title;
+
     while (route.firstChild) {
       route = route.firstChild;
+      title = route.title ?? title;
     }
-    return route.title;
+
+    return title;
   }
 }

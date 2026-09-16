@@ -1,0 +1,96 @@
+package com.eni.formagest.controllers.training;
+
+import com.eni.formagest.bll.training.TrackService;
+import com.eni.formagest.dto.training.TrackDto;
+import jakarta.validation.Valid;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.util.List;
+import java.util.NoSuchElementException;
+
+@RestController
+@RequestMapping("/api/tracks")
+public class TrackController {
+
+    private final TrackService trackService;
+
+    public TrackController(TrackService trackService) {
+        this.trackService = trackService;
+    }
+
+    @GetMapping
+    public List<TrackDto> findAll(
+            @RequestParam(required = false) Long sectorId) {
+        if (sectorId != null) {
+            try {
+                return trackService.findBySector(sectorId);
+            } catch (NoSuchElementException e) {
+                throw notFound(e);
+            }
+        }
+
+        return trackService.findAll();
+    }
+
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public TrackDto create(@Valid @RequestBody TrackDto dto) {
+        try {
+            return trackService.create(dto);
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Un cursus portant ce nom existe déjà.",
+                    e
+            );
+        } catch (NoSuchElementException e) {
+            throw notFound(e);
+        }
+    }
+
+    @PutMapping("/{id}")
+    public TrackDto update(
+            @PathVariable Long id,
+            @Valid @RequestBody TrackDto dto) {
+
+        try {
+            return trackService.update(id, dto);
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Un cursus portant ce nom existe déjà.",
+                    e
+            );
+        } catch (NoSuchElementException e) {
+            throw notFound(e);
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable Long id) {
+        try {
+            trackService.delete(id);
+        } catch (NoSuchElementException e) {
+            throw notFound(e);
+        } catch (DataIntegrityViolationException e) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Impossible de supprimer ce cursus : "
+                            + "il est encore utilisé par des données associées.",
+                    e
+            );
+        }
+    }
+
+    private ResponseStatusException notFound(NoSuchElementException e) {
+        String message = TrackService.MISSING_SECTOR.equals(e.getMessage())
+                ? "Cette filière n’existe pas."
+                : "Ce cursus n’existe pas.";
+
+        return new ResponseStatusException(HttpStatus.NOT_FOUND, message, e);
+    }
+}

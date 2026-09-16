@@ -37,9 +37,12 @@ export class Sidebar {
     { label: 'Mes promotions', icon: 'school'},
     { label: 'Inscriptions', icon: 'how_to_reg', roles: ['ADMINISTRATIVE_MANAGER'] },
     { label: 'Eleves', icon: 'person_search' },
-    { label: 'Filieres', icon: 'account_tree', route: '/filieres', roles: ['ADMINISTRATIVE_MANAGER'] },
-    { label: 'Cursus', icon: 'route' },
-    { label: 'Cours', icon: 'library_books' },
+    {
+      label: 'Formation',
+      icon: 'school',
+      route: '/formation',
+      roles: ['ADMINISTRATIVE_MANAGER'],
+    },
     { label: 'Formateurs', icon: 'badge' },
     { label: 'Utilisateurs', icon: 'manage_accounts', roles: ['ADMINISTRATOR'] },
   ];

@@ -1,8 +1,10 @@
 package com.eni.formagest.controllers.training;
 
+import com.eni.formagest.bo.training.Course;
 import com.eni.formagest.bo.training.Sector;
 import com.eni.formagest.bo.training.Track;
-import com.eni.formagest.dal.training.SectorRepository;
+import com.eni.formagest.bo.training.TrackCourse;
+import com.eni.formagest.dal.training.CourseRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.junit.jupiter.api.Test;
@@ -24,56 +26,49 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
-class SectorControllerTest {
+class CourseControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
 
     @Autowired
-    private SectorRepository sectorRepository;
+    private CourseRepository courseRepository;
 
     @PersistenceContext
     private EntityManager entityManager;
 
     @Test
     @WithMockUser(roles = "ADMINISTRATIVE_MANAGER")
-    void findAllReturnsOkWithSectors() throws Exception {
-        Sector sector = sectorRepository.save(Sector.builder()
-                .name("Design")
+    void findAllReturnsOkWithCourses() throws Exception {
+        Course course = courseRepository.save(Course.builder()
+                .name("Java")
                 .build());
-        entityManager.persist(Track.builder()
-                .name("Designer UX")
-                .sector(sector)
-                .build());
-        entityManager.flush();
-        entityManager.clear();
 
-        mockMvc.perform(get("/api/sectors"))
+        mockMvc.perform(get("/api/courses"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].id").value(sector.getId()))
-                .andExpect(jsonPath("$[0].name").value("Design"))
-                .andExpect(jsonPath("$[0].trackCount").value(1));
+                .andExpect(jsonPath("$[0].id").value(course.getId()))
+                .andExpect(jsonPath("$[0].name").value("Java"));
     }
 
     @Test
     @WithMockUser(roles = "STUDENT")
     void findAllReturnsForbiddenForUnauthorizedRole() throws Exception {
-        mockMvc.perform(get("/api/sectors"))
+        mockMvc.perform(get("/api/courses"))
                 .andExpect(status().isForbidden());
     }
 
     @Test
     @WithMockUser(roles = "ADMINISTRATIVE_MANAGER")
-    void createReturnsCreatedWithSector() throws Exception {
-        mockMvc.perform(post("/api/sectors")
+    void createReturnsCreatedWithCourse() throws Exception {
+        mockMvc.perform(post("/api/courses")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"name": "Design"}
+                                {"name": "Java"}
                                 """))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").isNumber())
-                .andExpect(jsonPath("$.name").value("Design"));
+                .andExpect(jsonPath("$.name").value("Java"));
     }
 
     @ParameterizedTest
@@ -85,12 +80,12 @@ class SectorControllerTest {
             "{\"name\": \"   \"}"
     })
     void createRejectsMissingOrBlankName(String body) throws Exception {
-        mockMvc.perform(post("/api/sectors")
+        mockMvc.perform(post("/api/courses")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().string(containsString(
-                        "Le nom de la filière est obligatoire."
+                        "Le nom du cours est obligatoire."
                 )));
     }
 
@@ -99,7 +94,7 @@ class SectorControllerTest {
     void createRejectsNameLongerThan255Characters() throws Exception {
         String body = "{\"name\":\"" + "a".repeat(256) + "\"}";
 
-        mockMvc.perform(post("/api/sectors")
+        mockMvc.perform(post("/api/courses")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isBadRequest())
@@ -111,130 +106,140 @@ class SectorControllerTest {
     @Test
     @WithMockUser(roles = "ADMINISTRATIVE_MANAGER")
     void createReturnsConflictWithDuplicateMessage() throws Exception {
-        sectorRepository.save(Sector.builder()
-                .name("Design")
+        courseRepository.save(Course.builder()
+                .name("Java")
                 .build());
 
-        mockMvc.perform(post("/api/sectors")
+        mockMvc.perform(post("/api/courses")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"name": "Design"}
+                                {"name": "Java"}
                                 """))
                 .andExpect(status().isConflict())
                 .andExpect(content().string(
-                        "Une filière portant ce nom existe déjà."
+                        "Un cours portant ce nom existe déjà."
                 ));
     }
 
     @Test
     @WithMockUser(roles = "ADMINISTRATIVE_MANAGER")
-    void updateReturnsUpdatedSector() throws Exception {
-        Sector sector = sectorRepository.save(Sector.builder()
+    void updateReturnsUpdatedCourse() throws Exception {
+        Course course = courseRepository.save(Course.builder()
                 .name("Ancien nom")
                 .build());
 
-        mockMvc.perform(put("/api/sectors/{id}", sector.getId())
+        mockMvc.perform(put("/api/courses/{id}", course.getId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"name": "Design"}
+                                {"name": "Java"}
                                 """))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(sector.getId()))
-                .andExpect(jsonPath("$.name").value("Design"));
+                .andExpect(jsonPath("$.id").value(course.getId()))
+                .andExpect(jsonPath("$.name").value("Java"));
     }
 
     @Test
     @WithMockUser(roles = "ADMINISTRATIVE_MANAGER")
     void updateRejectsBlankName() throws Exception {
-        Sector sector = sectorRepository.save(Sector.builder()
-                .name("Design")
+        Course course = courseRepository.save(Course.builder()
+                .name("Java")
                 .build());
 
-        mockMvc.perform(put("/api/sectors/{id}", sector.getId())
+        mockMvc.perform(put("/api/courses/{id}", course.getId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"name": "   "}
                                 """))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().string(containsString(
-                        "Le nom de la filière est obligatoire."
+                        "Le nom du cours est obligatoire."
                 )));
     }
 
     @Test
     @WithMockUser(roles = "ADMINISTRATIVE_MANAGER")
     void updateReturnsNotFoundWithMessage() throws Exception {
-        mockMvc.perform(put("/api/sectors/42")
+        mockMvc.perform(put("/api/courses/42")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"name": "Design"}
+                                {"name": "Java"}
                                 """))
                 .andExpect(status().isNotFound())
-                .andExpect(content().string("Cette filière n’existe pas."));
+                .andExpect(content().string("Ce cours n’existe pas."));
     }
 
     @Test
     @WithMockUser(roles = "ADMINISTRATIVE_MANAGER")
     void updateReturnsConflictWithDuplicateMessage() throws Exception {
-        Sector sector = sectorRepository.save(Sector.builder()
-                .name("Developpement")
+        Course course = courseRepository.save(Course.builder()
+                .name("Java")
                 .build());
-        sectorRepository.save(Sector.builder()
-                .name("Design")
+        courseRepository.save(Course.builder()
+                .name("Angular")
                 .build());
 
-        mockMvc.perform(put("/api/sectors/{id}", sector.getId())
+        mockMvc.perform(put("/api/courses/{id}", course.getId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"name": "Design"}
+                                {"name": "Angular"}
                                 """))
                 .andExpect(status().isConflict())
                 .andExpect(content().string(
-                        "Une filière portant ce nom existe déjà."
+                        "Un cours portant ce nom existe déjà."
                 ));
     }
 
     @Test
     @WithMockUser(roles = "ADMINISTRATIVE_MANAGER")
     void deleteReturnsNoContent() throws Exception {
-        Sector sector = sectorRepository.saveAndFlush(Sector.builder()
-                .name("Design")
+        Course course = courseRepository.saveAndFlush(Course.builder()
+                .name("Java")
                 .build());
 
-        mockMvc.perform(delete("/api/sectors/{id}", sector.getId()))
+        mockMvc.perform(delete("/api/courses/{id}", course.getId()))
                 .andExpect(status().isNoContent())
                 .andExpect(content().string(""));
 
-        assertFalse(sectorRepository.existsById(sector.getId()));
+        assertFalse(courseRepository.existsById(course.getId()));
     }
 
     @Test
     @WithMockUser(roles = "ADMINISTRATIVE_MANAGER")
     void deleteReturnsNotFoundWithMessage() throws Exception {
-        mockMvc.perform(delete("/api/sectors/42"))
+        mockMvc.perform(delete("/api/courses/42"))
                 .andExpect(status().isNotFound())
-                .andExpect(content().string("Cette filière n’existe pas."));
+                .andExpect(content().string("Ce cours n’existe pas."));
     }
 
     @Test
     @WithMockUser(roles = "ADMINISTRATIVE_MANAGER")
-    void deleteReturnsConflictWhenSectorIsReferenced() throws Exception {
-        Sector sector = sectorRepository.saveAndFlush(Sector.builder()
-                .name("Developpement")
+    void deleteReturnsConflictWhenCourseIsReferenced() throws Exception {
+        Course course = courseRepository.saveAndFlush(Course.builder()
+                .name("Java")
                 .build());
-
-        entityManager.persist(Track.builder()
-                .name("Concepteur developpeur")
+        Sector sector = Sector.builder()
+                .name("Secteur test cours controller")
+                .build();
+        Track track = Track.builder()
+                .name("Cursus test cours controller")
                 .sector(sector)
+                .build();
+
+        entityManager.persist(sector);
+        entityManager.persist(track);
+        entityManager.persist(TrackCourse.builder()
+                .track(track)
+                .course(course)
+                .position(1)
                 .build());
         entityManager.flush();
         entityManager.clear();
 
-        mockMvc.perform(delete("/api/sectors/{id}", sector.getId()))
+        mockMvc.perform(delete("/api/courses/{id}", course.getId()))
                 .andExpect(status().isConflict())
                 .andExpect(content().string(
-                        "Impossible de supprimer cette filière : "
-                                + "elle est encore utilisée par des données associées."
+                        "Impossible de supprimer ce cours : "
+                                + "il est encore utilisé par des données associées."
                 ));
     }
 }
