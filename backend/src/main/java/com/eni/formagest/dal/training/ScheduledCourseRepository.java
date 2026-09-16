@@ -8,4 +8,6 @@ import java.util.List;
 public interface ScheduledCourseRepository extends JpaRepository<ScheduledCourse, Long> {
 
     List<ScheduledCourse> findByCohortId(Long cohortId);
+
+    boolean existsByTeacherId(Long teacherId);
 }

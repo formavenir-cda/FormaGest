@@ -5,6 +5,8 @@ import com.eni.formagest.bo.users.Student;
 import com.eni.formagest.bo.users.Teacher;
 import com.eni.formagest.bo.users.User;
 import com.eni.formagest.bo.users.UserRole;
+import com.eni.formagest.dal.enrollment.EnrollmentRepository;
+import com.eni.formagest.dal.training.ScheduledCourseRepository;
 import com.eni.formagest.dal.training.SectorRepository;
 import com.eni.formagest.dal.users.UserRepository;
 import com.eni.formagest.dto.users.UserDto;
@@ -21,11 +23,16 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final SectorRepository sectorRepository;
+    private final EnrollmentRepository enrollmentRepository;
+    private final ScheduledCourseRepository scheduledCourseRepository;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, SectorRepository sectorRepository) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, SectorRepository sectorRepository,
+                        EnrollmentRepository enrollmentRepository, ScheduledCourseRepository scheduledCourseRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.sectorRepository = sectorRepository;
+        this.enrollmentRepository = enrollmentRepository;
+        this.scheduledCourseRepository = scheduledCourseRepository;
     }
 
     @Transactional(readOnly = true)
@@ -97,15 +104,66 @@ public class UserService {
             );
         }
 
-        Sector sector = null;
-        if (dto.getRole() == UserRole.TEACHER) {
-                sector = sectorRepository.findById(dto.getSectorId())
-                    .orElseThrow((NoSuchElementException::new));
+        if (dto.getRole() == user.getRole()) {
+            if (user instanceof Teacher teacher) {
+                Sector sector = sectorRepository.findById(dto.getSectorId())
+                        .orElseThrow((NoSuchElementException::new));
+                teacher.setSector(sector);
+            }
+            if (user instanceof Student student) {
+                student.setBirthDate(dto.getBirthDate());
+            }
+            return UserMapper.toDto(userRepository.save(user));
         }
-        User newUser = UserMapper.toBo(dto, user.getPassword(), sector);
-        userRepository.delete(user);
-        userRepository.flush();
-        return UserMapper.toDto(userRepository.save(newUser));
+
+        if (hasAssociatedData(user)) {
+            throw new IllegalStateException(
+                    "Impossible de changer le rôle : cet utilisateur a des données associées à son rôle actuel "
+                            + "(inscriptions, cours planifiés...)."
+            );
+        }
+
+        Long sectorId = null;
+        if (dto.getRole() == UserRole.TEACHER) {
+            sectorId = sectorRepository.findById(dto.getSectorId())
+                    .orElseThrow((NoSuchElementException::new))
+                    .getId();
+        }
+
+        UserRole oldRole = user.getRole();
+
+        user.setEmail(dto.getEmail().strip());
+        user.setLastName(dto.getLastName());
+        user.setFirstName(dto.getFirstName());
+        user.setRole(dto.getRole());
+        userRepository.saveAndFlush(user);
+
+        switch (oldRole) {
+            case STUDENT -> userRepository.deleteStudentRow(id);
+            case TEACHER -> userRepository.deleteTeacherRow(id);
+            case ADMINISTRATIVE_MANAGER -> userRepository.deleteAdministrativeManagerRow(id);
+            case ADMINISTRATOR -> userRepository.deleteAdministratorRow(id);
+        }
+
+        switch (dto.getRole()) {
+            case STUDENT -> userRepository.insertStudentRow(id, dto.getBirthDate());
+            case TEACHER -> userRepository.insertTeacherRow(id, sectorId);
+            case ADMINISTRATIVE_MANAGER -> userRepository.insertAdministrativeManagerRow(id);
+            case ADMINISTRATOR -> userRepository.insertAdministratorRow(id);
+        }
+
+        User updated = userRepository.findById(id).orElseThrow(NoSuchElementException::new);
+        return UserMapper.toDto(updated);
+    }
+
+    private boolean hasAssociatedData(User user) {
+        return switch (user.getRole()) {
+            case STUDENT -> enrollmentRepository.existsByStudentId(user.getId());
+            case ADMINISTRATIVE_MANAGER -> enrollmentRepository.existsByCreatedById(user.getId())
+                    || enrollmentRepository.existsByCancelledById(user.getId());
+            case TEACHER -> scheduledCourseRepository.existsByTeacherId(user.getId());
+            case ADMINISTRATOR -> false;
+        };
     }
 
     @Transactional
