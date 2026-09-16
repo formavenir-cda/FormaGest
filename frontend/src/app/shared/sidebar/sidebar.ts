@@ -30,11 +30,15 @@ export class Sidebar {
 
   protected readonly mainNavItems: SidebarNavItem[] = [
     { label: 'Accueil', icon: 'home' },
-    { label: 'Promotions', icon: 'groups' },
     { label: 'Mon calendrier', icon: 'calendar_month', roles: ['STUDENT'] },
     { label: 'Mes inscriptions', icon: 'assignment' },
     { label: 'Mes cours', icon: 'menu_book' },
-    { label: 'Mes promotions', icon: 'school'},
+    {
+      label: 'Promotions',
+      icon: 'groups',
+      route: '/promotions',
+      roles: ['ADMINISTRATIVE_MANAGER'],
+    },
     { label: 'Inscriptions', icon: 'how_to_reg', roles: ['ADMINISTRATIVE_MANAGER'] },
     { label: 'Eleves', icon: 'person_search' },
     {

@@ -11,6 +11,7 @@ import { Students } from './pages/users/students/students';
 import { Teachers } from './pages/users/teachers/teachers';
 import { AdministrativeManagers } from './pages/users/administrative-managers/administrative-managers';
 import { Administrators } from './pages/users/administrators/administrators';
+import { Promotions } from './pages/promotions/promotions';
 
 export const routes: Routes = [
   {
@@ -56,6 +57,13 @@ export const routes: Routes = [
       { path: 'students', redirectTo: 'users/students' },
       { path: 'administrative-managers', redirectTo: 'users/administrative-managers' },
       { path: 'administrators', redirectTo: 'users/administrators' },
+      {
+        path: 'promotions',
+        component: Promotions,
+        title: 'Promotions',
+        canActivate: [authGuard],
+        data: { roles: ['ADMINISTRATIVE_MANAGER'] }
+      },
     ],
   },
 ];

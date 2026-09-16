@@ -1,0 +1,135 @@
+<section class="promotions-page">
+  <div class="promotions-page__actions">
+    <button
+      mat-flat-button
+      class="fg-btn-primary"
+      type="button"
+      (click)="openCreateForm(promotionDialog)"
+    >
+      <span class="material-icons" aria-hidden="true">add_circle_outline</span>
+      Ajouter une promotion
+    </button>
+  </div>
+
+  <section class="promotions-table" aria-label="Liste des promotions">
+    <div class="promotions-table__header">
+      <span>Nom</span>
+      <span>Cursus</span>
+      <span>Date début</span>
+      <span>Date fin</span>
+      <span>Statut</span>
+    </div>
+
+    @if (loading()) {
+      <p>Chargement des promotions...</p>
+    } @else if (error()) {
+      <p role="alert">{{ error() }}</p>
+    } @else {
+      @for (cohort of cohorts(); track cohort.id) {
+        <div class="promotions-table__row">
+          <span class="promotions-table__name">{{ cohort.name }}</span>
+          <span>{{ trackName(cohort.trackId) }}</span>
+          <span>{{ cohort.startDate }}</span>
+          <span>{{ cohort.endDate }}</span>
+          <span>{{ statusLabel(cohort.status) }}</span>
+        </div>
+      } @empty {
+        <p>Aucune promotion trouvée.</p>
+      }
+    }
+  </section>
+</section>
+
+<ng-template #promotionDialog>
+  <h2 mat-dialog-title>Ajouter une promotion</h2>
+
+  <form (ngSubmit)="submitForm()">
+    <mat-dialog-content>
+      <mat-form-field appearance="outline" class="promotion-field">
+        <mat-label>Nom de la promotion</mat-label>
+
+        <input
+          matInput
+          name="promotionName"
+          required
+          maxlength="255"
+          [disabled]="saving()"
+          [ngModel]="promotionName()"
+          (ngModelChange)="promotionName.set($event)"
+        />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="promotion-field">
+        <mat-label>Cursus</mat-label>
+
+        <mat-select
+          name="trackId"
+          required
+          [disabled]="saving()"
+          [ngModel]="trackId()"
+          (ngModelChange)="trackId.set($event)"
+        >
+          @for (track of trackOptions(); track track.id) {
+            <mat-option [value]="track.id">
+              {{ track.name }}
+            </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <div class="promotion-dates">
+        <mat-form-field appearance="outline">
+          <mat-label>Date de début</mat-label>
+
+          <input
+            matInput
+            name="startDate"
+            type="date"
+            required
+            [disabled]="saving()"
+            [ngModel]="startDate()"
+            (ngModelChange)="startDate.set($event)"
+          />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Date de fin</mat-label>
+
+          <input
+            matInput
+            name="endDate"
+            type="date"
+            required
+            [disabled]="saving()"
+            [ngModel]="endDate()"
+            (ngModelChange)="endDate.set($event)"
+          />
+        </mat-form-field>
+      </div>
+
+      @if (formError()) {
+        <p class="form-error" role="alert">{{ formError() }}</p>
+      }
+    </mat-dialog-content>
+
+    <mat-dialog-actions align="end">
+      <button
+        mat-button
+        type="button"
+        [disabled]="saving()"
+        (click)="cancelForm()"
+      >
+        Annuler
+      </button>
+
+      <button
+        mat-flat-button
+        class="fg-btn-primary"
+        type="submit"
+        [disabled]="saving() || !promotionName().trim() || !trackId() || !startDate() || !endDate()"
+      >
+        {{ saving() ? 'Création...' : 'Créer' }}
+      </button>
+    </mat-dialog-actions>
+  </form>
+</ng-template>

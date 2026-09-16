@@ -1,0 +1,99 @@
+@use '../../../styles/tokens' as t;
+
+:host {
+  display: block;
+}
+
+.promotions-page {
+  max-width: t.$fg-content-max;
+  margin-inline: auto;
+
+  p {
+    color: t.$fg-text-secondary;
+    line-height: 1.5;
+  }
+}
+
+.promotions-page__actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: t.$fg-space-lg;
+
+  button {
+    min-height: t.$fg-touch-target;
+    padding-inline: t.$fg-space-lg;
+    border-radius: t.$fg-radius-sm;
+  }
+
+  .material-icons {
+    margin-right: t.$fg-space-sm;
+    vertical-align: middle;
+  }
+}
+
+.promotions-table {
+  border: 1px solid t.$fg-border;
+  border-radius: t.$fg-radius-md;
+  background: t.$fg-surface;
+  overflow: hidden;
+}
+
+.promotions-table__header,
+.promotions-table__row {
+  display: grid;
+  grid-template-columns: minmax(180px, 2fr) minmax(180px, 2fr) 140px 140px 120px;
+  align-items: center;
+  gap: t.$fg-space-md;
+  padding: t.$fg-space-md t.$fg-space-lg;
+}
+
+.promotions-table__header {
+  background: t.$fg-surface-variant;
+  color: t.$fg-text-secondary;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.promotions-table__row {
+  min-height: 64px;
+  border-top: 1px solid t.$fg-divider;
+  color: t.$fg-text-primary;
+}
+
+.promotions-table__name {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.promotion-field {
+  width: 100%;
+  margin-top: t.$fg-space-sm;
+}
+
+.promotion-dates {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: t.$fg-space-sm;
+}
+
+.form-error {
+  color: t.$fg-error;
+}
+
+@include t.fg-tablet-up {
+  .promotion-dates {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .promotions-table {
+    overflow-x: auto;
+  }
+
+  .promotions-table__header,
+  .promotions-table__row {
+    min-width: 820px;
+  }
+}
