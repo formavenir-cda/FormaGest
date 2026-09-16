@@ -16,6 +16,7 @@ export interface Student extends BaseUser {
 
 export interface Teacher extends BaseUser {
   role: 'TEACHER';
+  sectorId: number;
 }
 
 export interface AdministrativeManager extends BaseUser {
@@ -31,3 +32,16 @@ export type User =
   | Teacher
   | AdministrativeManager
   | Administrator;
+
+// Corps de requête pour create/update/changeRole : reflète UserDto côté back,
+// où birthDate et sectorId ne sont pertinents que selon le rôle.
+export interface UserPayload {
+  email: string;
+  lastName: string;
+  firstName: string;
+  password?: string;
+  active: boolean;
+  role: UserRole;
+  birthDate?: string;
+  sectorId?: number;
+}

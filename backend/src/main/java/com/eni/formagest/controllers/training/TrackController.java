@@ -8,6 +8,7 @@ import com.eni.formagest.dto.training.TrackDto;
 import jakarta.validation.Valid;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -42,6 +43,7 @@ public class TrackController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasRole('ADMINISTRATIVE_MANAGER')")
     public TrackDto create(@Valid @RequestBody TrackDto dto) {
         try {
             return trackService.create(dto);
@@ -57,6 +59,7 @@ public class TrackController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMINISTRATIVE_MANAGER')")
     public TrackDto update(
             @PathVariable Long id,
             @Valid @RequestBody TrackDto dto) {
@@ -93,6 +96,7 @@ public class TrackController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('ADMINISTRATIVE_MANAGER')")
     public void delete(@PathVariable Long id) {
         try {
             trackService.delete(id);

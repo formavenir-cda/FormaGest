@@ -1,0 +1,346 @@
+<section class="teachers-page">
+  <div class="teachers-page__actions">
+    <button
+      mat-flat-button
+      class="fg-btn-primary"
+      type="button"
+      (click)="openCreateForm(createTeacherDialog)"
+    >
+      <span class="material-icons" aria-hidden="true">
+        add_circle_outline
+      </span>
+      Nouveau formateur
+    </button>
+  </div>
+
+  <section class="teachers-toolbar">
+    <mat-form-field appearance="outline">
+      <mat-label>Rechercher</mat-label>
+
+      <input
+        matInput
+        name="teacherSearch"
+        [ngModel]="search()"
+        (ngModelChange)="search.set($event)"
+      />
+    </mat-form-field>
+  </section>
+
+  <section class="teachers-table" aria-label="Liste des formateurs">
+    <div class="teachers-table__header">
+      <span>Nom</span>
+      <span>Prénom</span>
+      <span>Email</span>
+      <span>Filière</span>
+      <span>Statut</span>
+      <span>Actions</span>
+    </div>
+
+    @if (loading()) {
+      <p>Chargement des formateurs...</p>
+    } @else if (error()) {
+      <p role="alert">{{ error() }}</p>
+    } @else {
+      @for (teacher of filteredTeachers(); track teacher.id) {
+        <div
+          class="teachers-table__row"
+          [class.teachers-table__row--inactive]="!teacher.active"
+        >
+          <span class="teachers-table__name">{{ teacher.lastName }}</span>
+          <span>{{ teacher.firstName }}</span>
+          <span>{{ teacher.email }}</span>
+          <span>{{ sectorName(teacher.sectorId) }}</span>
+          <span>
+            <button
+              type="button"
+              class="teachers-status"
+              [class.teachers-status--active]="teacher.active"
+              (click)="toggleActive(teacher)"
+            >
+              {{ teacher.active ? 'Actif' : 'Inactif' }}
+            </button>
+          </span>
+          <span class="teachers-table__actions">
+            <button
+              mat-icon-button
+              type="button"
+              aria-label="Modifier le formateur"
+              matTooltip="Modifier"
+              (click)="editTeacher(teacher, createTeacherDialog)"
+            >
+              <span class="material-icons" aria-hidden="true">edit</span>
+            </button>
+
+            <button
+              mat-icon-button
+              type="button"
+              aria-label="Changer le rôle"
+              matTooltip="Changer de rôle"
+              (click)="openChangeRoleForm(teacher, changeRoleDialog)"
+            >
+              <span class="material-icons" aria-hidden="true">swap_horiz</span>
+            </button>
+
+            <button
+              mat-icon-button
+              class="teacher-delete-icon"
+              type="button"
+              aria-label="Supprimer le formateur"
+              matTooltip="Supprimer"
+              (click)="deleteTeacher(teacher, deleteTeacherDialog)"
+            >
+              <span class="material-icons" aria-hidden="true">delete_outline</span>
+            </button>
+          </span>
+        </div>
+      } @empty {
+        <p>Aucun formateur trouvé.</p>
+      }
+    }
+  </section>
+</section>
+
+<ng-template #createTeacherDialog>
+  <h2 mat-dialog-title>
+    {{ editingTeacher() ? 'Modifier le formateur' : 'Nouveau formateur' }}
+  </h2>
+
+  <form (ngSubmit)="submitForm()">
+    <mat-dialog-content>
+      <mat-form-field appearance="outline" class="teacher-field">
+        <mat-label>Nom</mat-label>
+
+        <input
+          matInput
+          name="newTeacherLastName"
+          required
+          maxlength="255"
+          [disabled]="creating()"
+          [ngModel]="newLastName()"
+          (ngModelChange)="newLastName.set($event)"
+        />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="teacher-field">
+        <mat-label>Prénom</mat-label>
+
+        <input
+          matInput
+          name="newTeacherFirstName"
+          required
+          maxlength="255"
+          [disabled]="creating()"
+          [ngModel]="newFirstName()"
+          (ngModelChange)="newFirstName.set($event)"
+        />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="teacher-field">
+        <mat-label>Email</mat-label>
+
+        <input
+          matInput
+          type="email"
+          name="newTeacherEmail"
+          required
+          maxlength="255"
+          [disabled]="creating()"
+          [ngModel]="newEmail()"
+          (ngModelChange)="newEmail.set($event)"
+        />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="teacher-field">
+        <mat-label>Filière</mat-label>
+
+        <mat-select
+          name="newTeacherSectorId"
+          required
+          [disabled]="creating()"
+          [ngModel]="newSectorId()"
+          (ngModelChange)="newSectorId.set($event)"
+        >
+          @for (sector of sectors(); track sector.id) {
+            <mat-option [value]="sector.id">
+              {{ sector.name }}
+            </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="teacher-field">
+        <mat-label>Mot de passe</mat-label>
+
+        <input
+          matInput
+          type="password"
+          name="newTeacherPassword"
+          [required]="!editingTeacher()"
+          [disabled]="creating()"
+          [ngModel]="newPassword()"
+          (ngModelChange)="newPassword.set($event)"
+        />
+
+        @if (editingTeacher()) {
+          <mat-hint>Laisser vide pour ne pas modifier le mot de passe.</mat-hint>
+        }
+      </mat-form-field>
+
+      @if (createError()) {
+        <p class="create-error" role="alert">{{ createError() }}</p>
+      }
+    </mat-dialog-content>
+
+    <mat-dialog-actions align="end">
+      <button
+        mat-button
+        type="button"
+        [disabled]="creating()"
+        (click)="cancelCreate()"
+      >
+        Annuler
+      </button>
+
+      <button
+        mat-flat-button
+        class="fg-btn-primary"
+        type="submit"
+        [disabled]="creating()"
+      >
+        {{
+          creating()
+            ? 'Enregistrement...'
+            : (editingTeacher() ? 'Modifier' : 'Créer')
+        }}
+      </button>
+    </mat-dialog-actions>
+  </form>
+</ng-template>
+
+<ng-template #deleteTeacherDialog>
+  <h2 mat-dialog-title>Supprimer le formateur</h2>
+
+  <mat-dialog-content>
+    <p>
+      Voulez-vous supprimer le formateur
+      <strong>{{ teacherToDelete()?.firstName }} {{ teacherToDelete()?.lastName }}</strong> ?
+    </p>
+
+    <p>Cette action est définitive.</p>
+
+    @if (deleteError()) {
+      <p class="create-error" role="alert">
+        {{ deleteError() }}
+      </p>
+    }
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button
+      mat-button
+      type="button"
+      data-cancel-delete
+      [disabled]="deleting()"
+      (click)="cancelDelete()"
+    >
+      Annuler
+    </button>
+
+    <button
+      mat-stroked-button
+      class="teacher-delete-button"
+      type="button"
+      [disabled]="deleting()"
+      (click)="confirmDelete()"
+    >
+      {{ deleting() ? 'Suppression...' : 'Supprimer' }}
+    </button>
+  </mat-dialog-actions>
+</ng-template>
+
+<ng-template #changeRoleDialog>
+  <h2 mat-dialog-title>Changer le rôle</h2>
+
+  <form (ngSubmit)="submitChangeRole()">
+    <mat-dialog-content>
+      <p>
+        Nouveau rôle pour
+        <strong>{{ changingRoleTeacher()?.firstName }} {{ changingRoleTeacher()?.lastName }}</strong> :
+      </p>
+
+      <mat-form-field appearance="outline" class="teacher-field">
+        <mat-label>Rôle</mat-label>
+
+        <mat-select
+          name="newRole"
+          required
+          [disabled]="changingRole()"
+          [ngModel]="newRole()"
+          (ngModelChange)="newRole.set($event)"
+        >
+          @for (role of availableRoles(); track role) {
+            <mat-option [value]="role">{{ roleLabels[role] }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      @if (newRole() === 'TEACHER') {
+        <mat-form-field appearance="outline" class="teacher-field">
+          <mat-label>Filière</mat-label>
+
+          <mat-select
+            name="newRoleSectorId"
+            required
+            [disabled]="changingRole()"
+            [ngModel]="newRoleSectorId()"
+            (ngModelChange)="newRoleSectorId.set($event)"
+          >
+            @for (sector of sectors(); track sector.id) {
+              <mat-option [value]="sector.id">{{ sector.name }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      }
+
+      @if (newRole() === 'STUDENT') {
+        <mat-form-field appearance="outline" class="teacher-field">
+          <mat-label>Date de naissance</mat-label>
+
+          <input
+            matInput
+            type="date"
+            name="newRoleBirthDate"
+            required
+            [disabled]="changingRole()"
+            [ngModel]="newRoleBirthDate()"
+            (ngModelChange)="newRoleBirthDate.set($event)"
+          />
+        </mat-form-field>
+      }
+
+      @if (changeRoleError()) {
+        <p class="create-error" role="alert">{{ changeRoleError() }}</p>
+      }
+    </mat-dialog-content>
+
+    <mat-dialog-actions align="end">
+      <button
+        mat-button
+        type="button"
+        [disabled]="changingRole()"
+        (click)="cancelChangeRole()"
+      >
+        Annuler
+      </button>
+
+      <button
+        mat-flat-button
+        class="fg-btn-primary"
+        type="submit"
+        [disabled]="changingRole() || !newRole()"
+      >
+        {{ changingRole() ? 'Enregistrement...' : 'Changer le rôle' }}
+      </button>
+    </mat-dialog-actions>
+  </form>
+</ng-template>

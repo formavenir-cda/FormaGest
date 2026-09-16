@@ -1,0 +1,326 @@
+<section class="administrators-page">
+  <div class="administrators-page__actions">
+    <button
+      mat-flat-button
+      class="fg-btn-primary"
+      type="button"
+      (click)="openCreateForm(createAdministratorDialog)"
+    >
+      <span class="material-icons" aria-hidden="true">
+        add_circle_outline
+      </span>
+      Nouvel administrateur
+    </button>
+  </div>
+
+  <section class="administrators-toolbar">
+    <mat-form-field appearance="outline">
+      <mat-label>Rechercher</mat-label>
+
+      <input
+        matInput
+        name="administratorSearch"
+        [ngModel]="search()"
+        (ngModelChange)="search.set($event)"
+      />
+    </mat-form-field>
+  </section>
+
+  <section class="administrators-table" aria-label="Liste des administrateurs">
+    <div class="administrators-table__header">
+      <span>Nom</span>
+      <span>Prénom</span>
+      <span>Email</span>
+      <span>Statut</span>
+      <span>Actions</span>
+    </div>
+
+    @if (loading()) {
+      <p>Chargement des administrateurs...</p>
+    } @else if (error()) {
+      <p role="alert">{{ error() }}</p>
+    } @else {
+      @for (administrator of filteredAdministrators(); track administrator.id) {
+        <div
+          class="administrators-table__row"
+          [class.administrators-table__row--inactive]="!administrator.active"
+        >
+          <span class="administrators-table__name">{{ administrator.lastName }}</span>
+          <span>{{ administrator.firstName }}</span>
+          <span>{{ administrator.email }}</span>
+          <span>
+            <button
+              type="button"
+              class="administrators-status"
+              [class.administrators-status--active]="administrator.active"
+              (click)="toggleActive(administrator)"
+            >
+              {{ administrator.active ? 'Actif' : 'Inactif' }}
+            </button>
+          </span>
+          <span class="administrators-table__actions">
+            <button
+              mat-icon-button
+              type="button"
+              aria-label="Modifier l'administrateur"
+              matTooltip="Modifier"
+              (click)="editAdministrator(administrator, createAdministratorDialog)"
+            >
+              <span class="material-icons" aria-hidden="true">edit</span>
+            </button>
+
+            <button
+              mat-icon-button
+              type="button"
+              aria-label="Changer le rôle"
+              matTooltip="Changer de rôle"
+              (click)="openChangeRoleForm(administrator, changeRoleDialog)"
+            >
+              <span class="material-icons" aria-hidden="true">swap_horiz</span>
+            </button>
+
+            <button
+              mat-icon-button
+              class="administrator-delete-icon"
+              type="button"
+              aria-label="Supprimer l'administrateur"
+              matTooltip="Supprimer"
+              (click)="deleteAdministrator(administrator, deleteAdministratorDialog)"
+            >
+              <span class="material-icons" aria-hidden="true">delete_outline</span>
+            </button>
+          </span>
+        </div>
+      } @empty {
+        <p>Aucun administrateur trouvé.</p>
+      }
+    }
+  </section>
+</section>
+
+<ng-template #createAdministratorDialog>
+  <h2 mat-dialog-title>
+    {{ editingAdministrator() ? 'Modifier l’administrateur' : 'Nouvel administrateur' }}
+  </h2>
+
+  <form (ngSubmit)="submitForm()">
+    <mat-dialog-content>
+      <mat-form-field appearance="outline" class="administrator-field">
+        <mat-label>Nom</mat-label>
+
+        <input
+          matInput
+          name="newAdministratorLastName"
+          required
+          maxlength="255"
+          [disabled]="creating()"
+          [ngModel]="newLastName()"
+          (ngModelChange)="newLastName.set($event)"
+        />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="administrator-field">
+        <mat-label>Prénom</mat-label>
+
+        <input
+          matInput
+          name="newAdministratorFirstName"
+          required
+          maxlength="255"
+          [disabled]="creating()"
+          [ngModel]="newFirstName()"
+          (ngModelChange)="newFirstName.set($event)"
+        />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="administrator-field">
+        <mat-label>Email</mat-label>
+
+        <input
+          matInput
+          type="email"
+          name="newAdministratorEmail"
+          required
+          maxlength="255"
+          [disabled]="creating()"
+          [ngModel]="newEmail()"
+          (ngModelChange)="newEmail.set($event)"
+        />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="administrator-field">
+        <mat-label>Mot de passe</mat-label>
+
+        <input
+          matInput
+          type="password"
+          name="newAdministratorPassword"
+          [required]="!editingAdministrator()"
+          [disabled]="creating()"
+          [ngModel]="newPassword()"
+          (ngModelChange)="newPassword.set($event)"
+        />
+
+        @if (editingAdministrator()) {
+          <mat-hint>Laisser vide pour ne pas modifier le mot de passe.</mat-hint>
+        }
+      </mat-form-field>
+
+      @if (createError()) {
+        <p class="create-error" role="alert">{{ createError() }}</p>
+      }
+    </mat-dialog-content>
+
+    <mat-dialog-actions align="end">
+      <button
+        mat-button
+        type="button"
+        [disabled]="creating()"
+        (click)="cancelCreate()"
+      >
+        Annuler
+      </button>
+
+      <button
+        mat-flat-button
+        class="fg-btn-primary"
+        type="submit"
+        [disabled]="creating()"
+      >
+        {{
+          creating()
+            ? 'Enregistrement...'
+            : (editingAdministrator() ? 'Modifier' : 'Créer')
+        }}
+      </button>
+    </mat-dialog-actions>
+  </form>
+</ng-template>
+
+<ng-template #deleteAdministratorDialog>
+  <h2 mat-dialog-title>Supprimer l’administrateur</h2>
+
+  <mat-dialog-content>
+    <p>
+      Voulez-vous supprimer l’administrateur
+      <strong>{{ administratorToDelete()?.firstName }} {{ administratorToDelete()?.lastName }}</strong> ?
+    </p>
+
+    <p>Cette action est définitive.</p>
+
+    @if (deleteError()) {
+      <p class="create-error" role="alert">
+        {{ deleteError() }}
+      </p>
+    }
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button
+      mat-button
+      type="button"
+      data-cancel-delete
+      [disabled]="deleting()"
+      (click)="cancelDelete()"
+    >
+      Annuler
+    </button>
+
+    <button
+      mat-stroked-button
+      class="administrator-delete-button"
+      type="button"
+      [disabled]="deleting()"
+      (click)="confirmDelete()"
+    >
+      {{ deleting() ? 'Suppression...' : 'Supprimer' }}
+    </button>
+  </mat-dialog-actions>
+</ng-template>
+
+<ng-template #changeRoleDialog>
+  <h2 mat-dialog-title>Changer le rôle</h2>
+
+  <form (ngSubmit)="submitChangeRole()">
+    <mat-dialog-content>
+      <p>
+        Nouveau rôle pour
+        <strong>{{ changingRoleAdministrator()?.firstName }} {{ changingRoleAdministrator()?.lastName }}</strong> :
+      </p>
+
+      <mat-form-field appearance="outline" class="administrator-field">
+        <mat-label>Rôle</mat-label>
+
+        <mat-select
+          name="newRole"
+          required
+          [disabled]="changingRole()"
+          [ngModel]="newRole()"
+          (ngModelChange)="newRole.set($event)"
+        >
+          @for (role of availableRoles(); track role) {
+            <mat-option [value]="role">{{ roleLabels[role] }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      @if (newRole() === 'TEACHER') {
+        <mat-form-field appearance="outline" class="administrator-field">
+          <mat-label>Filière</mat-label>
+
+          <mat-select
+            name="newRoleSectorId"
+            required
+            [disabled]="changingRole()"
+            [ngModel]="newRoleSectorId()"
+            (ngModelChange)="newRoleSectorId.set($event)"
+          >
+            @for (sector of sectors(); track sector.id) {
+              <mat-option [value]="sector.id">{{ sector.name }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      }
+
+      @if (newRole() === 'STUDENT') {
+        <mat-form-field appearance="outline" class="administrator-field">
+          <mat-label>Date de naissance</mat-label>
+
+          <input
+            matInput
+            type="date"
+            name="newRoleBirthDate"
+            required
+            [disabled]="changingRole()"
+            [ngModel]="newRoleBirthDate()"
+            (ngModelChange)="newRoleBirthDate.set($event)"
+          />
+        </mat-form-field>
+      }
+
+      @if (changeRoleError()) {
+        <p class="create-error" role="alert">{{ changeRoleError() }}</p>
+      }
+    </mat-dialog-content>
+
+    <mat-dialog-actions align="end">
+      <button
+        mat-button
+        type="button"
+        [disabled]="changingRole()"
+        (click)="cancelChangeRole()"
+      >
+        Annuler
+      </button>
+
+      <button
+        mat-flat-button
+        class="fg-btn-primary"
+        type="submit"
+        [disabled]="changingRole() || !newRole()"
+      >
+        {{ changingRole() ? 'Enregistrement...' : 'Changer le rôle' }}
+      </button>
+    </mat-dialog-actions>
+  </form>
+</ng-template>

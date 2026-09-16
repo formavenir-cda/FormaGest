@@ -1,0 +1,50 @@
+@use '../../../styles/tokens' as t;
+
+:host {
+  display: block;
+}
+
+.users-page {
+  max-width: t.$fg-content-max;
+  margin-inline: auto;
+}
+
+.users-page__header {
+  margin-bottom: t.$fg-space-xl;
+
+  h1 {
+    margin: 0 0 t.$fg-space-lg;
+    font-family: t.$fg-font-display;
+    font-size: 2rem;
+    font-weight: 700;
+  }
+}
+
+.users-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: t.$fg-space-sm;
+  border-bottom: 1px solid t.$fg-divider;
+}
+
+.users-tabs__item {
+  min-height: 40px;
+  padding: 0 t.$fg-space-md;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  background: transparent;
+  color: t.$fg-text-secondary;
+  font: inherit;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.users-tabs__item:hover {
+  color: t.$fg-primary-dark;
+}
+
+.users-tabs__item--active {
+  color: t.$fg-primary;
+  border-bottom-color: t.$fg-primary;
+}

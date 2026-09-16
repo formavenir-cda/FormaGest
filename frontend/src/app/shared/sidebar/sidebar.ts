@@ -44,7 +44,7 @@ export class Sidebar {
       roles: ['ADMINISTRATIVE_MANAGER'],
     },
     { label: 'Formateurs', icon: 'badge' },
-    { label: 'Utilisateurs', icon: 'manage_accounts', roles: ['ADMINISTRATOR'] },
+    { label: 'Utilisateurs', icon: 'manage_accounts', route: '/users', roles: ['ADMINISTRATOR'] },
   ];
 
   protected readonly visibleNavItems = computed(() => {
