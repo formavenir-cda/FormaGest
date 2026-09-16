@@ -7,7 +7,7 @@ import {
   TemplateRef,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import {
   MatDialog,
@@ -43,6 +43,7 @@ export class Tracks implements OnInit {
   private readonly sectorService = inject(SectorService);
   private readonly dialog = inject(MatDialog);
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
 
   private formDialogRef?: MatDialogRef<unknown>;
   private deleteDialogRef?: MatDialogRef<unknown>;
@@ -95,6 +96,15 @@ export class Tracks implements OnInit {
   sectorName(sectorId: number): string {
     return this.sectors().find((sector) => sector.id === sectorId)?.name
       ?? 'Filière inconnue';
+  }
+
+  openTrackCourses(track: Track): void {
+    this.router.navigate(['/formation/cours'], {
+      queryParams: {
+        sectorId: track.sectorId,
+        trackId: track.id,
+      },
+    });
   }
 
   openCreateForm(template: TemplateRef<unknown>): void {

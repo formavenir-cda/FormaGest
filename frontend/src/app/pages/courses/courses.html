@@ -1,0 +1,296 @@
+<section class="courses-page">
+  <div class="courses-page__actions">
+    <button
+      mat-flat-button
+      class="fg-btn-primary"
+      type="button"
+      (click)="openCreateForm(courseDialog)"
+    >
+      <span class="material-icons" aria-hidden="true">
+        add_circle_outline
+      </span>
+      Nouveau cours
+    </button>
+  </div>
+
+  <section class="courses-toolbar">
+    <mat-form-field appearance="outline" class="courses-toolbar__search">
+      <mat-label>Rechercher</mat-label>
+
+      <input
+        matInput
+        name="courseSearch"
+        [ngModel]="search()"
+        (ngModelChange)="search.set($event)"
+      />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="courses-toolbar__sector">
+      <mat-label>Filière</mat-label>
+
+      <mat-select
+        name="courseSectorFilter"
+        [ngModel]="selectedSectorFilter()"
+        (ngModelChange)="selectSectorFilter($event)"
+      >
+        <mat-option [value]="null">Toutes les filières</mat-option>
+
+        @for (sector of sectorOptions(); track sector.id) {
+          <mat-option [value]="sector.id">
+            {{ sector.name }}
+          </mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="courses-toolbar__track">
+      <mat-label>Cursus</mat-label>
+
+      <mat-select
+        name="courseTrackFilter"
+        [ngModel]="selectedTrackFilter()"
+        (ngModelChange)="selectTrackFilter($event)"
+      >
+        <mat-option [value]="null">Tous les cursus</mat-option>
+
+        @for (track of trackOptions(); track track.id) {
+          <mat-option [value]="track.id">
+            {{ track.name }}
+          </mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  </section>
+
+  <section class="courses-table" aria-label="Liste des cours">
+    <div class="courses-table__header">
+      <span>Nom</span>
+      <span>Filière</span>
+      <span>Cursus</span>
+      <span>Position</span>
+      <span>Actions</span>
+    </div>
+
+    @if (loading()) {
+      <p>Chargement des cours...</p>
+    } @else if (error()) {
+      <p role="alert">{{ error() }}</p>
+    } @else {
+      @for (course of filteredCourses(); track course.id) {
+        <div class="courses-table__row">
+          <span class="courses-table__name">{{ course.name }}</span>
+          <span>{{ associatedSectorNames(course) }}</span>
+          <span>{{ associatedTrackNames(course) }}</span>
+          <span>{{ associatedPositions(course) }}</span>
+          <span class="courses-table__actions">
+            <button
+              mat-icon-button
+              type="button"
+              aria-label="Modifier le cours"
+              matTooltip="Modifier"
+              (click)="editCourse(course, courseDialog)"
+            >
+              <span class="material-icons" aria-hidden="true">edit</span>
+            </button>
+
+            <button
+              mat-icon-button
+              class="course-delete-icon"
+              type="button"
+              aria-label="Supprimer le cours"
+              matTooltip="Supprimer"
+              (click)="deleteCourse(course, deleteCourseDialog)"
+            >
+              <span class="material-icons" aria-hidden="true">delete_outline</span>
+            </button>
+          </span>
+        </div>
+      } @empty {
+        <p>Aucun cours trouvé.</p>
+      }
+    }
+  </section>
+</section>
+
+<ng-template #courseDialog>
+  <h2 mat-dialog-title>
+    {{ editingCourse() ? 'Modifier le cours' : 'Nouveau cours' }}
+  </h2>
+
+  <form (ngSubmit)="submitForm()">
+    <mat-dialog-content>
+      <mat-form-field appearance="outline" class="course-field">
+        <mat-label>Nom du cours</mat-label>
+
+        <input
+          matInput
+          name="courseName"
+          required
+          maxlength="255"
+          [disabled]="saving()"
+          [ngModel]="courseName()"
+          (ngModelChange)="courseName.set($event)"
+        />
+      </mat-form-field>
+
+      <section class="course-associations" aria-label="Cursus associés">
+        <div class="course-associations__controls">
+          <mat-form-field appearance="outline">
+            <mat-label>Filière</mat-label>
+
+            <mat-select
+              name="associationSectorId"
+              [disabled]="saving()"
+              [ngModel]="associationSectorId()"
+              (ngModelChange)="selectAssociationSector($event)"
+            >
+              <mat-option [value]="null">Toutes les filières</mat-option>
+
+              @for (sector of sectors(); track sector.id) {
+                <mat-option [value]="sector.id">
+                  {{ sector.name }}
+                </mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Cursus</mat-label>
+
+            <mat-select
+              name="associationTrackId"
+              [disabled]="saving()"
+              [ngModel]="associationTrackId()"
+              (ngModelChange)="selectAssociationTrack($event)"
+            >
+              <mat-option [value]="null">Sélectionner un cursus</mat-option>
+
+              @for (track of associationTrackOptions(); track track.id) {
+                <mat-option [value]="track.id">
+                  {{ track.name }}
+                </mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Position</mat-label>
+
+            <input
+              matInput
+              name="associationPosition"
+              type="number"
+              min="1"
+              [disabled]="saving() || !associationTrackId()"
+              [ngModel]="associationPosition()"
+              (ngModelChange)="setAssociationPosition($event)"
+            />
+          </mat-form-field>
+        </div>
+
+        @if (selectedSectorHasNoTracks()) {
+          <p class="course-associations__hint">
+            Aucun cursus disponible pour cette filière. Créez d’abord un cursus.
+          </p>
+        }
+      </section>
+
+      @if (formError()) {
+        <p class="form-error" role="alert">{{ formError() }}</p>
+      }
+    </mat-dialog-content>
+
+    <mat-dialog-actions align="end">
+      <button
+        mat-button
+        type="button"
+        [disabled]="saving()"
+        (click)="cancelForm()"
+      >
+        Annuler
+      </button>
+
+      <button
+        mat-flat-button
+        class="fg-btn-primary"
+        type="submit"
+        [disabled]="saving() || !courseName().trim()"
+      >
+        {{
+          saving()
+            ? 'Enregistrement...'
+            : (editingCourse() ? 'Modifier' : 'Créer')
+        }}
+      </button>
+    </mat-dialog-actions>
+  </form>
+</ng-template>
+
+<ng-template #deleteCourseDialog>
+  <h2 mat-dialog-title>Supprimer le cours</h2>
+
+  <mat-dialog-content>
+    <p>
+      Voulez-vous supprimer le cours
+      <strong>{{ courseToDelete()?.name }}</strong> ?
+    </p>
+
+    <p>Cette action est définitive.</p>
+
+    @if (deleteError()) {
+      <p class="form-error" role="alert">{{ deleteError() }}</p>
+    }
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button
+      mat-button
+      type="button"
+      data-cancel-delete-course
+      [disabled]="deleting()"
+      (click)="cancelDelete()"
+    >
+      Annuler
+    </button>
+
+    <button
+      mat-stroked-button
+      class="course-delete-button"
+      type="button"
+      [disabled]="deleting()"
+      (click)="confirmDelete()"
+    >
+      {{ deleting() ? 'Suppression...' : 'Supprimer' }}
+    </button>
+  </mat-dialog-actions>
+</ng-template>
+
+<ng-template #unassociatedCourseDialog>
+  <h2 mat-dialog-title>Créer un cours sans cursus</h2>
+
+  <mat-dialog-content>
+    <p>
+      {{ unassociatedCourseMessage() }}
+    </p>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button
+      mat-button
+      type="button"
+      data-cancel-unassociated-course
+      [mat-dialog-close]="false"
+    >
+      Annuler
+    </button>
+
+    <button
+      mat-flat-button
+      class="fg-btn-primary"
+      type="button"
+      [mat-dialog-close]="true"
+    >
+      Créer
+    </button>
+  </mat-dialog-actions>
+</ng-template>
