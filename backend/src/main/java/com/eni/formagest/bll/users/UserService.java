@@ -13,6 +13,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 
 @Service
@@ -28,8 +29,9 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public List<UserDto> findAll() {
-        return UserMapper.toDtoList(userRepository.findAll());
+    public List<UserDto> findAll(UserRole role) {
+        List<User> users = role != null ? userRepository.findByRole(role) : userRepository.findAll();
+        return UserMapper.toDtoList(users);
     }
 
     @Transactional
@@ -46,7 +48,7 @@ public class UserService {
 
         if (role == UserRole.TEACHER) {
             sector = sectorRepository.findById(dto.getSectorId())
-                    .orElseThrow(() -> new IllegalArgumentException("Filière introuvable"));
+                    .orElseThrow((NoSuchElementException::new));
         }
 
         User user = UserMapper.toBo(dto, password, sector);
@@ -55,9 +57,9 @@ public class UserService {
     }
 
     @Transactional
-    public UserDto update(UserDto dto) {
-        User user = userRepository.findById(dto.getId())
-                .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable"));
+    public UserDto update(Long id, UserDto dto) {
+        User user = userRepository.findById(id)
+                .orElseThrow((NoSuchElementException::new));
         String email = dto.getEmail().strip();
         UserRole role = dto.getRole();
         Sector sector = null;
@@ -75,7 +77,7 @@ public class UserService {
 
         if (role == UserRole.TEACHER && user instanceof Teacher teacher) {
             sector = sectorRepository.findById(dto.getSectorId())
-                    .orElseThrow(() -> new IllegalArgumentException("Filière introuvable"));
+                    .orElseThrow((NoSuchElementException::new));
             teacher.setSector(sector);
         }
         if (role == UserRole.STUDENT && user instanceof Student student) {
@@ -85,13 +87,20 @@ public class UserService {
     }
 
     @Transactional
-    public UserDto changeRole(UserDto dto) {
-        User user = userRepository.findById(dto.getId())
-                .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable"));
+    public UserDto changeRole(Long id, UserDto dto) {
+        User user = userRepository.findById(id)
+                .orElseThrow((NoSuchElementException::new));
+
+        if (dto.getRole() != UserRole.ADMINISTRATOR && isLastAdministrator(user)) {
+            throw new IllegalStateException(
+                    "Impossible de retirer le rôle administrateur au dernier administrateur."
+            );
+        }
+
         Sector sector = null;
         if (dto.getRole() == UserRole.TEACHER) {
                 sector = sectorRepository.findById(dto.getSectorId())
-                    .orElseThrow(() -> new IllegalArgumentException("Filière introuvable"));
+                    .orElseThrow((NoSuchElementException::new));
         }
         User newUser = UserMapper.toBo(dto, user.getPassword(), sector);
         userRepository.delete(user);
@@ -102,7 +111,12 @@ public class UserService {
     @Transactional
     public void delete(Long id) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable"));
+                .orElseThrow((NoSuchElementException::new));
+
+        if (isLastAdministrator(user)) {
+            throw new IllegalStateException("Impossible de supprimer le dernier administrateur.");
+        }
+
         userRepository.delete(user);
         userRepository.flush();
     }
@@ -110,9 +124,19 @@ public class UserService {
     @Transactional
     public UserDto toggleActive(Long id) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable"));
+                .orElseThrow((NoSuchElementException::new));
+
+        if (user.isActive() && isLastAdministrator(user)) {
+            throw new IllegalStateException("Impossible de désactiver le dernier administrateur.");
+        }
+
         user.setActive(!user.isActive());
         return UserMapper.toDto(userRepository.save(user));
+    }
+
+    private boolean isLastAdministrator(User user) {
+        return user.getRole() == UserRole.ADMINISTRATOR
+                && userRepository.findByRole(UserRole.ADMINISTRATOR).size() <= 1;
     }
 
 }
