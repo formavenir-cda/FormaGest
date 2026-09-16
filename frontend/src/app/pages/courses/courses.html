@@ -63,6 +63,10 @@
   </section>
 
   <section class="courses-table" aria-label="Liste des cours">
+    @if (reorderError()) {
+      <p class="courses-table__error" role="alert">{{ reorderError() }}</p>
+    }
+
     <div class="courses-table__header">
       <span>Nom</span>
       <span>Filière</span>
@@ -71,18 +75,41 @@
       <span>Actions</span>
     </div>
 
-    @if (loading()) {
-      <p>Chargement des cours...</p>
-    } @else if (error()) {
-      <p role="alert">{{ error() }}</p>
-    } @else {
-      @for (course of filteredCourses(); track course.id) {
-        <div class="courses-table__row">
+    <div
+      cdkDropList
+      [cdkDropListData]="filteredCourses()"
+      [cdkDropListDisabled]="!canDragReorder()"
+      (cdkDropListDropped)="dropCourse($event)"
+    >
+      @if (loading()) {
+        <p>Chargement des cours...</p>
+      } @else if (error()) {
+        <p role="alert">{{ error() }}</p>
+      } @else {
+        @for (course of filteredCourses(); track course.id) {
+          <div
+            cdkDrag
+            class="courses-table__row"
+            [cdkDragDisabled]="!canDragReorder()"
+          >
           <span class="courses-table__name">{{ course.name }}</span>
           <span>{{ associatedSectorNames(course) }}</span>
           <span>{{ associatedTrackNames(course) }}</span>
           <span>{{ associatedPositions(course) }}</span>
           <span class="courses-table__actions">
+            @if (selectedTrackFilter()) {
+              <button
+                mat-icon-button
+                cdkDragHandle
+                type="button"
+                aria-label="Déplacer le cours"
+                matTooltip="Déplacer"
+                [disabled]="!canDragReorder()"
+              >
+                <span class="material-icons" aria-hidden="true">drag_indicator</span>
+              </button>
+            }
+
             <button
               mat-icon-button
               type="button"
@@ -109,6 +136,7 @@
         <p>Aucun cours trouvé.</p>
       }
     }
+    </div>
   </section>
 </section>
 
@@ -134,6 +162,30 @@
       </mat-form-field>
 
       <section class="course-associations" aria-label="Cursus associés">
+        @if (pendingAssociations().length) {
+          <div class="course-associations__list">
+            @for (association of pendingAssociations(); track association.trackId) {
+              <div class="course-associations__item">
+                <span>
+                  <strong>{{ association.trackName }}</strong>
+                  <small>{{ association.sectorName }}</small>
+                </span>
+
+                <button
+                  mat-icon-button
+                  type="button"
+                  aria-label="Retirer le cursus"
+                  matTooltip="Retirer"
+                  [disabled]="saving()"
+                  (click)="removeAssociation(association.trackId)"
+                >
+                  <span class="material-icons" aria-hidden="true">close</span>
+                </button>
+              </div>
+            }
+          </div>
+        }
+
         <div class="course-associations__controls">
           <mat-form-field appearance="outline">
             <mat-label>Filière</mat-label>
@@ -173,24 +225,20 @@
             </mat-select>
           </mat-form-field>
 
-          <mat-form-field appearance="outline">
-            <mat-label>Position</mat-label>
+          <button
+            mat-stroked-button
+            type="button"
+            [disabled]="saving() || !associationTrackId()"
+            (click)="addAssociation()"
+          >
+            Ajouter
+          </button>
 
-            <input
-              matInput
-              name="associationPosition"
-              type="number"
-              min="1"
-              [disabled]="saving() || !associationTrackId()"
-              [ngModel]="associationPosition()"
-              (ngModelChange)="setAssociationPosition($event)"
-            />
-          </mat-form-field>
         </div>
 
         @if (selectedSectorHasNoTracks()) {
           <p class="course-associations__hint">
-            Aucun cursus disponible pour cette filière. Créez d’abord un cursus.
+            Aucun cursus disponible à ajouter pour cette filière.
           </p>
         }
       </section>
