@@ -1,0 +1,208 @@
+package com.eni.formagest.controllers.training;
+
+import com.eni.formagest.bo.training.Course;
+import com.eni.formagest.bo.training.Sector;
+import com.eni.formagest.bo.training.Track;
+import com.eni.formagest.bo.training.TrackCourse;
+import com.eni.formagest.dal.training.CohortRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
+
+import static org.hamcrest.Matchers.containsString;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+@SpringBootTest
+@AutoConfigureMockMvc
+@Transactional
+class CohortControllerTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Autowired
+    private CohortRepository cohortRepository;
+
+    @PersistenceContext
+    private EntityManager entityManager;
+
+    @Test
+    @WithMockUser(roles = "ADMINISTRATIVE_MANAGER")
+    void createReturnsCreatedCohortWithOrderedUndatedCourses() throws Exception {
+        Track track = saveTrackWithCourses(
+                "CDA test promotion",
+                "Java",
+                "Angular",
+                "Spring"
+        );
+
+        mockMvc.perform(post("/api/cohorts")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "name": "CDA 2026",
+                                  "startDate": "2026-09-01",
+                                  "endDate": "2027-06-30",
+                                  "trackId": %d
+                                }
+                                """.formatted(track.getId())))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").isNumber())
+                .andExpect(jsonPath("$.name").value("CDA 2026"))
+                .andExpect(jsonPath("$.startDate").value("2026-09-01"))
+                .andExpect(jsonPath("$.endDate").value("2027-06-30"))
+                .andExpect(jsonPath("$.status").value("UPCOMING"))
+                .andExpect(jsonPath("$.trackId").value(track.getId()))
+                .andExpect(jsonPath("$.scheduledCourses.length()").value(3))
+                .andExpect(jsonPath("$.scheduledCourses[0].courseId").isNumber())
+                .andExpect(jsonPath("$.scheduledCourses[0].startDate").doesNotExist())
+                .andExpect(jsonPath("$.scheduledCourses[0].endDate").doesNotExist())
+                .andExpect(jsonPath("$.scheduledCourses[1].startDate").doesNotExist())
+                .andExpect(jsonPath("$.scheduledCourses[1].endDate").doesNotExist())
+                .andExpect(jsonPath("$.scheduledCourses[2].startDate").doesNotExist())
+                .andExpect(jsonPath("$.scheduledCourses[2].endDate").doesNotExist());
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMINISTRATIVE_MANAGER")
+    void createRejectsEndDateBeforeStartDate() throws Exception {
+        Track track = saveTrackWithCourses("CDA dates invalides", "Java");
+
+        mockMvc.perform(post("/api/cohorts")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "name": "CDA dates invalides",
+                                  "startDate": "2027-06-30",
+                                  "endDate": "2026-09-01",
+                                  "trackId": %d
+                                }
+                                """.formatted(track.getId())))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string(
+                        "La date de fin doit être postérieure ou égale à la date de début."
+                ));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMINISTRATIVE_MANAGER")
+    void createRejectsMissingTrack() throws Exception {
+        mockMvc.perform(post("/api/cohorts")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "name": "CDA cursus inconnu",
+                                  "startDate": "2026-09-01",
+                                  "endDate": "2027-06-30",
+                                  "trackId": 42
+                                }
+                                """))
+                .andExpect(status().isNotFound())
+                .andExpect(content().string("Ce cursus n’existe pas."));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMINISTRATIVE_MANAGER")
+    void createRejectsDuplicateName() throws Exception {
+        Track track = saveTrackWithCourses("CDA doublon", "Java");
+
+        cohortRepository.save(com.eni.formagest.bo.training.Cohort.builder()
+                .name("CDA doublon 2026")
+                .startDate(java.time.LocalDate.of(2026, 9, 1))
+                .endDate(java.time.LocalDate.of(2027, 6, 30))
+                .status(com.eni.formagest.bo.training.CohortStatus.UPCOMING)
+                .track(track)
+                .build());
+
+        mockMvc.perform(post("/api/cohorts")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "name": "CDA doublon 2026",
+                                  "startDate": "2026-09-01",
+                                  "endDate": "2027-06-30",
+                                  "trackId": %d
+                                }
+                                """.formatted(track.getId())))
+                .andExpect(status().isConflict())
+                .andExpect(content().string(
+                        "Une promotion portant ce nom existe déjà."
+                ));
+    }
+
+    @Test
+    @WithMockUser(roles = "STUDENT")
+    void createReturnsForbiddenForUnauthorizedRole() throws Exception {
+        mockMvc.perform(post("/api/cohorts")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "name": "CDA interdit",
+                                  "startDate": "2026-09-01",
+                                  "endDate": "2027-06-30",
+                                  "trackId": 1
+                                }
+                                """))
+                .andExpect(status().isForbidden());
+    }
+
+    private Track saveTrackWithCourses(String trackName, String... courseNames) {
+        Sector sector = Sector.builder()
+                .name("Secteur " + trackName)
+                .build();
+        Track track = Track.builder()
+                .name("Cursus " + trackName)
+                .sector(sector)
+                .build();
+
+        entityManager.persist(sector);
+        entityManager.persist(track);
+
+        for (int index = 0; index < courseNames.length; index++) {
+            Course course = Course.builder()
+                    .name(courseNames[index] + " " + trackName)
+                    .build();
+
+            entityManager.persist(course);
+            entityManager.persist(TrackCourse.builder()
+                    .track(track)
+                    .course(course)
+                    .position(index + 1)
+                    .build());
+        }
+
+        entityManager.flush();
+        entityManager.clear();
+
+        return track;
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMINISTRATIVE_MANAGER")
+    void findAllReturnsOkWithCohorts() throws Exception {
+        Track track = saveTrackWithCourses("CDA liste promotions", "Java");
+
+        cohortRepository.save(com.eni.formagest.bo.training.Cohort.builder()
+                .name("CDA 2026")
+                .startDate(java.time.LocalDate.of(2026, 9, 1))
+                .endDate(java.time.LocalDate.of(2027, 6, 30))
+                .status(com.eni.formagest.bo.training.CohortStatus.UPCOMING)
+                .track(track)
+                .build());
+
+        mockMvc.perform(get("/api/cohorts"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].name").value("CDA 2026"))
+                .andExpect(jsonPath("$[0].trackId").value(track.getId()));
+    }
+}
