@@ -48,7 +48,7 @@
 .courses-table__header,
 .courses-table__row {
   display: grid;
-  grid-template-columns: minmax(180px, 2fr) minmax(150px, 1fr) minmax(150px, 1fr) 80px 104px;
+  grid-template-columns: minmax(180px, 2fr) minmax(150px, 1fr) minmax(150px, 1fr) 80px 128px;
   align-items: center;
   gap: t.$fg-space-md;
   padding: t.$fg-space-md t.$fg-space-lg;
@@ -92,9 +92,38 @@
     color: t.$fg-primary;
   }
 
+  button:disabled {
+    color: t.$fg-text-disabled;
+  }
+
   .course-delete-icon:hover {
     color: t.$fg-error;
   }
+}
+
+.courses-table__row.cdk-drag-preview {
+  border: 1px solid t.$fg-border;
+  background: t.$fg-surface;
+  box-shadow: t.$fg-elev-3;
+}
+
+.courses-table__row.cdk-drag-placeholder {
+  opacity: 0.35;
+}
+
+.courses-table__row.cdk-drag-animating {
+  transition: transform 180ms ease;
+}
+
+.courses-table .cdk-drop-list-dragging .courses-table__row:not(.cdk-drag-placeholder) {
+  transition: transform 180ms ease;
+}
+
+p.courses-table__error {
+  margin: 0;
+  padding: t.$fg-space-md t.$fg-space-lg;
+  border-bottom: 1px solid t.$fg-divider;
+  color: t.$fg-error;
 }
 
 .course-field {
@@ -107,6 +136,45 @@
 
   p {
     margin: 0;
+  }
+}
+
+.course-associations__list {
+  display: grid;
+  gap: t.$fg-space-xs;
+  margin-bottom: t.$fg-space-md;
+}
+
+.course-associations__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: t.$fg-space-md;
+  min-height: 48px;
+  padding: t.$fg-space-sm t.$fg-space-md;
+  border: 1px solid t.$fg-border;
+  border-radius: t.$fg-radius-sm;
+  background: t.$fg-surface-variant;
+
+  span {
+    display: grid;
+    gap: 2px;
+  }
+
+  strong {
+    color: t.$fg-text-primary;
+    font-weight: 600;
+  }
+
+  small {
+    color: t.$fg-text-secondary;
+  }
+
+  button {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    color: t.$fg-text-secondary;
   }
 }
 
@@ -138,7 +206,7 @@
   }
 
   .course-associations__controls {
-    grid-template-columns: minmax(150px, 1fr) minmax(150px, 1fr) 120px;
+    grid-template-columns: minmax(150px, 1fr) minmax(150px, 1fr) auto;
   }
 }
 
@@ -149,6 +217,6 @@
 
   .courses-table__header,
   .courses-table__row {
-    min-width: 840px;
+    min-width: 880px;
   }
 }

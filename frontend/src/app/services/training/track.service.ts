@@ -2,6 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import type { Observable } from 'rxjs';
 import type { Track } from '../../models/training/track.model';
+import type { TrackCourse } from '../../models/training/track-course.model';
 import { environment } from '../../../environments/environment.development';
 
 @Injectable({ providedIn: 'root' })
@@ -32,5 +33,15 @@ export class TrackService {
 
   delete(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
+
+  reorderCourses(
+    trackId: number,
+    courses: { courseId: number; position: number }[]
+  ): Observable<TrackCourse[]> {
+    return this.http.put<TrackCourse[]>(
+      `${this.apiUrl}/${trackId}/courses/order`,
+      courses
+    );
   }
 }

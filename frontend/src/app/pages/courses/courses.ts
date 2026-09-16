@@ -7,6 +7,11 @@ import {
   TemplateRef,
   ViewChild,
 } from '@angular/core';
+import {
+  CdkDragDrop,
+  DragDropModule,
+  moveItemInArray,
+} from '@angular/cdk/drag-drop';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
@@ -23,6 +28,7 @@ import { MatTooltip } from '@angular/material/tooltip';
 import type { Course, CourseAssociation } from '../../models/training/course.model';
 import type { Sector } from '../../models/training/sector.model';
 import type { Track } from '../../models/training/track.model';
+import type { TrackCourse } from '../../models/training/track-course.model';
 import { CourseService } from '../../services/training/course.service';
 import { SectorService } from '../../services/training/sector.service';
 import { TrackService } from '../../services/training/track.service';
@@ -30,6 +36,7 @@ import { TrackService } from '../../services/training/track.service';
 @Component({
   selector: 'app-courses',
   imports: [
+    DragDropModule,
     FormsModule,
     MatButtonModule,
     MatDialogModule,
@@ -68,7 +75,7 @@ export class Courses implements OnInit {
   readonly courseName = signal('');
   readonly associationSectorId = signal<number | null>(null);
   readonly associationTrackId = signal<number | null>(null);
-  readonly associationPosition = signal<number | null>(null);
+  readonly pendingAssociations = signal<CourseAssociation[]>([]);
   readonly formError = signal('');
   readonly saving = signal(false);
   readonly editingCourse = signal<Course | null>(null);
@@ -77,6 +84,8 @@ export class Courses implements OnInit {
   readonly deleting = signal(false);
   readonly deleteError = signal('');
   readonly unassociatedCourseMessage = signal('');
+  readonly reordering = signal(false);
+  readonly reorderError = signal('');
 
   readonly sectorOptions = computed(() => {
     return this.sectors()
@@ -106,9 +115,13 @@ export class Courses implements OnInit {
 
   readonly associationTrackOptions = computed(() => {
     const sectorId = this.associationSectorId();
+    const selectedTrackIds = new Set(
+      this.pendingAssociations().map((association) => association.trackId)
+    );
 
     return this.tracks()
       .filter((track) => !sectorId || track.sectorId === sectorId)
+      .filter((track) => !selectedTrackIds.has(track.id))
       .sort((a, b) => a.name.localeCompare(b.name));
   });
 
@@ -116,38 +129,51 @@ export class Courses implements OnInit {
     !!this.associationSectorId() && this.associationTrackOptions().length === 0
   );
 
+  readonly canDragReorder = computed(() =>
+    !!this.selectedTrackFilter()
+    && !this.normalizeSearch(this.search())
+    && !this.reordering()
+  );
+
   readonly filteredCourses = computed(() => {
     const search = this.normalizeSearch(this.search());
     const sectorId = this.selectedSectorFilter();
     const trackId = this.selectedTrackFilter();
 
-    return this.courses().filter((course) => {
+    const filtered = this.courses().filter((course) => {
+      const visibleAssociations = this.visibleAssociations(course);
       const searchableValues = [
         course.name,
-        ...course.associations.map((association) => association.sectorName),
-        ...course.associations.map((association) => association.trackName),
+        ...visibleAssociations.map((association) => association.sectorName),
+        ...visibleAssociations.map((association) => association.trackName),
       ];
 
       const matchesSearch = search
         ? searchableValues.some((value) =>
-            this.normalizeSearch(value).includes(search)
-          )
+          this.normalizeSearch(value).includes(search)
+        )
         : true;
 
       const matchesSector = sectorId
         ? course.associations.some((association) =>
-            association.sectorId === sectorId
-          )
+          association.sectorId === sectorId
+        )
         : true;
 
       const matchesTrack = trackId
         ? course.associations.some((association) =>
-            association.trackId === trackId
-          )
+          association.trackId === trackId
+        )
         : true;
 
       return matchesSearch && matchesSector && matchesTrack;
     });
+
+    return trackId
+      ? filtered.sort((a, b) =>
+        this.positionForTrack(a, trackId) - this.positionForTrack(b, trackId)
+      )
+      : filtered.sort((a, b) => a.name.localeCompare(b.name));
   });
 
   ngOnInit(): void {
@@ -188,7 +214,7 @@ export class Courses implements OnInit {
     this.courseName.set('');
     this.associationSectorId.set(null);
     this.associationTrackId.set(null);
-    this.associationPosition.set(null);
+    this.pendingAssociations.set([]);
     this.formError.set('');
 
     this.formDialogRef = this.dialog.open(template, {
@@ -204,9 +230,9 @@ export class Courses implements OnInit {
 
     this.editingCourse.set(course);
     this.courseName.set(course.name);
-    this.associationSectorId.set(course.associations[0]?.sectorId ?? null);
-    this.associationTrackId.set(course.associations[0]?.trackId ?? null);
-    this.associationPosition.set(course.associations[0]?.position ?? null);
+    this.associationSectorId.set(null);
+    this.associationTrackId.set(null);
+    this.pendingAssociations.set([...course.associations]);
     this.formError.set('');
 
     this.formDialogRef = this.dialog.open(template, {
@@ -240,7 +266,7 @@ export class Courses implements OnInit {
     }
 
     const courseToEdit = this.editingCourse();
-    const associations = this.selectedFormAssociations();
+    const associations = this.pendingAssociations();
 
     if (!courseToEdit && associations.length === 0) {
       this.unassociatedCourseMessage.set(
@@ -383,41 +409,64 @@ export class Courses implements OnInit {
   selectSectorFilter(sectorId: number | null): void {
     this.selectedSectorFilter.set(sectorId);
     this.selectedTrackFilter.set(null);
+    this.reorderError.set('');
   }
 
   selectTrackFilter(trackId: number | null): void {
     this.selectedTrackFilter.set(trackId);
+    this.reorderError.set('');
+  }
+
+  dropCourse(event: CdkDragDrop<Course[]>): void {
+    const trackId = this.selectedTrackFilter();
+
+    if (!trackId || !this.canDragReorder()) return;
+
+    const orderedCourses = this.coursesForTrack(trackId);
+
+    if (event.previousIndex === event.currentIndex) {
+      return;
+    }
+
+    const reorderedCourses = [...orderedCourses];
+    moveItemInArray(reorderedCourses, event.previousIndex, event.currentIndex);
+
+    const order = reorderedCourses.map((item, index) => ({
+      courseId: item.id,
+      position: index + 1,
+    }));
+
+    this.reordering.set(true);
+    this.reorderError.set('');
+
+    this.trackService.reorderCourses(trackId, order).subscribe({
+      next: (trackCourses) => {
+        this.applyTrackCourseOrder(trackId, trackCourses);
+        this.reordering.set(false);
+      },
+      error: () => {
+        this.reordering.set(false);
+        this.reorderError.set(
+          'Impossible de modifier l’ordre des cours. Veuillez réessayer.'
+        );
+      },
+    });
   }
 
   selectAssociationSector(sectorId: number | null): void {
     this.associationSectorId.set(sectorId);
     this.associationTrackId.set(null);
-    this.associationPosition.set(null);
   }
 
   selectAssociationTrack(trackId: number | null): void {
     this.associationTrackId.set(trackId);
-
-    const existingAssociation = this.editingCourse()?.associations.find(
-      (association) => association.trackId === trackId
-    );
-
-    this.associationPosition.set(existingAssociation?.position ?? null);
   }
 
-  setAssociationPosition(position: string | number | null): void {
-    const value = Number(position);
-
-    this.associationPosition.set(Number.isFinite(value) && value > 0
-      ? value
-      : null);
-  }
-
-  private selectedFormAssociations(): CourseAssociation[] {
+  addAssociation(): void {
     const trackId = this.associationTrackId();
 
     if (!trackId) {
-      return [];
+      return;
     }
 
     const track = this.tracks().find((item) => item.id === trackId);
@@ -426,29 +475,91 @@ export class Courses implements OnInit {
       : null;
 
     if (!track || !sector) {
-      return [];
+      return;
     }
 
-    const existingAssociation = this.editingCourse()?.associations.find(
-      (association) => association.trackId === track.id
-    );
+    if (this.pendingAssociations().some((association) =>
+      association.trackId === track.id
+    )) {
+      return;
+    }
 
-    return [
+    this.pendingAssociations.update((associations) => [
+      ...associations,
       {
         sectorId: sector.id,
         sectorName: sector.name,
         trackId: track.id,
         trackName: track.name,
-        position: this.associationPosition()
-          ?? existingAssociation?.position
-          ?? 0,
+        position: 0,
       },
-    ];
+    ]);
+    this.associationTrackId.set(null);
+  }
+
+  removeAssociation(trackId: number): void {
+    this.pendingAssociations.update((associations) =>
+      associations.filter((association) => association.trackId !== trackId)
+    );
+  }
+
+  private visibleAssociations(course: Course): CourseAssociation[] {
+    const trackId = this.selectedTrackFilter();
+
+    return trackId
+      ? course.associations.filter((association) =>
+        association.trackId === trackId
+      )
+      : course.associations;
+  }
+
+  private positionForTrack(course: Course, trackId: number): number {
+    return course.associations.find((association) =>
+      association.trackId === trackId
+    )?.position ?? Number.MAX_SAFE_INTEGER;
+  }
+
+  private coursesForTrack(trackId: number): Course[] {
+    return this.courses()
+      .filter((course) =>
+        course.associations.some((association) =>
+          association.trackId === trackId
+        )
+      )
+      .sort((a, b) =>
+        this.positionForTrack(a, trackId) - this.positionForTrack(b, trackId)
+      );
+  }
+
+  private applyTrackCourseOrder(
+    trackId: number,
+    trackCourses: TrackCourse[]
+  ): void {
+    const positionsByCourseId = new Map(
+      trackCourses.map((trackCourse) => [
+        trackCourse.courseId,
+        trackCourse.position,
+      ])
+    );
+
+    this.courses.update((courses) =>
+      courses.map((course) => ({
+        ...course,
+        associations: course.associations.map((association) =>
+          association.trackId === trackId && positionsByCourseId.has(course.id)
+            ? {
+              ...association,
+              position: positionsByCourseId.get(course.id)!,
+            }
+            : association
+        ),
+      }))
+    );
   }
 
   associatedPositions(course: Course): string {
     return this.distinctNames(
-      course.associations.map((association) =>
+      this.visibleAssociations(course).map((association) =>
         association.position.toString()
       )
     );
@@ -456,13 +567,17 @@ export class Courses implements OnInit {
 
   associatedSectorNames(course: Course): string {
     return this.distinctNames(
-      course.associations.map((association) => association.sectorName)
+      this.visibleAssociations(course).map((association) =>
+        association.sectorName
+      )
     );
   }
 
   associatedTrackNames(course: Course): string {
     return this.distinctNames(
-      course.associations.map((association) => association.trackName)
+      this.visibleAssociations(course).map((association) =>
+        association.trackName
+      )
     );
   }
 

@@ -5,6 +5,7 @@ import com.eni.formagest.bo.training.Sector;
 import com.eni.formagest.bo.training.Track;
 import com.eni.formagest.bo.training.TrackCourse;
 import com.eni.formagest.dal.training.CourseRepository;
+import com.eni.formagest.dal.training.TrackCourseRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.junit.jupiter.api.Test;
@@ -18,8 +19,11 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -33,6 +37,9 @@ class CourseControllerTest {
 
     @Autowired
     private CourseRepository courseRepository;
+
+    @Autowired
+    private TrackCourseRepository trackCourseRepository;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -187,6 +194,93 @@ class CourseControllerTest {
                 .andExpect(content().string(
                         "Un cours portant ce nom existe déjà."
                 ));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMINISTRATIVE_MANAGER")
+    void updateTracksReturnsCourseWithAssociations() throws Exception {
+        Course course = courseRepository.save(Course.builder()
+                .name("Java")
+                .build());
+        Sector sector = Sector.builder()
+                .name("Secteur update associations")
+                .build();
+        Track firstTrack = Track.builder()
+                .name("Cursus update associations 1")
+                .sector(sector)
+                .build();
+        Track secondTrack = Track.builder()
+                .name("Cursus update associations 2")
+                .sector(sector)
+                .build();
+
+        entityManager.persist(sector);
+        entityManager.persist(firstTrack);
+        entityManager.persist(secondTrack);
+        entityManager.flush();
+        entityManager.clear();
+
+        mockMvc.perform(put("/api/courses/{id}/tracks", course.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                [%d, %d]
+                                """.formatted(firstTrack.getId(), secondTrack.getId())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(course.getId()))
+                .andExpect(jsonPath("$.associations.length()").value(2))
+                .andExpect(jsonPath("$.associations[0].trackId").value(firstTrack.getId()))
+                .andExpect(jsonPath("$.associations[0].position").value(1))
+                .andExpect(jsonPath("$.associations[1].trackId").value(secondTrack.getId()))
+                .andExpect(jsonPath("$.associations[1].position").value(1));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMINISTRATIVE_MANAGER")
+    void updateTracksRemovesAssociationAndCompactsRemainingPositions() throws Exception {
+        Sector sector = Sector.builder()
+                .name("Secteur retrait association")
+                .build();
+        Track track = Track.builder()
+                .name("Cursus retrait association")
+                .sector(sector)
+                .build();
+        Course firstCourse = Course.builder()
+                .name("Java retrait association")
+                .build();
+        Course secondCourse = Course.builder()
+                .name("Angular retrait association")
+                .build();
+
+        entityManager.persist(sector);
+        entityManager.persist(track);
+        entityManager.persist(firstCourse);
+        entityManager.persist(secondCourse);
+        entityManager.persist(TrackCourse.builder()
+                .track(track)
+                .course(firstCourse)
+                .position(1)
+                .build());
+        entityManager.persist(TrackCourse.builder()
+                .track(track)
+                .course(secondCourse)
+                .position(2)
+                .build());
+        entityManager.flush();
+        entityManager.clear();
+
+        mockMvc.perform(put("/api/courses/{id}/tracks", firstCourse.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("[]"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(firstCourse.getId()))
+                .andExpect(jsonPath("$.associations.length()").value(0));
+
+        List<TrackCourse> remainingTrackCourses =
+                trackCourseRepository.findByTrackIdOrderByPositionAsc(track.getId());
+
+        assertEquals(1, remainingTrackCourses.size());
+        assertEquals(secondCourse.getId(), remainingTrackCourses.getFirst().getCourse().getId());
+        assertEquals(1, remainingTrackCourses.getFirst().getPosition());
     }
 
     @Test
