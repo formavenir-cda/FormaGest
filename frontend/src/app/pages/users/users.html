@@ -1,0 +1,38 @@
+<section class="users-page">
+  <header class="users-page__header">
+    <nav class="users-tabs" aria-label="Navigation users">
+      <a
+        class="users-tabs__item"
+        routerLink="students"
+        routerLinkActive="users-tabs__item--active"
+      >
+        Élèves
+      </a>
+
+      <a
+        class="users-tabs__item"
+        routerLink="teachers"
+        routerLinkActive="users-tabs__item--active"
+      >
+        Formateurs
+      </a>
+
+      <a
+        class="users-tabs__item"
+        routerLink="administrative-managers"
+        routerLinkActive="users-tabs__item--active"
+      >
+        Référents administratifs
+      </a>
+      <a
+        class="users-tabs__item"
+        routerLink="administrators"
+        routerLinkActive="users-tabs__item--active"
+      >
+        Administrateurs
+      </a>
+    </nav>
+  </header>
+
+  <router-outlet></router-outlet>
+</section>

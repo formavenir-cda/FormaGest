@@ -1,0 +1,147 @@
+@use '../../../../styles/tokens' as t;
+
+:host {
+  display: block;
+}
+
+.administrators-page {
+  max-width: t.$fg-content-max;
+  margin-inline: auto;
+
+  p {
+    color: t.$fg-text-secondary;
+    line-height: 1.5;
+  }
+}
+
+.administrators-page__actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: t.$fg-space-lg;
+
+  button {
+    min-height: t.$fg-touch-target;
+    padding-inline: t.$fg-space-lg;
+    border-radius: t.$fg-radius-sm;
+  }
+
+  .material-icons {
+    margin-right: t.$fg-space-sm;
+    vertical-align: middle;
+  }
+}
+
+.administrators-toolbar {
+  display: grid;
+  grid-template-columns: 1fr;
+  margin-bottom: t.$fg-space-lg;
+}
+
+.administrators-table {
+  border: 1px solid t.$fg-border;
+  border-radius: t.$fg-radius-md;
+  background: t.$fg-surface;
+  overflow: hidden;
+}
+
+.administrators-table__header,
+.administrators-table__row {
+  display: grid;
+  grid-template-columns: minmax(140px, 1fr) minmax(140px, 1fr) minmax(200px, 1.4fr) 96px 104px;
+  align-items: center;
+  gap: t.$fg-space-md;
+  padding: t.$fg-space-md t.$fg-space-lg;
+}
+
+.administrators-table__header {
+  background: t.$fg-surface-variant;
+  color: t.$fg-text-secondary;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.administrators-table__row {
+  min-height: 64px;
+  border-top: 1px solid t.$fg-divider;
+  color: t.$fg-text-primary;
+
+  &--inactive {
+    color: t.$fg-text-secondary;
+    background: t.$fg-surface-variant;
+  }
+}
+
+.administrators-table__name {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.administrators-table__actions {
+  display: flex;
+  gap: t.$fg-space-xs;
+
+  button {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    color: t.$fg-text-secondary;
+  }
+
+  .material-icons {
+    font-size: 18px;
+  }
+
+  button:hover {
+    color: t.$fg-primary;
+  }
+
+  .administrator-delete-icon:hover {
+    color: t.$fg-error;
+  }
+}
+
+.administrators-status {
+  border: 1px solid t.$fg-border;
+  border-radius: t.$fg-radius-sm;
+  padding: 2px t.$fg-space-sm;
+  background: none;
+  color: t.$fg-text-secondary;
+  font-size: 0.8125rem;
+  cursor: pointer;
+
+  &--active {
+    border-color: t.$fg-primary;
+    color: t.$fg-primary;
+  }
+}
+
+.administrator-field {
+  width: 100%;
+  margin-top: t.$fg-space-sm;
+}
+
+.create-error {
+  color: t.$fg-error;
+}
+
+.administrator-delete-button {
+  color: t.$fg-error;
+}
+
+@include t.fg-tablet-up {
+  .administrators-toolbar {
+    grid-template-columns: minmax(240px, 360px);
+  }
+}
+
+@media (max-width: 640px) {
+  .administrators-table {
+    overflow-x: auto;
+  }
+
+  .administrators-table__header,
+  .administrators-table__row {
+    min-width: 600px;
+  }
+}

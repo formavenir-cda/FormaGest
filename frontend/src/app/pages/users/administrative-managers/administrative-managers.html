@@ -1,0 +1,326 @@
+<section class="managers-page">
+  <div class="managers-page__actions">
+    <button
+      mat-flat-button
+      class="fg-btn-primary"
+      type="button"
+      (click)="openCreateForm(createManagerDialog)"
+    >
+      <span class="material-icons" aria-hidden="true">
+        add_circle_outline
+      </span>
+      Nouvelle référente
+    </button>
+  </div>
+
+  <section class="managers-toolbar">
+    <mat-form-field appearance="outline">
+      <mat-label>Rechercher</mat-label>
+
+      <input
+        matInput
+        name="managerSearch"
+        [ngModel]="search()"
+        (ngModelChange)="search.set($event)"
+      />
+    </mat-form-field>
+  </section>
+
+  <section class="managers-table" aria-label="Liste des référentes administratives">
+    <div class="managers-table__header">
+      <span>Nom</span>
+      <span>Prénom</span>
+      <span>Email</span>
+      <span>Statut</span>
+      <span>Actions</span>
+    </div>
+
+    @if (loading()) {
+      <p>Chargement des référentes...</p>
+    } @else if (error()) {
+      <p role="alert">{{ error() }}</p>
+    } @else {
+      @for (manager of filteredManagers(); track manager.id) {
+        <div
+          class="managers-table__row"
+          [class.managers-table__row--inactive]="!manager.active"
+        >
+          <span class="managers-table__name">{{ manager.lastName }}</span>
+          <span>{{ manager.firstName }}</span>
+          <span>{{ manager.email }}</span>
+          <span>
+            <button
+              type="button"
+              class="managers-status"
+              [class.managers-status--active]="manager.active"
+              (click)="toggleActive(manager)"
+            >
+              {{ manager.active ? 'Actif' : 'Inactif' }}
+            </button>
+          </span>
+          <span class="managers-table__actions">
+            <button
+              mat-icon-button
+              type="button"
+              aria-label="Modifier la référente"
+              matTooltip="Modifier"
+              (click)="editManager(manager, createManagerDialog)"
+            >
+              <span class="material-icons" aria-hidden="true">edit</span>
+            </button>
+
+            <button
+              mat-icon-button
+              type="button"
+              aria-label="Changer le rôle"
+              matTooltip="Changer de rôle"
+              (click)="openChangeRoleForm(manager, changeRoleDialog)"
+            >
+              <span class="material-icons" aria-hidden="true">swap_horiz</span>
+            </button>
+
+            <button
+              mat-icon-button
+              class="manager-delete-icon"
+              type="button"
+              aria-label="Supprimer la référente"
+              matTooltip="Supprimer"
+              (click)="deleteManager(manager, deleteManagerDialog)"
+            >
+              <span class="material-icons" aria-hidden="true">delete_outline</span>
+            </button>
+          </span>
+        </div>
+      } @empty {
+        <p>Aucune référente trouvée.</p>
+      }
+    }
+  </section>
+</section>
+
+<ng-template #createManagerDialog>
+  <h2 mat-dialog-title>
+    {{ editingManager() ? 'Modifier la référente' : 'Nouvelle référente' }}
+  </h2>
+
+  <form (ngSubmit)="submitForm()">
+    <mat-dialog-content>
+      <mat-form-field appearance="outline" class="manager-field">
+        <mat-label>Nom</mat-label>
+
+        <input
+          matInput
+          name="newManagerLastName"
+          required
+          maxlength="255"
+          [disabled]="creating()"
+          [ngModel]="newLastName()"
+          (ngModelChange)="newLastName.set($event)"
+        />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="manager-field">
+        <mat-label>Prénom</mat-label>
+
+        <input
+          matInput
+          name="newManagerFirstName"
+          required
+          maxlength="255"
+          [disabled]="creating()"
+          [ngModel]="newFirstName()"
+          (ngModelChange)="newFirstName.set($event)"
+        />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="manager-field">
+        <mat-label>Email</mat-label>
+
+        <input
+          matInput
+          type="email"
+          name="newManagerEmail"
+          required
+          maxlength="255"
+          [disabled]="creating()"
+          [ngModel]="newEmail()"
+          (ngModelChange)="newEmail.set($event)"
+        />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="manager-field">
+        <mat-label>Mot de passe</mat-label>
+
+        <input
+          matInput
+          type="password"
+          name="newManagerPassword"
+          [required]="!editingManager()"
+          [disabled]="creating()"
+          [ngModel]="newPassword()"
+          (ngModelChange)="newPassword.set($event)"
+        />
+
+        @if (editingManager()) {
+          <mat-hint>Laisser vide pour ne pas modifier le mot de passe.</mat-hint>
+        }
+      </mat-form-field>
+
+      @if (createError()) {
+        <p class="create-error" role="alert">{{ createError() }}</p>
+      }
+    </mat-dialog-content>
+
+    <mat-dialog-actions align="end">
+      <button
+        mat-button
+        type="button"
+        [disabled]="creating()"
+        (click)="cancelCreate()"
+      >
+        Annuler
+      </button>
+
+      <button
+        mat-flat-button
+        class="fg-btn-primary"
+        type="submit"
+        [disabled]="creating()"
+      >
+        {{
+          creating()
+            ? 'Enregistrement...'
+            : (editingManager() ? 'Modifier' : 'Créer')
+        }}
+      </button>
+    </mat-dialog-actions>
+  </form>
+</ng-template>
+
+<ng-template #deleteManagerDialog>
+  <h2 mat-dialog-title>Supprimer la référente</h2>
+
+  <mat-dialog-content>
+    <p>
+      Voulez-vous supprimer la référente
+      <strong>{{ managerToDelete()?.firstName }} {{ managerToDelete()?.lastName }}</strong> ?
+    </p>
+
+    <p>Cette action est définitive.</p>
+
+    @if (deleteError()) {
+      <p class="create-error" role="alert">
+        {{ deleteError() }}
+      </p>
+    }
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button
+      mat-button
+      type="button"
+      data-cancel-delete
+      [disabled]="deleting()"
+      (click)="cancelDelete()"
+    >
+      Annuler
+    </button>
+
+    <button
+      mat-stroked-button
+      class="manager-delete-button"
+      type="button"
+      [disabled]="deleting()"
+      (click)="confirmDelete()"
+    >
+      {{ deleting() ? 'Suppression...' : 'Supprimer' }}
+    </button>
+  </mat-dialog-actions>
+</ng-template>
+
+<ng-template #changeRoleDialog>
+  <h2 mat-dialog-title>Changer le rôle</h2>
+
+  <form (ngSubmit)="submitChangeRole()">
+    <mat-dialog-content>
+      <p>
+        Nouveau rôle pour
+        <strong>{{ changingRoleManager()?.firstName }} {{ changingRoleManager()?.lastName }}</strong> :
+      </p>
+
+      <mat-form-field appearance="outline" class="manager-field">
+        <mat-label>Rôle</mat-label>
+
+        <mat-select
+          name="newRole"
+          required
+          [disabled]="changingRole()"
+          [ngModel]="newRole()"
+          (ngModelChange)="newRole.set($event)"
+        >
+          @for (role of availableRoles(); track role) {
+            <mat-option [value]="role">{{ roleLabels[role] }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      @if (newRole() === 'TEACHER') {
+        <mat-form-field appearance="outline" class="manager-field">
+          <mat-label>Filière</mat-label>
+
+          <mat-select
+            name="newRoleSectorId"
+            required
+            [disabled]="changingRole()"
+            [ngModel]="newRoleSectorId()"
+            (ngModelChange)="newRoleSectorId.set($event)"
+          >
+            @for (sector of sectors(); track sector.id) {
+              <mat-option [value]="sector.id">{{ sector.name }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      }
+
+      @if (newRole() === 'STUDENT') {
+        <mat-form-field appearance="outline" class="manager-field">
+          <mat-label>Date de naissance</mat-label>
+
+          <input
+            matInput
+            type="date"
+            name="newRoleBirthDate"
+            required
+            [disabled]="changingRole()"
+            [ngModel]="newRoleBirthDate()"
+            (ngModelChange)="newRoleBirthDate.set($event)"
+          />
+        </mat-form-field>
+      }
+
+      @if (changeRoleError()) {
+        <p class="create-error" role="alert">{{ changeRoleError() }}</p>
+      }
+    </mat-dialog-content>
+
+    <mat-dialog-actions align="end">
+      <button
+        mat-button
+        type="button"
+        [disabled]="changingRole()"
+        (click)="cancelChangeRole()"
+      >
+        Annuler
+      </button>
+
+      <button
+        mat-flat-button
+        class="fg-btn-primary"
+        type="submit"
+        [disabled]="changingRole() || !newRole()"
+      >
+        {{ changingRole() ? 'Enregistrement...' : 'Changer le rôle' }}
+      </button>
+    </mat-dialog-actions>
+  </form>
+</ng-template>
