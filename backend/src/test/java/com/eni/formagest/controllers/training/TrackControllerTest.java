@@ -2,9 +2,12 @@ package com.eni.formagest.controllers.training;
 
 import com.eni.formagest.bo.training.Cohort;
 import com.eni.formagest.bo.training.CohortStatus;
+import com.eni.formagest.bo.training.Course;
 import com.eni.formagest.bo.training.Sector;
 import com.eni.formagest.bo.training.Track;
+import com.eni.formagest.bo.training.TrackCourse;
 import com.eni.formagest.dal.training.SectorRepository;
+import com.eni.formagest.dal.training.TrackCourseRepository;
 import com.eni.formagest.dal.training.TrackRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -20,6 +23,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -36,6 +40,9 @@ class TrackControllerTest {
 
     @Autowired
     private TrackRepository trackRepository;
+
+    @Autowired
+    private TrackCourseRepository trackCourseRepository;
 
     @Autowired
     private SectorRepository sectorRepository;
@@ -295,6 +302,79 @@ class TrackControllerTest {
 
     @Test
     @WithMockUser(roles = "ADMINISTRATIVE_MANAGER")
+    void reorderCoursesReturnsUpdatedOrder() throws Exception {
+        Track track = saveTrackWithCourses(
+                "Controller ordre OK",
+                "Java",
+                "Angular",
+                "Spring"
+        );
+        List<TrackCourse> courses =
+                trackCourseRepository.findByTrackIdOrderByPositionAsc(track.getId());
+
+        mockMvc.perform(put("/api/tracks/{id}/courses/order", track.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                [
+                                  {"courseId": %d, "position": 1},
+                                  {"courseId": %d, "position": 2},
+                                  {"courseId": %d, "position": 3}
+                                ]
+                                """.formatted(
+                                courses.get(2).getCourse().getId(),
+                                courses.get(0).getCourse().getId(),
+                                courses.get(1).getCourse().getId()
+                        )))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(3))
+                .andExpect(jsonPath("$[0].courseId").value(courses.get(2).getCourse().getId()))
+                .andExpect(jsonPath("$[0].position").value(1))
+                .andExpect(jsonPath("$[1].courseId").value(courses.get(0).getCourse().getId()))
+                .andExpect(jsonPath("$[1].position").value(2))
+                .andExpect(jsonPath("$[2].courseId").value(courses.get(1).getCourse().getId()))
+                .andExpect(jsonPath("$[2].position").value(3));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMINISTRATIVE_MANAGER")
+    void reorderCoursesReturnsNotFoundWithMessage() throws Exception {
+        mockMvc.perform(put("/api/tracks/42/courses/order")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("[]"))
+                .andExpect(status().isNotFound())
+                .andExpect(content().string("Ce cursus n’existe pas."));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMINISTRATIVE_MANAGER")
+    void reorderCoursesReturnsConflictWithDuplicatePositionMessage() throws Exception {
+        Track track = saveTrackWithCourses(
+                "Controller position dupliquee",
+                "Java",
+                "Angular"
+        );
+        List<TrackCourse> courses =
+                trackCourseRepository.findByTrackIdOrderByPositionAsc(track.getId());
+
+        mockMvc.perform(put("/api/tracks/{id}/courses/order", track.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                [
+                                  {"courseId": %d, "position": 1},
+                                  {"courseId": %d, "position": 1}
+                                ]
+                                """.formatted(
+                                courses.get(0).getCourse().getId(),
+                                courses.get(1).getCourse().getId()
+                        )))
+                .andExpect(status().isConflict())
+                .andExpect(content().string(
+                        "Deux cours ne peuvent pas avoir la même position."
+                ));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMINISTRATIVE_MANAGER")
     void deleteReturnsNoContent() throws Exception {
         Sector sector = saveSector("Informatique");
         Track track = trackRepository.saveAndFlush(Track.builder()
@@ -348,5 +428,35 @@ class TrackControllerTest {
         return sectorRepository.save(Sector.builder()
                 .name(name)
                 .build());
+    }
+
+    private Track saveTrackWithCourses(String trackName, String... courseNames) {
+        Sector sector = Sector.builder()
+                .name("Secteur " + trackName)
+                .build();
+        Track track = Track.builder()
+                .name("Cursus " + trackName)
+                .sector(sector)
+                .build();
+
+        entityManager.persist(sector);
+        entityManager.persist(track);
+
+        for (int index = 0; index < courseNames.length; index++) {
+            Course course = Course.builder()
+                    .name(courseNames[index] + " " + trackName)
+                    .build();
+            entityManager.persist(course);
+            entityManager.persist(TrackCourse.builder()
+                    .track(track)
+                    .course(course)
+                    .position(index + 1)
+                    .build());
+        }
+
+        entityManager.flush();
+        entityManager.clear();
+
+        return track;
     }
 }

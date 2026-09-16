@@ -1,5 +1,8 @@
 package com.eni.formagest.controllers.training;
 
+import com.eni.formagest.bll.training.TrackCourseService;
+import com.eni.formagest.dto.training.TrackCourseDto;
+import com.eni.formagest.dto.training.TrackCourseOrderDto;
 import com.eni.formagest.bll.training.TrackService;
 import com.eni.formagest.dto.training.TrackDto;
 import jakarta.validation.Valid;
@@ -16,9 +19,11 @@ import java.util.NoSuchElementException;
 public class TrackController {
 
     private final TrackService trackService;
+    private final TrackCourseService trackCourseService;
 
-    public TrackController(TrackService trackService) {
+    public TrackController(TrackService trackService, TrackCourseService trackCourseService) {
         this.trackService = trackService;
+        this.trackCourseService = trackCourseService;
     }
 
     @GetMapping
@@ -66,6 +71,23 @@ public class TrackController {
             );
         } catch (NoSuchElementException e) {
             throw notFound(e);
+        }
+    }
+
+    @PutMapping("/{id}/courses/order")
+    public List<TrackCourseDto> reorderCourses(
+            @PathVariable Long id,
+            @Valid @RequestBody List<TrackCourseOrderDto> order) {
+        try {
+            return trackCourseService.reorderCourses(id, order);
+        } catch (NoSuchElementException e) {
+            throw notFound(e);
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    e.getMessage(),
+                    e
+            );
         }
     }
 

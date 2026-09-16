@@ -1,6 +1,7 @@
 package com.eni.formagest.controllers.training;
 
 import com.eni.formagest.bll.training.CourseService;
+import com.eni.formagest.bll.training.TrackCourseService;
 import com.eni.formagest.dto.training.CourseDto;
 import jakarta.validation.Valid;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -16,9 +17,13 @@ import java.util.NoSuchElementException;
 public class CourseController {
 
     private final CourseService courseService;
+    private final TrackCourseService trackCourseService;
 
-    public CourseController(CourseService courseService) {
+    public CourseController(
+            CourseService courseService,
+            TrackCourseService trackCourseService) {
         this.courseService = courseService;
+        this.trackCourseService = trackCourseService;
     }
 
     @GetMapping
@@ -33,8 +38,6 @@ public class CourseController {
             return courseService.create(dto);
         } catch (IllegalArgumentException e) {
             throw duplicateCourse(e);
-        } catch (NoSuchElementException e) {
-            throw notFound(e);
         }
     }
 
@@ -49,6 +52,24 @@ public class CourseController {
             throw notFound(e);
         } catch (IllegalArgumentException e) {
             throw duplicateCourse(e);
+        }
+    }
+
+    @PutMapping("/{id}/tracks")
+    public CourseDto updateTracks(
+            @PathVariable Long id,
+            @RequestBody List<Long> trackIds) {
+
+        try {
+            return trackCourseService.updateCourseTracks(id, trackIds);
+        } catch (NoSuchElementException e) {
+            throw notFound(e);
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    e.getMessage(),
+                    e
+            );
         }
     }
 
@@ -78,7 +99,7 @@ public class CourseController {
     }
 
     private ResponseStatusException notFound(NoSuchElementException e) {
-        String message = CourseService.MISSING_TRACK.equals(e.getMessage())
+        String message = TrackCourseService.MISSING_TRACK.equals(e.getMessage())
                 ? "Ce cursus n’existe pas."
                 : "Ce cours n’existe pas.";
 
