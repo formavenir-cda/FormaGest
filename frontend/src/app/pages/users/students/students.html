@@ -49,7 +49,7 @@
           <span class="students-table__name">{{ student.lastName }}</span>
           <span>{{ student.firstName }}</span>
           <span>{{ student.email }}</span>
-          <span>{{ student.birthDate }}</span>
+          <span>{{ student.birthDate | date:'dd/MM/yyyy' }}</span>
           <span>
             <button
               type="button"
