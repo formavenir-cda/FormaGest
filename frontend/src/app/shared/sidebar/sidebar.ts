@@ -29,7 +29,7 @@ export class Sidebar {
   }
 
   protected readonly mainNavItems: SidebarNavItem[] = [
-    { label: 'Accueil', icon: 'home' },
+    { label: 'Accueil', icon: 'home', route: '/home' },
     { label: 'Promotions', icon: 'groups' },
     { label: 'Mon calendrier', icon: 'calendar_month', roles: ['STUDENT'] },
     { label: 'Mes inscriptions', icon: 'assignment' },

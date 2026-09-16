@@ -1,0 +1,35 @@
+@use '../../../styles/tokens' as t;
+
+:host {
+  display: block;
+}
+
+.home-page {
+  display: flex;
+  flex-direction: column;
+  gap: t.$fg-space-md;
+
+  h2 {
+    margin: 0;
+    font-family: t.$fg-font-display;
+    font-size: 17px;
+    font-weight: 700;
+    color: t.$fg-text-primary;
+
+    @include t.fg-desktop-up {
+      font-size: 20px;
+    }
+  }
+
+  &__quick-access {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: t.$fg-space-md;
+  }
+
+  &__empty {
+    margin: 0;
+    color: t.$fg-text-secondary;
+    font-size: 15px;
+  }
+}

@@ -1,0 +1,18 @@
+<section class="home-page">
+  <h2>Accès rapide</h2>
+
+  @if (visibleCards().length) {
+    <div class="home-page__quick-access">
+      @for (card of visibleCards(); track card.route) {
+        <a class="fg-quick-access" [routerLink]="card.route">
+          <span class="fg-quick-access__icon">
+            <span class="material-icons">{{ card.icon }}</span>
+          </span>
+          <span class="fg-quick-access__label">{{ card.label }}</span>
+        </a>
+      }
+    </div>
+  } @else {
+    <p class="home-page__empty">Aucun raccourci disponible pour le moment.</p>
+  }
+</section>
