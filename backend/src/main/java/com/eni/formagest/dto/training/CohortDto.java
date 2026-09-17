@@ -25,7 +25,6 @@ public class CohortDto {
     @NotNull(message = "La date de début est obligatoire.")
     private LocalDate startDate;
 
-    @NotNull(message = "La date de fin est obligatoire.")
     private LocalDate endDate;
 
     private CohortStatus status;

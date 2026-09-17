@@ -12,7 +12,6 @@ import jakarta.persistence.PersistenceContext;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
@@ -248,6 +247,22 @@ class TrackServiceTest {
     }
 
     @Test
+    void updateRejectsTrackUsedInCohort() {
+        Track track = saveTrackWithCohort("CDA update bloque");
+        TrackDto dto = TrackDto.builder()
+                .name("Nouveau cursus")
+                .sectorId(track.getSector().getId())
+                .build();
+
+        IllegalStateException exception = assertThrows(
+                IllegalStateException.class,
+                () -> trackService.update(track.getId(), dto)
+        );
+
+        assertEquals(TrackService.TRACK_USED_IN_COHORT, exception.getMessage());
+    }
+
+    @Test
     void deleteRemovesExistingTrack() {
         Sector sector = saveSector("Informatique");
         Track track = trackRepository.saveAndFlush(Track.builder()
@@ -271,15 +286,32 @@ class TrackServiceTest {
     }
 
     @Test
-    void deleteThrowsDataIntegrityViolationWhenTrackIsReferenced() {
-        Sector sector = saveSector("Informatique");
+    void deleteRejectsTrackUsedInCohort() {
+        Track track = saveTrackWithCohort("CDA delete bloque");
+
+        IllegalStateException exception = assertThrows(
+                IllegalStateException.class,
+                () -> trackService.delete(track.getId())
+        );
+
+        assertEquals(TrackService.TRACK_USED_IN_COHORT, exception.getMessage());
+    }
+
+    private Sector saveSector(String name) {
+        return sectorRepository.save(Sector.builder()
+                .name(name)
+                .build());
+    }
+
+    private Track saveTrackWithCohort(String trackName) {
+        Sector sector = saveSector("Secteur " + trackName);
         Track track = trackRepository.saveAndFlush(Track.builder()
-                .name("Concepteur developpeur")
+                .name(trackName)
                 .sector(sector)
                 .build());
 
         entityManager.persist(Cohort.builder()
-                .name("CDA 2026")
+                .name("Promotion " + trackName)
                 .startDate(LocalDate.of(2026, 1, 1))
                 .endDate(LocalDate.of(2026, 12, 31))
                 .status(CohortStatus.UPCOMING)
@@ -288,13 +320,6 @@ class TrackServiceTest {
         entityManager.flush();
         entityManager.clear();
 
-        assertThrows(DataIntegrityViolationException.class,
-                () -> trackService.delete(track.getId()));
-    }
-
-    private Sector saveSector(String name) {
-        return sectorRepository.save(Sector.builder()
-                .name(name)
-                .build());
+        return track;
     }
 }

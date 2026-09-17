@@ -13,6 +13,7 @@ public class ScheduledCourseDto {
     private Long id;
     private Long cohortId;
     private Long courseId;
+    private String courseName;
     private Long teacherId;
     private LocalDate startDate;
     private LocalDate endDate;

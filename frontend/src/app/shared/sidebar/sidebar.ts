@@ -34,7 +34,12 @@ export class Sidebar {
     { label: 'Mon calendrier', icon: 'calendar_month', roles: ['STUDENT'] },
     { label: 'Mes inscriptions', icon: 'assignment' },
     { label: 'Mes cours', icon: 'menu_book' },
-    { label: 'Mes promotions', icon: 'school'},
+    {
+      label: 'Promotions',
+      icon: 'groups',
+      route: '/promotions',
+      roles: ['ADMINISTRATIVE_MANAGER'],
+    },
     { label: 'Inscriptions', icon: 'how_to_reg', roles: ['ADMINISTRATIVE_MANAGER'] },
     { label: 'Élèves',
       icon: 'person_search',

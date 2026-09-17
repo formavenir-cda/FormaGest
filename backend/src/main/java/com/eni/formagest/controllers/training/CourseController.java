@@ -53,6 +53,8 @@ public class CourseController {
             return courseService.update(id, dto);
         } catch (NoSuchElementException e) {
             throw notFound(e);
+        } catch (IllegalStateException e) {
+            throw courseUsed(e);
         } catch (IllegalArgumentException e) {
             throw duplicateCourse(e);
         }
@@ -67,6 +69,8 @@ public class CourseController {
             return trackCourseService.updateCourseTracks(id, trackIds);
         } catch (NoSuchElementException e) {
             throw notFound(e);
+        } catch (IllegalStateException e) {
+            throw courseOrTrackUsed(e);
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
@@ -84,6 +88,8 @@ public class CourseController {
             courseService.delete(id);
         } catch (NoSuchElementException e) {
             throw notFound(e);
+        } catch (IllegalStateException e) {
+            throw courseUsed(e);
         } catch (DataIntegrityViolationException e) {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
@@ -98,6 +104,26 @@ public class CourseController {
         return new ResponseStatusException(
                 HttpStatus.CONFLICT,
                 "Un cours portant ce nom existe déjà.",
+                e
+        );
+    }
+
+    private ResponseStatusException courseUsed(RuntimeException e) {
+        return new ResponseStatusException(
+                HttpStatus.CONFLICT,
+                "Impossible de modifier ce cours : il est utilisé dans une promotion.",
+                e
+        );
+    }
+
+    private ResponseStatusException courseOrTrackUsed(RuntimeException e) {
+        String message = TrackCourseService.TRACK_USED_IN_COHORT.equals(e.getMessage())
+                ? "Impossible de modifier ce cursus : il est utilisé dans une promotion."
+                : "Impossible de modifier ce cours : il est utilisé dans une promotion.";
+
+        return new ResponseStatusException(
+                HttpStatus.CONFLICT,
+                message,
                 e
         );
     }

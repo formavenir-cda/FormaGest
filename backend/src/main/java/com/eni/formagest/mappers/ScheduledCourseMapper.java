@@ -16,6 +16,7 @@ public final class ScheduledCourseMapper {
                 .id(scheduledCourse.getId())
                 .cohortId(scheduledCourse.getCohort().getId())
                 .courseId(scheduledCourse.getCourse().getId())
+                .courseName(scheduledCourse.getCourse().getName())
                 .teacherId(scheduledCourse.getTeacher() != null ? scheduledCourse.getTeacher().getId() : null)
                 .startDate(scheduledCourse.getStartDate())
                 .endDate(scheduledCourse.getEndDate())

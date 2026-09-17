@@ -14,6 +14,9 @@ import com.eni.formagest.mappers.CohortMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -21,6 +24,7 @@ import java.util.NoSuchElementException;
 public class CohortService {
 
     public static final String MISSING_TRACK = "track";
+    public static final String EMPTY_TRACK = "empty-track";
 
     private final CohortRepository cohortRepository;
     private final TrackRepository trackRepository;
@@ -51,36 +55,79 @@ public class CohortService {
             throw new IllegalArgumentException("duplicate");
         }
 
-        if (dto.getEndDate().isBefore(dto.getStartDate())) {
-            throw new IllegalArgumentException("date");
-        }
-
         Track track = trackRepository.findById(dto.getTrackId())
                 .orElseThrow(() -> new NoSuchElementException(MISSING_TRACK));
+
+        List<TrackCourse> trackCourses =
+                trackCourseRepository.findByTrackIdOrderByPositionAsc(track.getId());
+
+        if (trackCourses.isEmpty()) {
+            throw new IllegalArgumentException(EMPTY_TRACK);
+        }
+
+        List<ScheduledCourse> scheduledCourses = new ArrayList<>();
+        LocalDate nextCourseStart = nextWorkingDay(dto.getStartDate());
+        LocalDate cohortEndDate = nextCourseStart;
 
         Cohort cohort = Cohort.builder()
                 .name(name)
                 .startDate(dto.getStartDate())
-                .endDate(dto.getEndDate())
+                .endDate(cohortEndDate)
                 .status(CohortStatus.UPCOMING)
                 .track(track)
                 .build();
 
         Cohort savedCohort = cohortRepository.save(cohort);
 
-        List<TrackCourse> trackCourses =
-                trackCourseRepository.findByTrackIdOrderByPositionAsc(track.getId());
+        for (TrackCourse trackCourse : trackCourses) {
+            LocalDate courseStartDate = nextWorkingDay(nextCourseStart);
+            LocalDate courseEndDate = addWorkingDays(
+                    courseStartDate,
+                    trackCourse.getCourse().getDurationInDays() - 1
+            );
 
-        List<ScheduledCourse> scheduledCourses = trackCourses.stream()
-                .map(trackCourse -> ScheduledCourse.builder()
-                        .cohort(savedCohort)
-                        .course(trackCourse.getCourse())
-                        .build())
-                .toList();
+            scheduledCourses.add(ScheduledCourse.builder()
+                    .cohort(savedCohort)
+                    .course(trackCourse.getCourse())
+                    .startDate(courseStartDate)
+                    .endDate(courseEndDate)
+                    .build());
+
+            cohortEndDate = courseEndDate;
+            nextCourseStart = nextWorkingDay(courseEndDate.plusDays(1));
+        }
+
+        savedCohort.setEndDate(cohortEndDate);
 
         scheduledCourseRepository.saveAll(scheduledCourses);
         savedCohort.setScheduledCourses(scheduledCourses);
 
         return CohortMapper.toDto(savedCohort);
+    }
+
+    private LocalDate addWorkingDays(LocalDate date, int daysToAdd) {
+        LocalDate result = date;
+
+        for (int daysAdded = 0; daysAdded < daysToAdd; daysAdded++) {
+            result = nextWorkingDay(result.plusDays(1));
+        }
+
+        return result;
+    }
+
+    private LocalDate nextWorkingDay(LocalDate date) {
+        LocalDate result = date;
+
+        while (isWeekend(result)) {
+            result = result.plusDays(1);
+        }
+
+        return result;
+    }
+
+    private boolean isWeekend(LocalDate date) {
+        DayOfWeek dayOfWeek = date.getDayOfWeek();
+        return DayOfWeek.SATURDAY.equals(dayOfWeek)
+                || DayOfWeek.SUNDAY.equals(dayOfWeek);
     }
 }

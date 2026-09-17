@@ -69,9 +69,9 @@ class TrackControllerTest {
 
     @Test
     @WithMockUser(roles = "STUDENT")
-    void findAllReturnsForbiddenForUnauthorizedRole() throws Exception {
+    void findAllReturnsOkForStudentRole() throws Exception {
         mockMvc.perform(get("/api/tracks"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isOk());
     }
 
     @Test
@@ -445,6 +445,7 @@ class TrackControllerTest {
         for (int index = 0; index < courseNames.length; index++) {
             Course course = Course.builder()
                     .name(courseNames[index] + " " + trackName)
+                    .durationInDays(5)
                     .build();
             entityManager.persist(course);
             entityManager.persist(TrackCourse.builder()

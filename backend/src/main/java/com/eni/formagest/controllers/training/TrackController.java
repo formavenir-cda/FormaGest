@@ -66,6 +66,8 @@ public class TrackController {
 
         try {
             return trackService.update(id, dto);
+        } catch (IllegalStateException e) {
+            throw trackUsed(e);
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
@@ -85,6 +87,8 @@ public class TrackController {
             return trackCourseService.reorderCourses(id, order);
         } catch (NoSuchElementException e) {
             throw notFound(e);
+        } catch (IllegalStateException e) {
+            throw trackUsed(e);
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
@@ -102,6 +106,13 @@ public class TrackController {
             trackService.delete(id);
         } catch (NoSuchElementException e) {
             throw notFound(e);
+        } catch (IllegalStateException e) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Impossible de supprimer ce cursus : "
+                            + "il est encore utilisé par des données associées.",
+                    e
+            );
         } catch (DataIntegrityViolationException e) {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
@@ -118,5 +129,13 @@ public class TrackController {
                 : "Ce cursus n’existe pas.";
 
         return new ResponseStatusException(HttpStatus.NOT_FOUND, message, e);
+    }
+
+    private ResponseStatusException trackUsed(RuntimeException e) {
+        return new ResponseStatusException(
+                HttpStatus.CONFLICT,
+                "Impossible de modifier ce cursus : il est utilisé dans une promotion.",
+                e
+        );
     }
 }

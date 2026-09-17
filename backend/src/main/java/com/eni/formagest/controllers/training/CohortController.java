@@ -35,14 +35,14 @@ public class CohortController {
         } catch (NoSuchElementException e) {
             throw new ResponseStatusException(
                     HttpStatus.NOT_FOUND,
-                    "Ce cursus n’existe pas.",
+                    "Ce cursus n'existe pas.",
                     e
             );
         } catch (IllegalArgumentException e) {
-            if ("date".equals(e.getMessage())) {
+            if (CohortService.EMPTY_TRACK.equals(e.getMessage())) {
                 throw new ResponseStatusException(
                         HttpStatus.BAD_REQUEST,
-                        "La date de fin doit être postérieure ou égale à la date de début.",
+                        "Le cursus doit contenir au moins un cours.",
                         e
                 );
             }

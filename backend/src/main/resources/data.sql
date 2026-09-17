@@ -96,152 +96,152 @@ SELECT 'CDA', s.sector_id FROM sector s WHERE s.name = 'Développement'
 AND NOT EXISTS (SELECT 1 FROM track WHERE name = 'CDA');
 
 -- --- Cours (catalogue, 37 intitulés uniques partagés entre cursus) ---
-INSERT INTO course (name)
-SELECT 'Algorithmique / Pseudo-Code'
+INSERT INTO course (name, duration_in_days)
+SELECT 'Algorithmique / Pseudo-Code', 5
 WHERE NOT EXISTS (SELECT 1 FROM course WHERE name = 'Algorithmique / Pseudo-Code');
 
-INSERT INTO course (name)
-SELECT 'Initiation à la Programmation / Java'
+INSERT INTO course (name, duration_in_days)
+SELECT 'Initiation à la Programmation / Java', 5
 WHERE NOT EXISTS (SELECT 1 FROM course WHERE name = 'Initiation à la Programmation / Java');
 
-INSERT INTO course (name)
-SELECT 'Web Client / HTML & CSS'
+INSERT INTO course (name, duration_in_days)
+SELECT 'Web Client / HTML & CSS', 5
 WHERE NOT EXISTS (SELECT 1 FROM course WHERE name = 'Web Client / HTML & CSS');
 
-INSERT INTO course (name)
-SELECT 'JavaScript initiation'
+INSERT INTO course (name, duration_in_days)
+SELECT 'JavaScript initiation', 5
 WHERE NOT EXISTS (SELECT 1 FROM course WHERE name = 'JavaScript initiation');
 
-INSERT INTO course (name)
-SELECT 'Projet Web / HTML & CSS + JS'
+INSERT INTO course (name, duration_in_days)
+SELECT 'Projet Web / HTML & CSS + JS', 5
 WHERE NOT EXISTS (SELECT 1 FROM course WHERE name = 'Projet Web / HTML & CSS + JS');
 
-INSERT INTO course (name)
-SELECT 'Programmation Orientée Objet / Java (partie 1)'
+INSERT INTO course (name, duration_in_days)
+SELECT 'Programmation Orientée Objet / Java (partie 1)', 5
 WHERE NOT EXISTS (SELECT 1 FROM course WHERE name = 'Programmation Orientée Objet / Java (partie 1)');
 
-INSERT INTO course (name)
-SELECT 'Programmation Orientée Objet / Java (partie 2)'
+INSERT INTO course (name, duration_in_days)
+SELECT 'Programmation Orientée Objet / Java (partie 2)', 5
 WHERE NOT EXISTS (SELECT 1 FROM course WHERE name = 'Programmation Orientée Objet / Java (partie 2)');
 
-INSERT INTO course (name)
-SELECT 'Langage SQL / SQL Server'
+INSERT INTO course (name, duration_in_days)
+SELECT 'Langage SQL / SQL Server', 5
 WHERE NOT EXISTS (SELECT 1 FROM course WHERE name = 'Langage SQL / SQL Server');
 
-INSERT INTO course (name)
-SELECT 'Notions Complémentaires / Java SE'
+INSERT INTO course (name, duration_in_days)
+SELECT 'Notions Complémentaires / Java SE', 5
 WHERE NOT EXISTS (SELECT 1 FROM course WHERE name = 'Notions Complémentaires / Java SE');
 
-INSERT INTO course (name)
-SELECT 'Développement Web côté Serveur (Back-End) / Java Spring Boot (partie 1)'
+INSERT INTO course (name, duration_in_days)
+SELECT 'Développement Web côté Serveur (Back-End) / Java Spring Boot (partie 1)', 5
 WHERE NOT EXISTS (SELECT 1 FROM course WHERE name = 'Développement Web côté Serveur (Back-End) / Java Spring Boot (partie 1)');
 
-INSERT INTO course (name)
-SELECT 'Développement Web côté Serveur (Back-End) / Java Spring Boot (partie 2)'
+INSERT INTO course (name, duration_in_days)
+SELECT 'Développement Web côté Serveur (Back-End) / Java Spring Boot (partie 2)', 5
 WHERE NOT EXISTS (SELECT 1 FROM course WHERE name = 'Développement Web côté Serveur (Back-End) / Java Spring Boot (partie 2)');
 
-INSERT INTO course (name)
-SELECT 'Développement Web côté Serveur (Back-End) / Java Spring Boot (partie 3)'
+INSERT INTO course (name, duration_in_days)
+SELECT 'Développement Web côté Serveur (Back-End) / Java Spring Boot (partie 3)', 5
 WHERE NOT EXISTS (SELECT 1 FROM course WHERE name = 'Développement Web côté Serveur (Back-End) / Java Spring Boot (partie 3)');
 
-INSERT INTO course (name)
-SELECT 'Projet Web / Java Spring Boot (partie 1)'
+INSERT INTO course (name, duration_in_days)
+SELECT 'Projet Web / Java Spring Boot (partie 1)', 5
 WHERE NOT EXISTS (SELECT 1 FROM course WHERE name = 'Projet Web / Java Spring Boot (partie 1)');
 
-INSERT INTO course (name)
-SELECT 'Projet Web / Java Spring Boot (partie 2)'
+INSERT INTO course (name, duration_in_days)
+SELECT 'Projet Web / Java Spring Boot (partie 2)', 5
 WHERE NOT EXISTS (SELECT 1 FROM course WHERE name = 'Projet Web / Java Spring Boot (partie 2)');
 
-INSERT INTO course (name)
-SELECT 'Analyse et Conception / Oracle Data Modeler'
+INSERT INTO course (name, duration_in_days)
+SELECT 'Analyse et Conception / Oracle Data Modeler', 5
 WHERE NOT EXISTS (SELECT 1 FROM course WHERE name = 'Analyse et Conception / Oracle Data Modeler');
 
-INSERT INTO course (name)
-SELECT 'JavaScript avancé + initiation Framework JS / Angular'
+INSERT INTO course (name, duration_in_days)
+SELECT 'JavaScript avancé + initiation Framework JS / Angular', 5
 WHERE NOT EXISTS (SELECT 1 FROM course WHERE name = 'JavaScript avancé + initiation Framework JS / Angular');
 
-INSERT INTO course (name)
-SELECT 'Développement Web côté Serveur avec JavaScript / Node.js et NoSQL'
+INSERT INTO course (name, duration_in_days)
+SELECT 'Développement Web côté Serveur avec JavaScript / Node.js et NoSQL', 5
 WHERE NOT EXISTS (SELECT 1 FROM course WHERE name = 'Développement Web côté Serveur avec JavaScript / Node.js et NoSQL');
 
-INSERT INTO course (name)
-SELECT 'Développement Web côté Serveur (Back-End) / PHP'
+INSERT INTO course (name, duration_in_days)
+SELECT 'Développement Web côté Serveur (Back-End) / PHP', 5
 WHERE NOT EXISTS (SELECT 1 FROM course WHERE name = 'Développement Web côté Serveur (Back-End) / PHP');
 
-INSERT INTO course (name)
-SELECT 'Développement Web côté Serveur (Back-End) / Symfony (partie 1)'
+INSERT INTO course (name, duration_in_days)
+SELECT 'Développement Web côté Serveur (Back-End) / Symfony (partie 1)', 5
 WHERE NOT EXISTS (SELECT 1 FROM course WHERE name = 'Développement Web côté Serveur (Back-End) / Symfony (partie 1)');
 
-INSERT INTO course (name)
-SELECT 'Développement Web côté Serveur (Back-End) / Symfony (partie 2)'
+INSERT INTO course (name, duration_in_days)
+SELECT 'Développement Web côté Serveur (Back-End) / Symfony (partie 2)', 5
 WHERE NOT EXISTS (SELECT 1 FROM course WHERE name = 'Développement Web côté Serveur (Back-End) / Symfony (partie 2)');
 
-INSERT INTO course (name)
-SELECT 'Projet Web / Symfony (partie 1)'
+INSERT INTO course (name, duration_in_days)
+SELECT 'Projet Web / Symfony (partie 1)', 5
 WHERE NOT EXISTS (SELECT 1 FROM course WHERE name = 'Projet Web / Symfony (partie 1)');
 
-INSERT INTO course (name)
-SELECT 'Projet Web / Symfony (partie 2)'
+INSERT INTO course (name, duration_in_days)
+SELECT 'Projet Web / Symfony (partie 2)', 5
 WHERE NOT EXISTS (SELECT 1 FROM course WHERE name = 'Projet Web / Symfony (partie 2)');
 
-INSERT INTO course (name)
-SELECT 'CMS / WordPress'
+INSERT INTO course (name, duration_in_days)
+SELECT 'CMS / WordPress', 5
 WHERE NOT EXISTS (SELECT 1 FROM course WHERE name = 'CMS / WordPress');
 
-INSERT INTO course (name)
-SELECT 'CMS / WordPress + Projet Final'
+INSERT INTO course (name, duration_in_days)
+SELECT 'CMS / WordPress + Projet Final', 5
 WHERE NOT EXISTS (SELECT 1 FROM course WHERE name = 'CMS / WordPress + Projet Final');
 
-INSERT INTO course (name)
-SELECT 'Algorithmique + Initiation à la Programmation / Java'
+INSERT INTO course (name, duration_in_days)
+SELECT 'Algorithmique + Initiation à la Programmation / Java', 5
 WHERE NOT EXISTS (SELECT 1 FROM course WHERE name = 'Algorithmique + Initiation à la Programmation / Java');
 
-INSERT INTO course (name)
-SELECT 'SQL avancé / Transact SQL et Sécurité'
+INSERT INTO course (name, duration_in_days)
+SELECT 'SQL avancé / Transact SQL et Sécurité', 5
 WHERE NOT EXISTS (SELECT 1 FROM course WHERE name = 'SQL avancé / Transact SQL et Sécurité');
 
-INSERT INTO course (name)
-SELECT 'Gestion de projet et Communication'
+INSERT INTO course (name, duration_in_days)
+SELECT 'Gestion de projet et Communication', 5
 WHERE NOT EXISTS (SELECT 1 FROM course WHERE name = 'Gestion de projet et Communication');
 
-INSERT INTO course (name)
-SELECT 'Java Frameworks - API Web (Spring Security, ORM, …) (partie 1)'
+INSERT INTO course (name, duration_in_days)
+SELECT 'Java Frameworks - API Web (Spring Security, ORM, …) (partie 1)', 5
 WHERE NOT EXISTS (SELECT 1 FROM course WHERE name = 'Java Frameworks - API Web (Spring Security, ORM, …) (partie 1)');
 
-INSERT INTO course (name)
-SELECT 'Java Frameworks - API Web (Spring Security, ORM, …) (partie 2)'
+INSERT INTO course (name, duration_in_days)
+SELECT 'Java Frameworks - API Web (Spring Security, ORM, …) (partie 2)', 5
 WHERE NOT EXISTS (SELECT 1 FROM course WHERE name = 'Java Frameworks - API Web (Spring Security, ORM, …) (partie 2)');
 
-INSERT INTO course (name)
-SELECT 'Angular avancé / Angular'
+INSERT INTO course (name, duration_in_days)
+SELECT 'Angular avancé / Angular', 5
 WHERE NOT EXISTS (SELECT 1 FROM course WHERE name = 'Angular avancé / Angular');
 
-INSERT INTO course (name)
-SELECT 'Analyse et Conception / Oracle Data Modeler (approfondissement)'
+INSERT INTO course (name, duration_in_days)
+SELECT 'Analyse et Conception / Oracle Data Modeler (approfondissement)', 5
 WHERE NOT EXISTS (SELECT 1 FROM course WHERE name = 'Analyse et Conception / Oracle Data Modeler (approfondissement)');
 
-INSERT INTO course (name)
-SELECT 'Projet Fullstack - Web / Java Spring Boot + Angular (partie 1)'
+INSERT INTO course (name, duration_in_days)
+SELECT 'Projet Fullstack - Web / Java Spring Boot + Angular (partie 1)', 5
 WHERE NOT EXISTS (SELECT 1 FROM course WHERE name = 'Projet Fullstack - Web / Java Spring Boot + Angular (partie 1)');
 
-INSERT INTO course (name)
-SELECT 'Projet Fullstack - Web / Java Spring Boot + Angular (partie 2)'
+INSERT INTO course (name, duration_in_days)
+SELECT 'Projet Fullstack - Web / Java Spring Boot + Angular (partie 2)', 5
 WHERE NOT EXISTS (SELECT 1 FROM course WHERE name = 'Projet Fullstack - Web / Java Spring Boot + Angular (partie 2)');
 
-INSERT INTO course (name)
-SELECT 'Technologie Cross-Platform / Flutter'
+INSERT INTO course (name, duration_in_days)
+SELECT 'Technologie Cross-Platform / Flutter', 5
 WHERE NOT EXISTS (SELECT 1 FROM course WHERE name = 'Technologie Cross-Platform / Flutter');
 
-INSERT INTO course (name)
-SELECT 'DevOps - Infrastructure et déploiement d''applications'
+INSERT INTO course (name, duration_in_days)
+SELECT 'DevOps - Infrastructure et déploiement d''applications', 5
 WHERE NOT EXISTS (SELECT 1 FROM course WHERE name = 'DevOps - Infrastructure et déploiement d''applications');
 
-INSERT INTO course (name)
-SELECT 'Intelligence Artificielle / Python'
+INSERT INTO course (name, duration_in_days)
+SELECT 'Intelligence Artificielle / Python', 5
 WHERE NOT EXISTS (SELECT 1 FROM course WHERE name = 'Intelligence Artificielle / Python');
 
-INSERT INTO course (name)
-SELECT 'IA / Python + Projet Final'
+INSERT INTO course (name, duration_in_days)
+SELECT 'IA / Python + Projet Final', 5
 WHERE NOT EXISTS (SELECT 1 FROM course WHERE name = 'IA / Python + Projet Final');
 
 -- --- Progression pédagogique : D2WM ---

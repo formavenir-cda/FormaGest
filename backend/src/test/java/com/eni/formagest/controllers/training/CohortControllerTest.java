@@ -16,7 +16,6 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
-import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -37,7 +36,7 @@ class CohortControllerTest {
 
     @Test
     @WithMockUser(roles = "ADMINISTRATIVE_MANAGER")
-    void createReturnsCreatedCohortWithOrderedUndatedCourses() throws Exception {
+    void createReturnsCreatedCohortWithOrderedDatedCourses() throws Exception {
         Track track = saveTrackWithCourses(
                 "CDA test promotion",
                 "Java",
@@ -51,7 +50,6 @@ class CohortControllerTest {
                                 {
                                   "name": "CDA 2026",
                                   "startDate": "2026-09-01",
-                                  "endDate": "2027-06-30",
                                   "trackId": %d
                                 }
                                 """.formatted(track.getId())))
@@ -59,37 +57,47 @@ class CohortControllerTest {
                 .andExpect(jsonPath("$.id").isNumber())
                 .andExpect(jsonPath("$.name").value("CDA 2026"))
                 .andExpect(jsonPath("$.startDate").value("2026-09-01"))
-                .andExpect(jsonPath("$.endDate").value("2027-06-30"))
+                .andExpect(jsonPath("$.endDate").value("2026-09-21"))
                 .andExpect(jsonPath("$.status").value("UPCOMING"))
                 .andExpect(jsonPath("$.trackId").value(track.getId()))
                 .andExpect(jsonPath("$.scheduledCourses.length()").value(3))
                 .andExpect(jsonPath("$.scheduledCourses[0].courseId").isNumber())
-                .andExpect(jsonPath("$.scheduledCourses[0].startDate").doesNotExist())
-                .andExpect(jsonPath("$.scheduledCourses[0].endDate").doesNotExist())
-                .andExpect(jsonPath("$.scheduledCourses[1].startDate").doesNotExist())
-                .andExpect(jsonPath("$.scheduledCourses[1].endDate").doesNotExist())
-                .andExpect(jsonPath("$.scheduledCourses[2].startDate").doesNotExist())
-                .andExpect(jsonPath("$.scheduledCourses[2].endDate").doesNotExist());
+                .andExpect(jsonPath("$.scheduledCourses[0].startDate").value("2026-09-01"))
+                .andExpect(jsonPath("$.scheduledCourses[0].endDate").value("2026-09-07"))
+                .andExpect(jsonPath("$.scheduledCourses[1].startDate").value("2026-09-08"))
+                .andExpect(jsonPath("$.scheduledCourses[1].endDate").value("2026-09-14"))
+                .andExpect(jsonPath("$.scheduledCourses[2].startDate").value("2026-09-15"))
+                .andExpect(jsonPath("$.scheduledCourses[2].endDate").value("2026-09-21"));
     }
 
     @Test
     @WithMockUser(roles = "ADMINISTRATIVE_MANAGER")
-    void createRejectsEndDateBeforeStartDate() throws Exception {
-        Track track = saveTrackWithCourses("CDA dates invalides", "Java");
+    void createRejectsTrackWithoutCourses() throws Exception {
+        Sector sector = Sector.builder()
+                .name("Secteur cursus vide")
+                .build();
+        Track track = Track.builder()
+                .name("Cursus vide")
+                .sector(sector)
+                .build();
+
+        entityManager.persist(sector);
+        entityManager.persist(track);
+        entityManager.flush();
+        entityManager.clear();
 
         mockMvc.perform(post("/api/cohorts")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                  "name": "CDA dates invalides",
-                                  "startDate": "2027-06-30",
-                                  "endDate": "2026-09-01",
+                                  "name": "CDA cursus vide",
+                                  "startDate": "2026-09-01",
                                   "trackId": %d
                                 }
                                 """.formatted(track.getId())))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().string(
-                        "La date de fin doit être postérieure ou égale à la date de début."
+                        "Le cursus doit contenir au moins un cours."
                 ));
     }
 
@@ -102,12 +110,11 @@ class CohortControllerTest {
                                 {
                                   "name": "CDA cursus inconnu",
                                   "startDate": "2026-09-01",
-                                  "endDate": "2027-06-30",
                                   "trackId": 42
                                 }
                                 """))
                 .andExpect(status().isNotFound())
-                .andExpect(content().string("Ce cursus n’existe pas."));
+                .andExpect(content().string("Ce cursus n'existe pas."));
     }
 
     @Test
@@ -129,7 +136,6 @@ class CohortControllerTest {
                                 {
                                   "name": "CDA doublon 2026",
                                   "startDate": "2026-09-01",
-                                  "endDate": "2027-06-30",
                                   "trackId": %d
                                 }
                                 """.formatted(track.getId())))
@@ -148,7 +154,6 @@ class CohortControllerTest {
                                 {
                                   "name": "CDA interdit",
                                   "startDate": "2026-09-01",
-                                  "endDate": "2027-06-30",
                                   "trackId": 1
                                 }
                                 """))
@@ -170,6 +175,7 @@ class CohortControllerTest {
         for (int index = 0; index < courseNames.length; index++) {
             Course course = Course.builder()
                     .name(courseNames[index] + " " + trackName)
+                    .durationInDays(5)
                     .build();
 
             entityManager.persist(course);

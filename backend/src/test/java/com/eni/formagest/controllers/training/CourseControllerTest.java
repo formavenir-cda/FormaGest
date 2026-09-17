@@ -1,6 +1,9 @@
 package com.eni.formagest.controllers.training;
 
+import com.eni.formagest.bo.training.Cohort;
+import com.eni.formagest.bo.training.CohortStatus;
 import com.eni.formagest.bo.training.Course;
+import com.eni.formagest.bo.training.ScheduledCourse;
 import com.eni.formagest.bo.training.Sector;
 import com.eni.formagest.bo.training.Track;
 import com.eni.formagest.bo.training.TrackCourse;
@@ -19,6 +22,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import static org.hamcrest.Matchers.containsString;
@@ -49,20 +53,22 @@ class CourseControllerTest {
     void findAllReturnsOkWithCourses() throws Exception {
         Course course = courseRepository.save(Course.builder()
                 .name("Java")
+                .durationInDays(5)
                 .build());
 
         mockMvc.perform(get("/api/courses"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].id").value(course.getId()))
-                .andExpect(jsonPath("$[0].name").value("Java"));
+                .andExpect(jsonPath("$[0].name").value("Java"))
+                .andExpect(jsonPath("$[0].durationInDays").value(5));
     }
 
     @Test
     @WithMockUser(roles = "STUDENT")
-    void findAllReturnsForbiddenForUnauthorizedRole() throws Exception {
+    void findAllReturnsOkForStudentRole() throws Exception {
         mockMvc.perform(get("/api/courses"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isOk());
     }
 
     @Test
@@ -71,11 +77,12 @@ class CourseControllerTest {
         mockMvc.perform(post("/api/courses")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"name": "Java"}
+                                {"name": "Java", "durationInDays": 5}
                                 """))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").isNumber())
-                .andExpect(jsonPath("$.name").value("Java"));
+                .andExpect(jsonPath("$.name").value("Java"))
+                .andExpect(jsonPath("$.durationInDays").value(5));
     }
 
     @ParameterizedTest
@@ -98,8 +105,36 @@ class CourseControllerTest {
 
     @Test
     @WithMockUser(roles = "ADMINISTRATIVE_MANAGER")
+    void createRejectsDurationLessThanOne() throws Exception {
+        mockMvc.perform(post("/api/courses")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"name": "Java", "durationInDays": 0}
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string(containsString(
+                        "La durée doit être supérieure à 0."
+                )));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMINISTRATIVE_MANAGER")
+    void createRejectsMissingDuration() throws Exception {
+        mockMvc.perform(post("/api/courses")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"name": "Java"}
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string(containsString(
+                        "La durée est obligatoire."
+                )));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMINISTRATIVE_MANAGER")
     void createRejectsNameLongerThan255Characters() throws Exception {
-        String body = "{\"name\":\"" + "a".repeat(256) + "\"}";
+        String body = "{\"name\":\"" + "a".repeat(256) + "\",\"durationInDays\":5}";
 
         mockMvc.perform(post("/api/courses")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -115,12 +150,13 @@ class CourseControllerTest {
     void createReturnsConflictWithDuplicateMessage() throws Exception {
         courseRepository.save(Course.builder()
                 .name("Java")
+                .durationInDays(5)
                 .build());
 
         mockMvc.perform(post("/api/courses")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"name": "Java"}
+                                {"name": "Java", "durationInDays": 5}
                                 """))
                 .andExpect(status().isConflict())
                 .andExpect(content().string(
@@ -133,16 +169,18 @@ class CourseControllerTest {
     void updateReturnsUpdatedCourse() throws Exception {
         Course course = courseRepository.save(Course.builder()
                 .name("Ancien nom")
+                .durationInDays(5)
                 .build());
 
         mockMvc.perform(put("/api/courses/{id}", course.getId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"name": "Java"}
+                                {"name": "Java", "durationInDays": 7}
                                 """))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(course.getId()))
-                .andExpect(jsonPath("$.name").value("Java"));
+                .andExpect(jsonPath("$.name").value("Java"))
+                .andExpect(jsonPath("$.durationInDays").value(7));
     }
 
     @Test
@@ -150,6 +188,7 @@ class CourseControllerTest {
     void updateRejectsBlankName() throws Exception {
         Course course = courseRepository.save(Course.builder()
                 .name("Java")
+                .durationInDays(5)
                 .build());
 
         mockMvc.perform(put("/api/courses/{id}", course.getId())
@@ -169,7 +208,7 @@ class CourseControllerTest {
         mockMvc.perform(put("/api/courses/42")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"name": "Java"}
+                                {"name": "Java", "durationInDays": 5}
                                 """))
                 .andExpect(status().isNotFound())
                 .andExpect(content().string("Ce cours n’existe pas."));
@@ -180,15 +219,17 @@ class CourseControllerTest {
     void updateReturnsConflictWithDuplicateMessage() throws Exception {
         Course course = courseRepository.save(Course.builder()
                 .name("Java")
+                .durationInDays(5)
                 .build());
         courseRepository.save(Course.builder()
                 .name("Angular")
+                .durationInDays(5)
                 .build());
 
         mockMvc.perform(put("/api/courses/{id}", course.getId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"name": "Angular"}
+                                {"name": "Angular", "durationInDays": 5}
                                 """))
                 .andExpect(status().isConflict())
                 .andExpect(content().string(
@@ -198,9 +239,26 @@ class CourseControllerTest {
 
     @Test
     @WithMockUser(roles = "ADMINISTRATIVE_MANAGER")
+    void updateReturnsConflictWhenCourseIsUsedInCohort() throws Exception {
+        Course course = saveScheduledCourse("Java cours utilise controller update");
+
+        mockMvc.perform(put("/api/courses/{id}", course.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"name": "Java modifie", "durationInDays": 7}
+                                """))
+                .andExpect(status().isConflict())
+                .andExpect(content().string(
+                        "Impossible de modifier ce cours : il est utilisé dans une promotion."
+                ));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMINISTRATIVE_MANAGER")
     void updateTracksReturnsCourseWithAssociations() throws Exception {
         Course course = courseRepository.save(Course.builder()
                 .name("Java")
+                .durationInDays(5)
                 .build());
         Sector sector = Sector.builder()
                 .name("Secteur update associations")
@@ -246,9 +304,11 @@ class CourseControllerTest {
                 .build();
         Course firstCourse = Course.builder()
                 .name("Java retrait association")
+                .durationInDays(5)
                 .build();
         Course secondCourse = Course.builder()
                 .name("Angular retrait association")
+                .durationInDays(5)
                 .build();
 
         entityManager.persist(sector);
@@ -288,6 +348,7 @@ class CourseControllerTest {
     void deleteReturnsNoContent() throws Exception {
         Course course = courseRepository.saveAndFlush(Course.builder()
                 .name("Java")
+                .durationInDays(5)
                 .build());
 
         mockMvc.perform(delete("/api/courses/{id}", course.getId()))
@@ -310,6 +371,7 @@ class CourseControllerTest {
     void deleteReturnsConflictWhenCourseIsReferenced() throws Exception {
         Course course = courseRepository.saveAndFlush(Course.builder()
                 .name("Java")
+                .durationInDays(5)
                 .build());
         Sector sector = Sector.builder()
                 .name("Secteur test cours controller")
@@ -335,5 +397,53 @@ class CourseControllerTest {
                         "Impossible de supprimer ce cours : "
                                 + "il est encore utilisé par des données associées."
                 ));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMINISTRATIVE_MANAGER")
+    void deleteReturnsConflictWhenCourseIsUsedInCohort() throws Exception {
+        Course course = saveScheduledCourse("Java cours utilise controller delete");
+
+        mockMvc.perform(delete("/api/courses/{id}", course.getId()))
+                .andExpect(status().isConflict())
+                .andExpect(content().string(
+                        "Impossible de modifier ce cours : il est utilisé dans une promotion."
+                ));
+    }
+
+    private Course saveScheduledCourse(String courseName) {
+        Course course = Course.builder()
+                .name(courseName)
+                .durationInDays(5)
+                .build();
+        Sector sector = Sector.builder()
+                .name("Secteur " + courseName)
+                .build();
+        Track track = Track.builder()
+                .name("Cursus " + courseName)
+                .sector(sector)
+                .build();
+        Cohort cohort = Cohort.builder()
+                .name("Promotion " + courseName)
+                .startDate(LocalDate.of(2026, 9, 1))
+                .endDate(LocalDate.of(2026, 9, 7))
+                .status(CohortStatus.UPCOMING)
+                .track(track)
+                .build();
+
+        entityManager.persist(sector);
+        entityManager.persist(track);
+        entityManager.persist(course);
+        entityManager.persist(cohort);
+        entityManager.persist(ScheduledCourse.builder()
+                .cohort(cohort)
+                .course(course)
+                .startDate(LocalDate.of(2026, 9, 1))
+                .endDate(LocalDate.of(2026, 9, 7))
+                .build());
+        entityManager.flush();
+        entityManager.clear();
+
+        return course;
     }
 }

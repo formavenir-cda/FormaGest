@@ -35,11 +35,11 @@ public class ScheduledCourse {
     @JoinColumn(name = "TEACHER_ID")
     private Teacher teacher;
 
-    @Column(name = "START_DATE")
+    @Column(name = "START_DATE", nullable = false)
     @ToString.Include
     private LocalDate startDate;
 
-    @Column(name = "END_DATE")
+    @Column(name = "END_DATE", nullable = false)
     @ToString.Include
     private LocalDate endDate;
 }

@@ -33,6 +33,7 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.GET, "/api/sectors/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/tracks/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/courses/**").permitAll()
+                    .requestMatchers("/api/cohorts/**").hasRole("ADMINISTRATIVE_MANAGER")
                     .anyRequest().authenticated();
         });
 
