@@ -5,7 +5,6 @@ import {
   OnInit,
   signal,
   TemplateRef,
-  ViewChild,
 } from '@angular/core';
 import {
   CdkDragDrop,
@@ -14,6 +13,7 @@ import {
 } from '@angular/cdk/drag-drop';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
+import { of, switchMap } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
 import {
   MatDialog,
@@ -57,10 +57,6 @@ export class Courses implements OnInit {
 
   private formDialogRef?: MatDialogRef<unknown>;
   private deleteDialogRef?: MatDialogRef<unknown>;
-  private unassociatedCourseDialogRef?: MatDialogRef<unknown>;
-
-  @ViewChild('unassociatedCourseDialog')
-  private unassociatedCourseDialog?: TemplateRef<unknown>;
 
   readonly courses = signal<Course[]>([]);
   readonly sectors = signal<Sector[]>([]);
@@ -74,9 +70,6 @@ export class Courses implements OnInit {
 
   readonly courseName = signal('');
   readonly courseDurationInDays = signal<number | null>(null);
-  readonly associationSectorId = signal<number | null>(null);
-  readonly associationTrackId = signal<number | null>(null);
-  readonly pendingAssociations = signal<CourseAssociation[]>([]);
   readonly formError = signal('');
   readonly saving = signal(false);
   readonly editingCourse = signal<Course | null>(null);
@@ -84,9 +77,45 @@ export class Courses implements OnInit {
   readonly courseToDelete = signal<Course | null>(null);
   readonly deleting = signal(false);
   readonly deleteError = signal('');
-  readonly unassociatedCourseMessage = signal('');
   readonly reordering = signal(false);
   readonly reorderError = signal('');
+
+  private trackDialogRef?: MatDialogRef<unknown>;
+
+  readonly editTrackName = signal('');
+  readonly editTrackSectorId = signal<number | null>(null);
+  readonly trackFormError = signal('');
+  readonly trackSaving = signal(false);
+
+  readonly currentTrack = computed(() =>
+    this.tracks().find((track) => track.id === this.selectedTrackFilter()) ?? null
+  );
+
+  readonly currentTrackSectorName = computed(() => {
+    const track = this.currentTrack();
+
+    return track
+      ? this.sectors().find((sector) => sector.id === track.sectorId)?.name ?? 'Filière inconnue'
+      : '';
+  });
+
+  private attachDialogRef?: MatDialogRef<unknown>;
+
+  readonly courseToAttachId = signal<number | null>(null);
+  readonly attaching = signal(false);
+  readonly attachError = signal('');
+
+  readonly attachableCourses = computed(() => {
+    const track = this.currentTrack();
+
+    if (!track) return [];
+
+    return this.courses()
+      .filter((course) =>
+        !course.associations.some((association) => association.trackId === track.id)
+      )
+      .sort((a, b) => a.name.localeCompare(b.name));
+  });
 
   readonly sectorOptions = computed(() => {
     return this.sectors()
@@ -113,22 +142,6 @@ export class Courses implements OnInit {
       .map(([id, name]) => ({ id, name }))
       .sort((a, b) => a.name.localeCompare(b.name));
   });
-
-  readonly associationTrackOptions = computed(() => {
-    const sectorId = this.associationSectorId();
-    const selectedTrackIds = new Set(
-      this.pendingAssociations().map((association) => association.trackId)
-    );
-
-    return this.tracks()
-      .filter((track) => !sectorId || track.sectorId === sectorId)
-      .filter((track) => !selectedTrackIds.has(track.id))
-      .sort((a, b) => a.name.localeCompare(b.name));
-  });
-
-  readonly selectedSectorHasNoTracks = computed(() =>
-    !!this.associationSectorId() && this.associationTrackOptions().length === 0
-  );
 
   readonly canDragReorder = computed(() =>
     !!this.selectedTrackFilter()
@@ -214,13 +227,10 @@ export class Courses implements OnInit {
     this.editingCourse.set(null);
     this.courseName.set('');
     this.courseDurationInDays.set(null);
-    this.associationSectorId.set(null);
-    this.associationTrackId.set(null);
-    this.pendingAssociations.set([]);
     this.formError.set('');
 
     this.formDialogRef = this.dialog.open(template, {
-      width: '520px',
+      width: '480px',
       maxWidth: '95vw',
     });
   }
@@ -233,13 +243,10 @@ export class Courses implements OnInit {
     this.editingCourse.set(course);
     this.courseName.set(course.name);
     this.courseDurationInDays.set(course.durationInDays);
-    this.associationSectorId.set(null);
-    this.associationTrackId.set(null);
-    this.pendingAssociations.set([...course.associations]);
     this.formError.set('');
 
     this.formDialogRef = this.dialog.open(template, {
-      width: '520px',
+      width: '480px',
       maxWidth: '95vw',
     });
   }
@@ -274,45 +281,6 @@ export class Courses implements OnInit {
       return;
     }
 
-    const courseToEdit = this.editingCourse();
-    const associations = this.pendingAssociations();
-
-    if (!courseToEdit && associations.length === 0) {
-      this.unassociatedCourseMessage.set(
-        this.associationSectorId()
-          ? 'La filière seule ne peut pas être enregistrée sans cursus. Voulez-vous créer ce cours sans cursus associé ?'
-          : 'Êtes-vous sûr de vouloir créer un cours sans filière ni cursus ?'
-      );
-
-      if (this.unassociatedCourseDialog) {
-        this.unassociatedCourseDialogRef = this.dialog.open(
-          this.unassociatedCourseDialog,
-          {
-            width: '480px',
-            maxWidth: '95vw',
-            autoFocus: '[data-cancel-unassociated-course]',
-          }
-        );
-
-        this.unassociatedCourseDialogRef.afterClosed().subscribe((confirmed) => {
-          if (confirmed) {
-            this.saveCourse(name, durationInDays, courseToEdit, associations);
-          }
-        });
-      }
-
-      return;
-    }
-
-    this.saveCourse(name, durationInDays, courseToEdit, associations);
-  }
-
-  private saveCourse(
-    name: string,
-    durationInDays: number,
-    courseToEdit: Course | null,
-    associations: CourseAssociation[]
-  ): void {
     this.formError.set('');
     this.saving.set(true);
 
@@ -320,11 +288,18 @@ export class Courses implements OnInit {
       this.formDialogRef.disableClose = true;
     }
 
-    const request = courseToEdit
-      ? this.courseService.update(courseToEdit.id, name, durationInDays, associations)
-      : this.courseService.create(name, durationInDays, associations);
+    const courseToEdit = this.editingCourse();
+    const track = this.currentTrack();
 
-    request.subscribe({
+    const request$ = courseToEdit
+      ? this.courseService.update(courseToEdit.id, name, durationInDays)
+      : this.courseService.create(name, durationInDays).pipe(
+        switchMap((course) =>
+          track ? this.courseService.updateTracks(course.id, [track.id]) : of(course)
+        )
+      );
+
+    request$.subscribe({
       next: (course) => {
         this.courses.update((list) =>
           courseToEdit
@@ -338,18 +313,6 @@ export class Courses implements OnInit {
       },
       error: (err) => {
         this.saving.set(false);
-        if (err.status === 409) {
-          this.formError.set(this.errorMessage(
-            err,
-            'Impossible d’enregistrer le cours. Veuillez réessayer.'
-          ));
-
-          if (this.formDialogRef) {
-            this.formDialogRef.disableClose = false;
-          }
-
-          return;
-        }
         this.formError.set(
           err.status === 409
             ? 'Un cours portant ce nom existe déjà.'
@@ -358,6 +321,65 @@ export class Courses implements OnInit {
 
         if (this.formDialogRef) {
           this.formDialogRef.disableClose = false;
+        }
+      },
+    });
+  }
+
+  openAttachCourseForm(template: TemplateRef<unknown>): void {
+    this.courseToAttachId.set(null);
+    this.attachError.set('');
+
+    this.attachDialogRef = this.dialog.open(template, {
+      width: '480px',
+      maxWidth: '95vw',
+    });
+  }
+
+  cancelAttachCourse(): void {
+    this.attachDialogRef?.close();
+  }
+
+  confirmAttachCourse(): void {
+    const track = this.currentTrack();
+    const courseId = this.courseToAttachId();
+
+    if (!track || !courseId || this.attaching()) return;
+
+    const course = this.courses().find((item) => item.id === courseId);
+
+    if (!course) return;
+
+    this.attaching.set(true);
+    this.attachError.set('');
+
+    if (this.attachDialogRef) {
+      this.attachDialogRef.disableClose = true;
+    }
+
+    const trackIds = [
+      ...course.associations.map((association) => association.trackId),
+      track.id,
+    ];
+
+    this.courseService.updateTracks(course.id, trackIds).subscribe({
+      next: (updatedCourse) => {
+        this.courses.update((list) =>
+          list.map((item) => item.id === updatedCourse.id ? updatedCourse : item)
+        );
+
+        this.attaching.set(false);
+        this.attachDialogRef?.close();
+      },
+      error: (err) => {
+        this.attaching.set(false);
+        this.attachError.set(this.errorMessage(
+          err,
+          'Impossible d’ajouter ce cours au cursus. Veuillez réessayer.'
+        ));
+
+        if (this.attachDialogRef) {
+          this.attachDialogRef.disableClose = false;
         }
       },
     });
@@ -440,6 +462,80 @@ export class Courses implements OnInit {
     });
   }
 
+  openEditTrackForm(template: TemplateRef<unknown>): void {
+    const track = this.currentTrack();
+
+    if (!track) return;
+
+    this.editTrackName.set(track.name);
+    this.editTrackSectorId.set(track.sectorId);
+    this.trackFormError.set('');
+
+    this.trackDialogRef = this.dialog.open(template, {
+      width: '480px',
+      maxWidth: '95vw',
+    });
+  }
+
+  cancelTrackForm(): void {
+    this.trackDialogRef?.close();
+  }
+
+  submitTrackForm(): void {
+    const track = this.currentTrack();
+
+    if (!track || this.trackSaving()) return;
+
+    const name = this.editTrackName().trim();
+    const sectorId = this.editTrackSectorId();
+
+    if (!name) {
+      this.trackFormError.set('Le nom est obligatoire.');
+      return;
+    }
+
+    if (name.length > 255) {
+      this.trackFormError.set('Le nom ne doit pas dépasser 255 caractères.');
+      return;
+    }
+
+    if (!sectorId) {
+      this.trackFormError.set('La filière est obligatoire.');
+      return;
+    }
+
+    this.trackFormError.set('');
+    this.trackSaving.set(true);
+
+    if (this.trackDialogRef) {
+      this.trackDialogRef.disableClose = true;
+    }
+
+    this.trackService.update(track.id, name, sectorId).subscribe({
+      next: (updatedTrack) => {
+        this.tracks.update((list) =>
+          list.map((item) => item.id === updatedTrack.id ? updatedTrack : item)
+        );
+
+        this.trackSaving.set(false);
+        this.trackDialogRef?.close();
+      },
+      error: (err) => {
+        this.trackSaving.set(false);
+        this.trackFormError.set(this.errorMessage(
+          err,
+          err.status === 409
+            ? 'Un cursus portant ce nom existe déjà.'
+            : 'Impossible d’enregistrer le cursus. Veuillez réessayer.'
+        ));
+
+        if (this.trackDialogRef) {
+          this.trackDialogRef.disableClose = false;
+        }
+      },
+    });
+  }
+
   selectSectorFilter(sectorId: number | null): void {
     this.selectedSectorFilter.set(sectorId);
     this.selectedTrackFilter.set(null);
@@ -492,56 +588,6 @@ export class Courses implements OnInit {
         );
       },
     });
-  }
-
-  selectAssociationSector(sectorId: number | null): void {
-    this.associationSectorId.set(sectorId);
-    this.associationTrackId.set(null);
-  }
-
-  selectAssociationTrack(trackId: number | null): void {
-    this.associationTrackId.set(trackId);
-  }
-
-  addAssociation(): void {
-    const trackId = this.associationTrackId();
-
-    if (!trackId) {
-      return;
-    }
-
-    const track = this.tracks().find((item) => item.id === trackId);
-    const sector = track
-      ? this.sectors().find((item) => item.id === track.sectorId)
-      : null;
-
-    if (!track || !sector) {
-      return;
-    }
-
-    if (this.pendingAssociations().some((association) =>
-      association.trackId === track.id
-    )) {
-      return;
-    }
-
-    this.pendingAssociations.update((associations) => [
-      ...associations,
-      {
-        sectorId: sector.id,
-        sectorName: sector.name,
-        trackId: track.id,
-        trackName: track.name,
-        position: 0,
-      },
-    ]);
-    this.associationTrackId.set(null);
-  }
-
-  removeAssociation(trackId: number): void {
-    this.pendingAssociations.update((associations) =>
-      associations.filter((association) => association.trackId !== trackId)
-    );
   }
 
   private visibleAssociations(course: Course): CourseAssociation[] {

@@ -3,6 +3,7 @@ package com.eni.formagest.bll.training;
 import com.eni.formagest.bo.training.Course;
 import com.eni.formagest.dal.training.CourseRepository;
 import com.eni.formagest.dal.training.ScheduledCourseRepository;
+import com.eni.formagest.dal.training.TrackCourseRepository;
 import com.eni.formagest.dto.training.CourseDto;
 import com.eni.formagest.mappers.CourseMapper;
 import org.springframework.stereotype.Service;
@@ -16,14 +17,19 @@ public class CourseServiceImpl implements CourseService {
 
     private final CourseRepository courseRepository;
     private final ScheduledCourseRepository scheduledCourseRepository;
+    private final TrackCourseRepository trackCourseRepository;
+    private final CohortService cohortService;
 
     public CourseServiceImpl(
             CourseRepository courseRepository,
-            ScheduledCourseRepository scheduledCourseRepository
+            ScheduledCourseRepository scheduledCourseRepository,
+            TrackCourseRepository trackCourseRepository,
+            CohortService cohortService
             ) {
         this.courseRepository = courseRepository;
         this.scheduledCourseRepository = scheduledCourseRepository;
-
+        this.trackCourseRepository = trackCourseRepository;
+        this.cohortService = cohortService;
     }
 
     @Override
@@ -56,10 +62,6 @@ public class CourseServiceImpl implements CourseService {
         Course course = courseRepository.findById(id)
                 .orElseThrow(NoSuchElementException::new);
 
-        if (scheduledCourseRepository.existsByCourseId(id)) {
-            throw new IllegalStateException(COURSE_USED_IN_COHORT);
-        }
-
         String name = dto.getName().strip();
 
         if (courseRepository.existsByNameAndIdNot(name, id)) {
@@ -71,7 +73,20 @@ public class CourseServiceImpl implements CourseService {
 
         Course savedCourse = courseRepository.save(course);
 
+        recalculateAffectedCohorts(id);
+
         return CourseMapper.toDto(savedCourse);
+    }
+
+    /**
+     * Répercute une modification de cours sur le planning des promotions
+     * à venir des cursus qui l’utilisent.
+     */
+    private void recalculateAffectedCohorts(Long courseId) {
+        trackCourseRepository.findByCourseId(courseId).stream()
+                .map(trackCourse -> trackCourse.getTrack().getId())
+                .distinct()
+                .forEach(cohortService::recalculateUpcomingCohortsForTrack);
     }
 
     @Override

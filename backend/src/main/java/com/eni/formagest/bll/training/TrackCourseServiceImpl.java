@@ -3,9 +3,7 @@ package com.eni.formagest.bll.training;
 import com.eni.formagest.bo.training.Course;
 import com.eni.formagest.bo.training.Track;
 import com.eni.formagest.bo.training.TrackCourse;
-import com.eni.formagest.dal.training.CohortRepository;
 import com.eni.formagest.dal.training.CourseRepository;
-import com.eni.formagest.dal.training.ScheduledCourseRepository;
 import com.eni.formagest.dal.training.TrackCourseRepository;
 import com.eni.formagest.dal.training.TrackRepository;
 import com.eni.formagest.dto.training.CourseDto;
@@ -31,20 +29,17 @@ public class TrackCourseServiceImpl implements TrackCourseService {
     private final CourseRepository courseRepository;
     private final TrackRepository trackRepository;
     private final TrackCourseRepository trackCourseRepository;
-    private final CohortRepository cohortRepository;
-    private final ScheduledCourseRepository scheduledCourseRepository;
+    private final CohortService cohortService;
 
     public TrackCourseServiceImpl(
             CourseRepository courseRepository,
             TrackRepository trackRepository,
             TrackCourseRepository trackCourseRepository,
-            CohortRepository cohortRepository,
-            ScheduledCourseRepository scheduledCourseRepository) {
+            CohortService cohortService) {
         this.courseRepository = courseRepository;
         this.trackRepository = trackRepository;
         this.trackCourseRepository = trackCourseRepository;
-        this.cohortRepository = cohortRepository;
-        this.scheduledCourseRepository = scheduledCourseRepository;
+        this.cohortService = cohortService;
     }
 
     @Override
@@ -52,10 +47,6 @@ public class TrackCourseServiceImpl implements TrackCourseService {
     public CourseDto updateCourseTracks(Long courseId, List<Long> trackIds) {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new NoSuchElementException(MISSING_COURSE));
-
-        if (scheduledCourseRepository.existsByCourseId(courseId)) {
-            throw new IllegalStateException(COURSE_USED_IN_COHORT);
-        }
 
         Set<Long> requestedTrackIds = validateTrackIds(trackIds);
         List<TrackCourse> existingTrackCourses =
@@ -70,8 +61,6 @@ public class TrackCourseServiceImpl implements TrackCourseService {
         requestedTrackIds.stream()
                 .filter(trackId -> !existingTrackCoursesByTrackId.containsKey(trackId))
                 .forEach(changedTrackIds::add);
-
-        validateTracksAreNotUsedInCohorts(changedTrackIds);
 
         existingTrackCourses.stream()
                 .filter(trackCourse ->
@@ -91,6 +80,8 @@ public class TrackCourseServiceImpl implements TrackCourseService {
         trackCourseRepository.flush();
         course.setTrackCourses(trackCourseRepository.findByCourseId(courseId));
 
+        changedTrackIds.forEach(cohortService::recalculateUpcomingCohortsForTrack);
+
         return CourseMapper.toDto(course);
     }
 
@@ -104,7 +95,6 @@ public class TrackCourseServiceImpl implements TrackCourseService {
             List<TrackCourseOrderDto> order) {
 
         validateTrackExists(trackId);
-        validateTrackIsNotUsedInCohort(trackId);
 
         List<TrackCourse> trackCourses =
                 trackCourseRepository.findByTrackIdOrderByPositionAsc(trackId);
@@ -120,6 +110,9 @@ public class TrackCourseServiceImpl implements TrackCourseService {
 
         moveToTemporaryPositions(trackCourses);
         applyNewPositions(trackCoursesByCourseId, order);
+        trackCourseRepository.flush();
+
+        cohortService.recalculateUpcomingCohortsForTrack(trackId);
 
         return TrackCourseMapper.toDtoList(
                 trackCourseRepository.findByTrackIdOrderByPositionAsc(trackId)
@@ -132,21 +125,6 @@ public class TrackCourseServiceImpl implements TrackCourseService {
     private void validateTrackExists(Long trackId) {
         if (!trackRepository.existsById(trackId)) {
             throw new NoSuchElementException(MISSING_TRACK);
-        }
-    }
-
-    private void validateTrackIsNotUsedInCohort(Long trackId) {
-        if (cohortRepository.existsByTrackId(trackId)) {
-            throw new IllegalStateException(TRACK_USED_IN_COHORT);
-        }
-    }
-
-    private void validateTracksAreNotUsedInCohorts(Set<Long> trackIds) {
-        boolean hasUsedTrack = trackIds.stream()
-                .anyMatch(cohortRepository::existsByTrackId);
-
-        if (hasUsedTrack) {
-            throw new IllegalStateException(TRACK_USED_IN_COHORT);
         }
     }
 

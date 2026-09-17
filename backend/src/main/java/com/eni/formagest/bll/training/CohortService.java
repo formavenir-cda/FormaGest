@@ -12,4 +12,10 @@ public interface CohortService {
     List<CohortDto> findAll();
 
     CohortDto create(CohortDto dto);
+
+    /**
+     * Recalcule le planning des promotions à venir d’un cursus après une modification
+     * de sa composition (réordonnancement, ajout ou retrait d’un cours).
+     */
+    void recalculateUpcomingCohortsForTrack(Long trackId);
 }

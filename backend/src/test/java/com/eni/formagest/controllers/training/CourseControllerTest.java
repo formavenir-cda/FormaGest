@@ -239,8 +239,11 @@ class CourseControllerTest {
 
     @Test
     @WithMockUser(roles = "ADMINISTRATIVE_MANAGER")
-    void updateReturnsConflictWhenCourseIsUsedInCohort() throws Exception {
-        Course course = saveScheduledCourse("Java cours utilise controller update");
+    void updateReturnsConflictWhenCourseIsUsedInStartedCohort() throws Exception {
+        Course course = saveScheduledCourse(
+                "Java cours utilise controller update",
+                CohortStatus.IN_PROGRESS
+        );
 
         mockMvc.perform(put("/api/courses/{id}", course.getId())
                         .contentType(MediaType.APPLICATION_JSON)
@@ -251,6 +254,24 @@ class CourseControllerTest {
                 .andExpect(content().string(
                         "Impossible de modifier ce cours : il est utilisé dans une promotion."
                 ));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMINISTRATIVE_MANAGER")
+    void updateReturnsOkWhenCourseIsOnlyUsedInUpcomingCohort() throws Exception {
+        Course course = saveScheduledCourse(
+                "Java cours utilise controller update a venir",
+                CohortStatus.UPCOMING
+        );
+
+        mockMvc.perform(put("/api/courses/{id}", course.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"name": "Java modifie", "durationInDays": 7}
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("Java modifie"))
+                .andExpect(jsonPath("$.durationInDays").value(7));
     }
 
     @Test
@@ -402,7 +423,10 @@ class CourseControllerTest {
     @Test
     @WithMockUser(roles = "ADMINISTRATIVE_MANAGER")
     void deleteReturnsConflictWhenCourseIsUsedInCohort() throws Exception {
-        Course course = saveScheduledCourse("Java cours utilise controller delete");
+        Course course = saveScheduledCourse(
+                "Java cours utilise controller delete",
+                CohortStatus.UPCOMING
+        );
 
         mockMvc.perform(delete("/api/courses/{id}", course.getId()))
                 .andExpect(status().isConflict())
@@ -411,7 +435,7 @@ class CourseControllerTest {
                 ));
     }
 
-    private Course saveScheduledCourse(String courseName) {
+    private Course saveScheduledCourse(String courseName, CohortStatus status) {
         Course course = Course.builder()
                 .name(courseName)
                 .durationInDays(5)
@@ -427,13 +451,18 @@ class CourseControllerTest {
                 .name("Promotion " + courseName)
                 .startDate(LocalDate.of(2026, 9, 1))
                 .endDate(LocalDate.of(2026, 9, 7))
-                .status(CohortStatus.UPCOMING)
+                .status(status)
                 .track(track)
                 .build();
 
         entityManager.persist(sector);
         entityManager.persist(track);
         entityManager.persist(course);
+        entityManager.persist(TrackCourse.builder()
+                .track(track)
+                .course(course)
+                .position(1)
+                .build());
         entityManager.persist(cohort);
         entityManager.persist(ScheduledCourse.builder()
                 .cohort(cohort)

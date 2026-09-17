@@ -117,6 +117,21 @@
   margin-top: t.$fg-space-sm;
 }
 
+.track-courses-detail {
+  display: grid;
+  gap: t.$fg-space-xs;
+}
+
+.track-courses-detail__item {
+  display: flex;
+  justify-content: space-between;
+  gap: t.$fg-space-md;
+  padding: t.$fg-space-sm t.$fg-space-md;
+  border: 1px solid t.$fg-border;
+  border-radius: t.$fg-radius-sm;
+  background: t.$fg-surface-variant;
+}
+
 .form-error {
   color: t.$fg-error;
 }

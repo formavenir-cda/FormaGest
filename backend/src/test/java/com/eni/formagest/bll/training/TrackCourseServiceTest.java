@@ -7,6 +7,7 @@ import com.eni.formagest.bo.training.ScheduledCourse;
 import com.eni.formagest.bo.training.Sector;
 import com.eni.formagest.bo.training.Track;
 import com.eni.formagest.bo.training.TrackCourse;
+import com.eni.formagest.dal.training.ScheduledCourseRepository;
 import com.eni.formagest.dal.training.TrackCourseRepository;
 import com.eni.formagest.dto.training.TrackCourseDto;
 import com.eni.formagest.dto.training.TrackCourseOrderDto;
@@ -32,6 +33,9 @@ class TrackCourseServiceTest {
 
     @Autowired
     private TrackCourseRepository trackCourseRepository;
+
+    @Autowired
+    private ScheduledCourseRepository scheduledCourseRepository;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -177,13 +181,13 @@ class TrackCourseServiceTest {
     }
 
     @Test
-    void reorderCoursesRejectsTrackUsedInCohort() {
+    void reorderCoursesRejectsTrackUsedInStartedCohort() {
         Track track = saveTrackWithCourses(
                 "Service ordre cursus utilise",
                 "Java",
                 "Angular"
         );
-        saveCohort(track, "Promotion ordre cursus utilise");
+        saveCohort(track, "Promotion ordre cursus utilise", CohortStatus.IN_PROGRESS);
         List<TrackCourse> courses =
                 trackCourseRepository.findByTrackIdOrderByPositionAsc(track.getId());
 
@@ -202,7 +206,35 @@ class TrackCourseServiceTest {
     }
 
     @Test
-    void updateCourseTracksRejectsCourseUsedInCohort() {
+    void reorderCoursesAllowsAndRecalculatesUpcomingCohort() {
+        Track track = saveTrackWithCourses(
+                "Service ordre cursus a venir",
+                "Java",
+                "Angular"
+        );
+        Cohort cohort = saveCohort(track, "Promotion ordre cursus a venir", CohortStatus.UPCOMING);
+        List<TrackCourse> courses =
+                trackCourseRepository.findByTrackIdOrderByPositionAsc(track.getId());
+
+        trackCourseService.reorderCourses(
+                track.getId(),
+                List.of(
+                        order(courses.get(1).getCourse().getId(), 1),
+                        order(courses.get(0).getCourse().getId(), 2)
+                )
+        );
+
+        List<ScheduledCourse> scheduledCourses = scheduledCourseRepository.findByCohortId(cohort.getId());
+
+        assertEquals(2, scheduledCourses.size());
+        assertEquals(
+                courses.get(1).getCourse().getId(),
+                scheduledCourses.get(0).getCourse().getId()
+        );
+    }
+
+    @Test
+    void updateCourseTracksRejectsCourseUsedInStartedCohort() {
         Track track = saveTrackWithCourses(
                 "Service association cours utilise",
                 "Java"
@@ -212,7 +244,8 @@ class TrackCourseServiceTest {
         saveScheduledCourse(
                 track,
                 trackCourse.getCourse(),
-                "Promotion association cours utilise"
+                "Promotion association cours utilise",
+                CohortStatus.IN_PROGRESS
         );
 
         IllegalStateException exception = assertThrows(
@@ -227,12 +260,12 @@ class TrackCourseServiceTest {
     }
 
     @Test
-    void updateCourseTracksRejectsChangedTrackUsedInCohort() {
+    void updateCourseTracksRejectsChangedTrackUsedInStartedCohort() {
         Track track = saveTrackWithCourses(
                 "Service association cursus utilise",
                 "Java"
         );
-        saveCohort(track, "Promotion association cursus utilise");
+        saveCohort(track, "Promotion association cursus utilise", CohortStatus.IN_PROGRESS);
         TrackCourse trackCourse =
                 trackCourseRepository.findByTrackIdOrderByPositionAsc(track.getId()).getFirst();
 
@@ -278,12 +311,12 @@ class TrackCourseServiceTest {
         return track;
     }
 
-    private Cohort saveCohort(Track track, String name) {
+    private Cohort saveCohort(Track track, String name, CohortStatus status) {
         Cohort cohort = Cohort.builder()
                 .name(name)
                 .startDate(LocalDate.of(2026, 9, 1))
                 .endDate(LocalDate.of(2026, 9, 7))
-                .status(CohortStatus.UPCOMING)
+                .status(status)
                 .track(track)
                 .build();
 
@@ -294,12 +327,16 @@ class TrackCourseServiceTest {
         return cohort;
     }
 
-    private void saveScheduledCourse(Track track, Course course, String cohortName) {
+    private void saveScheduledCourse(
+            Track track,
+            Course course,
+            String cohortName,
+            CohortStatus status) {
         Cohort cohort = Cohort.builder()
                 .name(cohortName)
                 .startDate(LocalDate.of(2026, 9, 1))
                 .endDate(LocalDate.of(2026, 9, 7))
-                .status(CohortStatus.UPCOMING)
+                .status(status)
                 .track(track)
                 .build();
 

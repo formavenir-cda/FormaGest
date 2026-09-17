@@ -17,6 +17,7 @@
 .courses-page__actions {
   display: flex;
   justify-content: flex-end;
+  gap: t.$fg-space-sm;
   margin-bottom: t.$fg-space-lg;
 
   button {
@@ -28,6 +29,41 @@
   .material-icons {
     margin-right: t.$fg-space-sm;
     vertical-align: middle;
+  }
+}
+
+.courses-page__track-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: t.$fg-space-md;
+  margin-bottom: t.$fg-space-lg;
+  padding: t.$fg-space-md t.$fg-space-lg;
+  border: 1px solid t.$fg-border;
+  border-radius: t.$fg-radius-md;
+  background: t.$fg-surface-variant;
+
+  div {
+    display: grid;
+    gap: 2px;
+  }
+
+  small {
+    color: t.$fg-text-secondary;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+
+  strong {
+    color: t.$fg-text-primary;
+    font-weight: 600;
+  }
+
+  span {
+    color: t.$fg-text-secondary;
   }
 }
 
@@ -131,66 +167,6 @@ p.courses-table__error {
   margin-top: t.$fg-space-sm;
 }
 
-.course-associations {
-  margin-top: t.$fg-space-md;
-
-  p {
-    margin: 0;
-  }
-}
-
-.course-associations__list {
-  display: grid;
-  gap: t.$fg-space-xs;
-  margin-bottom: t.$fg-space-md;
-}
-
-.course-associations__item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: t.$fg-space-md;
-  min-height: 48px;
-  padding: t.$fg-space-sm t.$fg-space-md;
-  border: 1px solid t.$fg-border;
-  border-radius: t.$fg-radius-sm;
-  background: t.$fg-surface-variant;
-
-  span {
-    display: grid;
-    gap: 2px;
-  }
-
-  strong {
-    color: t.$fg-text-primary;
-    font-weight: 600;
-  }
-
-  small {
-    color: t.$fg-text-secondary;
-  }
-
-  button {
-    width: 32px;
-    height: 32px;
-    padding: 0;
-    color: t.$fg-text-secondary;
-  }
-}
-
-.course-associations__controls {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: t.$fg-space-sm;
-  align-items: start;
-}
-
-.course-associations__hint {
-  margin: t.$fg-space-xs 0 0;
-  color: t.$fg-text-secondary;
-  font-size: 0.875rem;
-}
-
 .form-error {
   color: t.$fg-error;
 }
@@ -203,10 +179,6 @@ p.courses-table__error {
   .courses-toolbar {
     grid-template-columns: minmax(240px, 1fr) minmax(180px, 260px) minmax(180px, 260px);
     align-items: start;
-  }
-
-  .course-associations__controls {
-    grid-template-columns: minmax(150px, 1fr) minmax(150px, 1fr) auto;
   }
 }
 

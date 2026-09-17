@@ -16,7 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -57,26 +56,43 @@ public class CohortServiceImpl implements CohortService {
         Track track = trackRepository.findById(dto.getTrackId())
                 .orElseThrow(() -> new NoSuchElementException(MISSING_TRACK));
 
-        List<TrackCourse> trackCourses =
-                trackCourseRepository.findByTrackIdOrderByPositionAsc(track.getId());
-
-        if (trackCourses.isEmpty()) {
+        if (trackCourseRepository.findByTrackIdOrderByPositionAsc(track.getId()).isEmpty()) {
             throw new IllegalArgumentException(EMPTY_TRACK);
         }
-
-        List<ScheduledCourse> scheduledCourses = new ArrayList<>();
-        LocalDate nextCourseStart = nextWorkingDay(dto.getStartDate());
-        LocalDate cohortEndDate = nextCourseStart;
 
         Cohort cohort = Cohort.builder()
                 .name(name)
                 .startDate(dto.getStartDate())
-                .endDate(cohortEndDate)
+                .endDate(dto.getStartDate())
                 .status(CohortStatus.UPCOMING)
                 .track(track)
                 .build();
 
         Cohort savedCohort = cohortRepository.save(cohort);
+        recalculateSchedule(savedCohort);
+
+        return CohortMapper.toDto(savedCohort);
+    }
+
+    @Override
+    @Transactional
+    public void recalculateUpcomingCohortsForTrack(Long trackId) {
+        cohortRepository.findByTrackIdAndStatus(trackId, CohortStatus.UPCOMING)
+                .forEach(this::recalculateSchedule);
+    }
+
+    /**
+     * Recalcule le planning d’une promotion à partir de la composition actuelle de son cursus.
+     */
+    private void recalculateSchedule(Cohort cohort) {
+        List<TrackCourse> trackCourses =
+                trackCourseRepository.findByTrackIdOrderByPositionAsc(cohort.getTrack().getId());
+
+        cohort.getScheduledCourses().clear();
+        cohortRepository.saveAndFlush(cohort);
+
+        LocalDate nextCourseStart = nextWorkingDay(cohort.getStartDate());
+        LocalDate cohortEndDate = nextCourseStart;
 
         for (TrackCourse trackCourse : trackCourses) {
             LocalDate courseStartDate = nextWorkingDay(nextCourseStart);
@@ -85,8 +101,8 @@ public class CohortServiceImpl implements CohortService {
                     trackCourse.getCourse().getDurationInDays() - 1
             );
 
-            scheduledCourses.add(ScheduledCourse.builder()
-                    .cohort(savedCohort)
+            cohort.getScheduledCourses().add(ScheduledCourse.builder()
+                    .cohort(cohort)
                     .course(trackCourse.getCourse())
                     .startDate(courseStartDate)
                     .endDate(courseEndDate)
@@ -96,12 +112,8 @@ public class CohortServiceImpl implements CohortService {
             nextCourseStart = nextWorkingDay(courseEndDate.plusDays(1));
         }
 
-        savedCohort.setEndDate(cohortEndDate);
-
-        scheduledCourseRepository.saveAll(scheduledCourses);
-        savedCohort.setScheduledCourses(scheduledCourses);
-
-        return CohortMapper.toDto(savedCohort);
+        cohort.setEndDate(cohortEndDate);
+        cohortRepository.save(cohort);
     }
 
     private LocalDate addWorkingDays(LocalDate date, int daysToAdd) {

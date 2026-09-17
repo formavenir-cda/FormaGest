@@ -63,7 +63,7 @@
       @for (track of filteredTracks(); track track.id) {
         <div
           class="tracks-table__row"
-          (click)="openTrackCourses(track)"
+          (click)="viewTrackCourses(track, trackCoursesDialog)"
         >
           <span class="tracks-table__name">{{ track.name }}</span>
           <span>{{ sectorName(track.sectorId) }}</span>
@@ -74,7 +74,7 @@
               type="button"
               aria-label="Modifier le cursus"
               matTooltip="Modifier"
-              (click)="editTrack(track, trackDialog); $event.stopPropagation()"
+              (click)="editTrackCourses(track); $event.stopPropagation()"
             >
               <span class="material-icons" aria-hidden="true">edit</span>
             </button>
@@ -98,10 +98,29 @@
   </section>
 </section>
 
+<ng-template #trackCoursesDialog>
+  <h2 mat-dialog-title>{{ viewedTrack()?.name }}</h2>
+
+  <mat-dialog-content>
+    <section class="track-courses-detail">
+      @for (course of orderedCourses(viewedTrack()!); track $index) {
+        <div class="track-courses-detail__item">
+          <span>{{ $index + 1 }}. {{ course.name }}</span>
+          <span>{{ course.durationInDays }} j</span>
+        </div>
+      } @empty {
+        <p>Aucun cours dans ce cursus.</p>
+      }
+    </section>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button type="button" (click)="closeTrackCourses()">Fermer</button>
+  </mat-dialog-actions>
+</ng-template>
+
 <ng-template #trackDialog>
-  <h2 mat-dialog-title>
-    {{ editingTrack() ? 'Modifier le cursus' : 'Nouveau cursus' }}
-  </h2>
+  <h2 mat-dialog-title>Nouveau cursus</h2>
 
   <form (ngSubmit)="submitForm()">
     <mat-dialog-content>
@@ -158,11 +177,7 @@
         type="submit"
         [disabled]="saving() || !trackName().trim() || !trackSectorId()"
       >
-        {{
-          saving()
-            ? 'Enregistrement...'
-            : (editingTrack() ? 'Modifier' : 'Créer')
-        }}
+        {{ saving() ? 'Enregistrement...' : 'Créer' }}
       </button>
     </mat-dialog-actions>
   </form>

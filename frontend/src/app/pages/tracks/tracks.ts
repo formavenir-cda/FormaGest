@@ -19,8 +19,10 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTooltip } from '@angular/material/tooltip';
 
+import type { Course } from '../../models/training/course.model';
 import type { Sector } from '../../models/training/sector.model';
 import type { Track } from '../../models/training/track.model';
+import { CourseService } from '../../services/training/course.service';
 import { SectorService } from '../../services/training/sector.service';
 import { TrackService } from '../../services/training/track.service';
 
@@ -41,16 +43,20 @@ import { TrackService } from '../../services/training/track.service';
 export class Tracks implements OnInit {
   private readonly trackService = inject(TrackService);
   private readonly sectorService = inject(SectorService);
+  private readonly courseService = inject(CourseService);
   private readonly dialog = inject(MatDialog);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
   private formDialogRef?: MatDialogRef<unknown>;
   private deleteDialogRef?: MatDialogRef<unknown>;
+  private coursesDialogRef?: MatDialogRef<unknown>;
 
   readonly tracks = signal<Track[]>([]);
   readonly sectors = signal<Sector[]>([]);
+  readonly courses = signal<Course[]>([]);
   readonly selectedTrack = signal<Track | null>(null);
+  readonly viewedTrack = signal<Track | null>(null);
   readonly loading = signal(true);
   readonly error = signal('');
   readonly search = signal('');
@@ -60,7 +66,6 @@ export class Tracks implements OnInit {
   readonly trackSectorId = signal<number | null>(null);
   readonly formError = signal('');
   readonly saving = signal(false);
-  readonly editingTrack = signal<Track | null>(null);
 
   readonly trackToDelete = signal<Track | null>(null);
   readonly deleting = signal(false);
@@ -98,7 +103,31 @@ export class Tracks implements OnInit {
       ?? 'Filière inconnue';
   }
 
-  openTrackCourses(track: Track): void {
+  viewTrackCourses(track: Track, template: TemplateRef<unknown>): void {
+    this.viewedTrack.set(track);
+
+    this.coursesDialogRef = this.dialog.open(template, {
+      width: '480px',
+      maxWidth: '95vw',
+    });
+  }
+
+  closeTrackCourses(): void {
+    this.coursesDialogRef?.close();
+  }
+
+  orderedCourses(track: Track): { name: string; durationInDays: number }[] {
+    return [...track.courses]
+      .sort((a, b) => a.position - b.position)
+      .map((trackCourse) => ({
+        name: this.courses().find((course) => course.id === trackCourse.courseId)?.name
+          ?? 'Cours inconnu',
+        durationInDays: this.courses().find((course) => course.id === trackCourse.courseId)
+          ?.durationInDays ?? 0,
+      }));
+  }
+
+  editTrackCourses(track: Track): void {
     this.router.navigate(['/formation/cours'], {
       queryParams: {
         sectorId: track.sectorId,
@@ -108,7 +137,6 @@ export class Tracks implements OnInit {
   }
 
   openCreateForm(template: TemplateRef<unknown>): void {
-    this.editingTrack.set(null);
     this.trackName.set('');
     this.trackSectorId.set(this.sectors()[0]?.id ?? null);
     this.formError.set('');
@@ -117,27 +145,6 @@ export class Tracks implements OnInit {
       width: '520px',
       maxWidth: '95vw',
     });
-  }
-
-  openEditForm(template: TemplateRef<unknown>): void {
-    const track = this.selectedTrack();
-
-    if (!track) return;
-
-    this.editingTrack.set(track);
-    this.trackName.set(track.name);
-    this.trackSectorId.set(track.sectorId);
-    this.formError.set('');
-
-    this.formDialogRef = this.dialog.open(template, {
-      width: '520px',
-      maxWidth: '95vw',
-    });
-  }
-
-  editTrack(track: Track, template: TemplateRef<unknown>): void {
-    this.selectedTrack.set(track);
-    this.openEditForm(template);
   }
 
   cancelForm(): void {
@@ -172,18 +179,9 @@ export class Tracks implements OnInit {
       this.formDialogRef.disableClose = true;
     }
 
-    const trackToEdit = this.editingTrack();
-    const request = trackToEdit
-      ? this.trackService.update(trackToEdit.id, name, sectorId)
-      : this.trackService.create(name, sectorId);
-
-    request.subscribe({
+    this.trackService.create(name, sectorId).subscribe({
       next: (track) => {
-        this.tracks.update((list) =>
-          trackToEdit
-            ? list.map((item) => item.id === track.id ? track : item)
-            : [...list, track]
-        );
+        this.tracks.update((list) => [...list, track]);
 
         this.selectedTrack.set(track);
         this.saving.set(false);
@@ -191,20 +189,6 @@ export class Tracks implements OnInit {
       },
       error: (err) => {
         this.saving.set(false);
-        if (err.status === 409) {
-          this.formError.set(this.errorMessage(
-            err,
-            trackToEdit
-              ? 'Impossible de modifier ce cursus : il est utilisé dans une promotion.'
-              : 'Un cursus portant ce nom existe déjà.'
-          ));
-
-          if (this.formDialogRef) {
-            this.formDialogRef.disableClose = false;
-          }
-
-          return;
-        }
         this.formError.set(
           err.status === 409
             ? 'Un cursus portant ce nom existe déjà.'
@@ -308,6 +292,10 @@ export class Tracks implements OnInit {
         this.error.set('Impossible de charger les filières.');
         this.loading.set(false);
       },
+    });
+
+    this.courseService.findAll().subscribe({
+      next: (courses) => this.courses.set(courses),
     });
   }
 

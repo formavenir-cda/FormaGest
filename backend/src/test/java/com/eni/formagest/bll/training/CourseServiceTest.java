@@ -170,8 +170,11 @@ class CourseServiceTest {
     }
 
     @Test
-    void updateRejectsCourseUsedInCohort() {
-        Course course = saveScheduledCourse("Java cours utilise update");
+    void updateRejectsCourseUsedInStartedCohort() {
+        Course course = saveScheduledCourse(
+                "Java cours utilise update",
+                CohortStatus.IN_PROGRESS
+        );
         CourseDto dto = CourseDto.builder()
                 .name("Java modifie")
                 .durationInDays(7)
@@ -183,6 +186,37 @@ class CourseServiceTest {
         );
 
         assertEquals(CourseService.COURSE_USED_IN_COHORT, exception.getMessage());
+    }
+
+    @Test
+    void updateAllowsCourseUsedInUpcomingCohortAndRecalculatesSchedule() {
+        Course course = saveScheduledCourse(
+                "Java cours utilise a venir",
+                CohortStatus.UPCOMING
+        );
+        CourseDto dto = CourseDto.builder()
+                .name("Java modifie")
+                .durationInDays(10)
+                .build();
+
+        CourseDto result = courseService.update(course.getId(), dto);
+
+        assertEquals("Java modifie", result.getName());
+        assertEquals(10, result.getDurationInDays());
+
+        ScheduledCourse scheduledCourse = findScheduledCourseForCourse(course.getId());
+
+        assertEquals(LocalDate.of(2026, 9, 14), scheduledCourse.getEndDate());
+    }
+
+    private ScheduledCourse findScheduledCourseForCourse(Long courseId) {
+        return entityManager.createQuery(
+                        "select scheduledCourse from ScheduledCourse scheduledCourse "
+                                + "where scheduledCourse.course.id = :courseId",
+                        ScheduledCourse.class
+                )
+                .setParameter("courseId", courseId)
+                .getSingleResult();
     }
 
     @Test
@@ -205,7 +239,7 @@ class CourseServiceTest {
 
     @Test
     void deleteRejectsCourseUsedInCohort() {
-        Course course = saveScheduledCourse("Java cours utilise delete");
+        Course course = saveScheduledCourse("Java cours utilise delete", CohortStatus.UPCOMING);
 
         IllegalStateException exception = assertThrows(
                 IllegalStateException.class,
@@ -243,7 +277,7 @@ class CourseServiceTest {
                 () -> courseService.delete(course.getId()));
     }
 
-    private Course saveScheduledCourse(String courseName) {
+    private Course saveScheduledCourse(String courseName, CohortStatus status) {
         Course course = Course.builder()
                 .name(courseName)
                 .durationInDays(5)
@@ -259,13 +293,18 @@ class CourseServiceTest {
                 .name("Promotion " + courseName)
                 .startDate(LocalDate.of(2026, 9, 1))
                 .endDate(LocalDate.of(2026, 9, 7))
-                .status(CohortStatus.UPCOMING)
+                .status(status)
                 .track(track)
                 .build();
 
         entityManager.persist(sector);
         entityManager.persist(track);
         entityManager.persist(course);
+        entityManager.persist(TrackCourse.builder()
+                .track(track)
+                .course(course)
+                .position(1)
+                .build());
         entityManager.persist(cohort);
         entityManager.persist(ScheduledCourse.builder()
                 .cohort(cohort)
