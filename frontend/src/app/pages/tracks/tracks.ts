@@ -191,6 +191,20 @@ export class Tracks implements OnInit {
       },
       error: (err) => {
         this.saving.set(false);
+        if (err.status === 409) {
+          this.formError.set(this.errorMessage(
+            err,
+            trackToEdit
+              ? 'Impossible de modifier ce cursus : il est utilisé dans une promotion.'
+              : 'Un cursus portant ce nom existe déjà.'
+          ));
+
+          if (this.formDialogRef) {
+            this.formDialogRef.disableClose = false;
+          }
+
+          return;
+        }
         this.formError.set(
           err.status === 409
             ? 'Un cursus portant ce nom existe déjà.'
@@ -256,6 +270,18 @@ export class Tracks implements OnInit {
       },
       error: (err) => {
         this.deleting.set(false);
+        if (err.status === 409) {
+          this.deleteError.set(this.errorMessage(
+            err,
+            'Impossible de supprimer ce cursus : il est utilisé dans une promotion.'
+          ));
+
+          if (this.deleteDialogRef) {
+            this.deleteDialogRef.disableClose = false;
+          }
+
+          return;
+        }
         this.deleteError.set(
           typeof err.error === 'string' && err.error.trim()
             ? err.error
@@ -304,5 +330,28 @@ export class Tracks implements OnInit {
       .toLowerCase()
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '');
+  }
+
+  private errorMessage(err: unknown, fallback: string): string {
+    const httpError = err as {
+      error?: string | { message?: string; detail?: string };
+    };
+    const body = httpError.error;
+
+    if (typeof body === 'string' && body.trim()) {
+      return body;
+    }
+
+    if (body && typeof body === 'object') {
+      if (body.message) {
+        return body.message;
+      }
+
+      if (body.detail) {
+        return body.detail;
+      }
+    }
+
+    return fallback;
   }
 }

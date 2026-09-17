@@ -41,7 +41,7 @@
 .promotions-table__header,
 .promotions-table__row {
   display: grid;
-  grid-template-columns: minmax(180px, 2fr) minmax(180px, 2fr) 140px 140px 120px;
+  grid-template-columns: minmax(180px, 2fr) minmax(180px, 2fr) 140px 140px 120px 96px;
   align-items: center;
   gap: t.$fg-space-md;
   padding: t.$fg-space-md t.$fg-space-lg;
@@ -79,6 +79,29 @@
 
 .form-error {
   color: t.$fg-error;
+}
+
+.promotion-detail {
+  display: grid;
+  gap: t.$fg-space-sm;
+
+  p {
+    margin: 0;
+  }
+}
+
+.promotion-detail__courses {
+  display: grid;
+  gap: t.$fg-space-xs;
+  margin-top: t.$fg-space-md;
+}
+
+.promotion-detail__course {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) minmax(180px, auto);
+  gap: t.$fg-space-md;
+  padding: t.$fg-space-sm 0;
+  border-top: 1px solid t.$fg-divider;
 }
 
 @include t.fg-tablet-up {

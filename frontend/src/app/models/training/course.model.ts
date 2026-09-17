@@ -9,5 +9,6 @@ export interface CourseAssociation {
 export interface Course {
   id: number;
   name: string;
+  durationInDays: number;
   associations: CourseAssociation[];
 }

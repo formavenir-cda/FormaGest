@@ -48,7 +48,7 @@
 .courses-table__header,
 .courses-table__row {
   display: grid;
-  grid-template-columns: minmax(180px, 2fr) minmax(150px, 1fr) minmax(150px, 1fr) 80px 128px;
+  grid-template-columns: minmax(180px, 2fr) 88px minmax(150px, 1fr) minmax(150px, 1fr) 80px 128px;
   align-items: center;
   gap: t.$fg-space-md;
   padding: t.$fg-space-md t.$fg-space-lg;

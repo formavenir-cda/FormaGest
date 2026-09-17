@@ -18,6 +18,7 @@
       <span>Date début</span>
       <span>Date fin</span>
       <span>Statut</span>
+      <span>Actions</span>
     </div>
 
     @if (loading()) {
@@ -32,6 +33,15 @@
           <span>{{ cohort.startDate }}</span>
           <span>{{ cohort.endDate }}</span>
           <span>{{ statusLabel(cohort.status) }}</span>
+          <span>
+            <button
+              mat-stroked-button
+              type="button"
+              (click)="openDetail(cohort, promotionDetailDialog)"
+            >
+              Détail
+            </button>
+          </span>
         </div>
       } @empty {
         <p>Aucune promotion trouvée.</p>
@@ -92,19 +102,6 @@
           />
         </mat-form-field>
 
-        <mat-form-field appearance="outline">
-          <mat-label>Date de fin</mat-label>
-
-          <input
-            matInput
-            name="endDate"
-            type="date"
-            required
-            [disabled]="saving()"
-            [ngModel]="endDate()"
-            (ngModelChange)="endDate.set($event)"
-          />
-        </mat-form-field>
       </div>
 
       @if (formError()) {
@@ -126,10 +123,43 @@
         mat-flat-button
         class="fg-btn-primary"
         type="submit"
-        [disabled]="saving() || !promotionName().trim() || !trackId() || !startDate() || !endDate()"
+        [disabled]="saving() || !promotionName().trim() || !trackId() || !startDate()"
       >
         {{ saving() ? 'Création...' : 'Créer' }}
       </button>
     </mat-dialog-actions>
   </form>
+</ng-template>
+
+<ng-template #promotionDetailDialog>
+  <h2 mat-dialog-title>{{ selectedCohort()?.name }}</h2>
+
+  <mat-dialog-content>
+    <section class="promotion-detail">
+      <p>
+        <strong>Cursus</strong>
+        {{ selectedCohort() ? trackName(selectedCohort()!.trackId) : '' }}
+      </p>
+
+      <p>
+        <strong>Dates</strong>
+        {{ selectedCohort()?.startDate }} - {{ selectedCohort()?.endDate }}
+      </p>
+
+      <div class="promotion-detail__courses">
+        @for (scheduledCourse of selectedCohort()?.scheduledCourses ?? []; track scheduledCourse.id) {
+          <div class="promotion-detail__course">
+            <span>{{ scheduledCourse.courseName }}</span>
+            <span>{{ scheduledCourseDates(scheduledCourse.startDate, scheduledCourse.endDate) }}</span>
+          </div>
+        } @empty {
+          <p>Aucun cours planifié.</p>
+        }
+      </div>
+    </section>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button type="button" (click)="closeDetail()">Fermer</button>
+  </mat-dialog-actions>
 </ng-template>

@@ -69,6 +69,7 @@
 
     <div class="courses-table__header">
       <span>Nom</span>
+      <span>Durée</span>
       <span>Filière</span>
       <span>Cursus</span>
       <span>Position</span>
@@ -93,6 +94,7 @@
             [cdkDragDisabled]="!canDragReorder()"
           >
           <span class="courses-table__name">{{ course.name }}</span>
+          <span>{{ course.durationInDays }} j</span>
           <span>{{ associatedSectorNames(course) }}</span>
           <span>{{ associatedTrackNames(course) }}</span>
           <span>{{ associatedPositions(course) }}</span>
@@ -158,6 +160,21 @@
           [disabled]="saving()"
           [ngModel]="courseName()"
           (ngModelChange)="courseName.set($event)"
+        />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="course-field">
+        <mat-label>Durée en jours</mat-label>
+
+        <input
+          matInput
+          name="courseDurationInDays"
+          type="number"
+          required
+          min="1"
+          [disabled]="saving()"
+          [ngModel]="courseDurationInDays()"
+          (ngModelChange)="courseDurationInDays.set(+$event)"
         />
       </mat-form-field>
 
@@ -262,7 +279,7 @@
         mat-flat-button
         class="fg-btn-primary"
         type="submit"
-        [disabled]="saving() || !courseName().trim()"
+        [disabled]="saving() || !courseName().trim() || !courseDurationInDays()"
       >
         {{
           saving()

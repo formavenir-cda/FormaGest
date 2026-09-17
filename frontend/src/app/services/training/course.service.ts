@@ -14,8 +14,12 @@ export class CourseService {
     return this.http.get<Course[]>(this.apiUrl);
   }
 
-  create(name: string, associations: CourseAssociation[] = []): Observable<Course> {
-    return this.http.post<Course>(this.apiUrl, { name }).pipe(
+  create(
+    name: string,
+    durationInDays: number,
+    associations: CourseAssociation[] = []
+  ): Observable<Course> {
+    return this.http.post<Course>(this.apiUrl, { name, durationInDays }).pipe(
       switchMap((course) =>
         associations.length
           ? this.updateTracks(course.id, this.trackIds(associations))
@@ -27,11 +31,12 @@ export class CourseService {
   update(
     id: number,
     name: string,
+    durationInDays: number,
     associations: CourseAssociation[] = []
   ): Observable<Course> {
     return this.http.put<Course>(
       `${this.apiUrl}/${id}`,
-      { name }
+      { name, durationInDays }
     ).pipe(
       switchMap(() =>
         this.updateTracks(id, this.trackIds(associations))

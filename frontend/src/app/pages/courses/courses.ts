@@ -73,6 +73,7 @@ export class Courses implements OnInit {
   readonly selectedTrackFilter = signal<number | null>(null);
 
   readonly courseName = signal('');
+  readonly courseDurationInDays = signal<number | null>(null);
   readonly associationSectorId = signal<number | null>(null);
   readonly associationTrackId = signal<number | null>(null);
   readonly pendingAssociations = signal<CourseAssociation[]>([]);
@@ -212,6 +213,7 @@ export class Courses implements OnInit {
   openCreateForm(template: TemplateRef<unknown>): void {
     this.editingCourse.set(null);
     this.courseName.set('');
+    this.courseDurationInDays.set(null);
     this.associationSectorId.set(null);
     this.associationTrackId.set(null);
     this.pendingAssociations.set([]);
@@ -230,6 +232,7 @@ export class Courses implements OnInit {
 
     this.editingCourse.set(course);
     this.courseName.set(course.name);
+    this.courseDurationInDays.set(course.durationInDays);
     this.associationSectorId.set(null);
     this.associationTrackId.set(null);
     this.pendingAssociations.set([...course.associations]);
@@ -254,6 +257,7 @@ export class Courses implements OnInit {
     if (this.saving()) return;
 
     const name = this.courseName().trim();
+    const durationInDays = this.courseDurationInDays();
 
     if (!name) {
       this.formError.set('Le nom est obligatoire.');
@@ -262,6 +266,11 @@ export class Courses implements OnInit {
 
     if (name.length > 255) {
       this.formError.set('Le nom ne doit pas dépasser 255 caractères.');
+      return;
+    }
+
+    if (!durationInDays || durationInDays < 1) {
+      this.formError.set('La durée doit être supérieure à 0.');
       return;
     }
 
@@ -287,7 +296,7 @@ export class Courses implements OnInit {
 
         this.unassociatedCourseDialogRef.afterClosed().subscribe((confirmed) => {
           if (confirmed) {
-            this.saveCourse(name, courseToEdit, associations);
+            this.saveCourse(name, durationInDays, courseToEdit, associations);
           }
         });
       }
@@ -295,11 +304,12 @@ export class Courses implements OnInit {
       return;
     }
 
-    this.saveCourse(name, courseToEdit, associations);
+    this.saveCourse(name, durationInDays, courseToEdit, associations);
   }
 
   private saveCourse(
     name: string,
+    durationInDays: number,
     courseToEdit: Course | null,
     associations: CourseAssociation[]
   ): void {
@@ -311,8 +321,8 @@ export class Courses implements OnInit {
     }
 
     const request = courseToEdit
-      ? this.courseService.update(courseToEdit.id, name, associations)
-      : this.courseService.create(name, associations);
+      ? this.courseService.update(courseToEdit.id, name, durationInDays, associations)
+      : this.courseService.create(name, durationInDays, associations);
 
     request.subscribe({
       next: (course) => {
@@ -328,6 +338,18 @@ export class Courses implements OnInit {
       },
       error: (err) => {
         this.saving.set(false);
+        if (err.status === 409) {
+          this.formError.set(this.errorMessage(
+            err,
+            'Impossible d’enregistrer le cours. Veuillez réessayer.'
+          ));
+
+          if (this.formDialogRef) {
+            this.formDialogRef.disableClose = false;
+          }
+
+          return;
+        }
         this.formError.set(
           err.status === 409
             ? 'Un cours portant ce nom existe déjà.'
@@ -393,6 +415,18 @@ export class Courses implements OnInit {
       },
       error: (err) => {
         this.deleting.set(false);
+        if (err.status === 409) {
+          this.deleteError.set(this.errorMessage(
+            err,
+            'Impossible de supprimer le cours. Veuillez réessayer.'
+          ));
+
+          if (this.deleteDialogRef) {
+            this.deleteDialogRef.disableClose = false;
+          }
+
+          return;
+        }
         this.deleteError.set(
           typeof err.error === 'string' && err.error.trim()
             ? err.error
@@ -444,8 +478,15 @@ export class Courses implements OnInit {
         this.applyTrackCourseOrder(trackId, trackCourses);
         this.reordering.set(false);
       },
-      error: () => {
+      error: (err) => {
         this.reordering.set(false);
+        if (err.status === 409) {
+          this.reorderError.set(this.errorMessage(
+            err,
+            'Impossible de modifier l’ordre des cours. Veuillez réessayer.'
+          ));
+          return;
+        }
         this.reorderError.set(
           'Impossible de modifier l’ordre des cours. Veuillez réessayer.'
         );
@@ -593,5 +634,31 @@ export class Courses implements OnInit {
       .toLowerCase()
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '');
+  }
+
+  private errorMessage(err: unknown, fallback: string): string {
+    const httpError = err as {
+      error?: string | { message?: string; detail?: string };
+      status?: number;
+    };
+    const body = httpError.error;
+
+    if (typeof body === 'string' && body.trim()) {
+      return body;
+    }
+
+    if (body && typeof body === 'object') {
+      if (body.message) {
+        return body.message;
+      }
+
+      if (body.detail) {
+        return body.detail;
+      }
+    }
+
+    return httpError.status === 409
+      ? 'Cette action est impossible car ce cours ou ce cursus est utilisé dans une promotion.'
+      : fallback;
   }
 }

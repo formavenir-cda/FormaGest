@@ -39,10 +39,12 @@ export class Promotions implements OnInit {
   private readonly cohortService = inject(CohortService);
   private readonly trackService = inject(TrackService);
   private readonly dialog = inject(MatDialog);
+  private detailDialogRef?: MatDialogRef<unknown>;
 
   private formDialogRef?: MatDialogRef<unknown>;
 
   readonly cohorts = signal<Cohort[]>([]);
+  readonly selectedCohort = signal<Cohort | null>(null);
   readonly tracks = signal<Track[]>([]);
   readonly loading = signal(true);
   readonly error = signal('');
@@ -50,9 +52,9 @@ export class Promotions implements OnInit {
   readonly promotionName = signal('');
   readonly trackId = signal<number | null>(null);
   readonly startDate = signal('');
-  readonly endDate = signal('');
   readonly formError = signal('');
   readonly saving = signal(false);
+
 
   readonly trackOptions = computed(() =>
     this.tracks().sort((a, b) => a.name.localeCompare(b.name))
@@ -79,7 +81,6 @@ export class Promotions implements OnInit {
     this.promotionName.set('');
     this.trackId.set(null);
     this.startDate.set('');
-    this.endDate.set('');
     this.formError.set('');
 
     this.formDialogRef = this.dialog.open(template, {
@@ -98,15 +99,9 @@ export class Promotions implements OnInit {
     const name = this.promotionName().trim();
     const trackId = this.trackId();
     const startDate = this.startDate();
-    const endDate = this.endDate();
 
-    if (!name || !trackId || !startDate || !endDate) {
+    if (!name || !trackId || !startDate) {
       this.formError.set('Tous les champs sont obligatoires.');
-      return;
-    }
-
-    if (endDate < startDate) {
-      this.formError.set('La date de fin doit être postérieure ou égale à la date de début.');
       return;
     }
 
@@ -117,7 +112,7 @@ export class Promotions implements OnInit {
       this.formDialogRef.disableClose = true;
     }
 
-    this.cohortService.create(name, trackId, startDate, endDate).subscribe({
+    this.cohortService.create(name, trackId, startDate).subscribe({
       next: (cohort) => {
         this.cohorts.update((list) => [...list, cohort]);
         this.saving.set(false);
@@ -137,6 +132,27 @@ export class Promotions implements OnInit {
         }
       },
     });
+  }
+
+  openDetail(cohort: Cohort, template: TemplateRef<unknown>): void {
+    this.selectedCohort.set(cohort);
+
+    this.detailDialogRef = this.dialog.open(template, {
+      width: '640px',
+      maxWidth: '95vw',
+    });
+  }
+
+  scheduledCourseDates(startDate: string | null, endDate: string | null): string {
+    if (!startDate || !endDate) {
+      return 'Non daté';
+    }
+
+    return `${startDate} - ${endDate}`;
+  }
+
+  closeDetail(): void {
+    this.detailDialogRef?.close();
   }
 
   trackName(trackId: number): string {
