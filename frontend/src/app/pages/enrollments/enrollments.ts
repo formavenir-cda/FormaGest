@@ -1,9 +1,10 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, TemplateRef, computed, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatRadioModule } from '@angular/material/radio';
@@ -50,6 +51,7 @@ const FORCE_HINT = 'cours précédents';
     FormsModule,
     MatButtonModule,
     MatCheckboxModule,
+    MatDialogModule,
     MatFormFieldModule,
     MatInputModule,
     MatRadioModule,
@@ -62,6 +64,8 @@ export class Enrollments implements OnInit {
   private readonly userService = inject(UserService);
   private readonly cohortService = inject(CohortService);
   private readonly enrollmentService = inject(EnrollmentService);
+  private readonly dialog = inject(MatDialog);
+  private forceDialogRef?: MatDialogRef<unknown>;
 
   readonly students = signal<Student[]>([]);
   readonly cohorts = signal<Cohort[]>([]);
@@ -78,6 +82,10 @@ export class Enrollments implements OnInit {
 
   readonly submitting = signal(false);
   readonly results = signal<EnrollResult[]>([]);
+
+  readonly forcingResult = signal<EnrollResult | null>(null);
+  readonly forceJustification = signal('');
+  readonly forcing = signal(false);
 
   private readonly activeMode = signal<EnrollMode | null>(null);
   private readonly activeTargetId = signal<number | null>(null);
@@ -266,28 +274,52 @@ export class Enrollments implements OnInit {
     });
   }
 
-  retryForced(studentId: number): void {
-    const student = this.students().find((item) => item.id === studentId);
+  openForceDialog(result: EnrollResult, template: TemplateRef<unknown>): void {
+    this.forcingResult.set(result);
+    this.forceJustification.set('');
 
-    if (!student) {
-      return;
-    }
-
-    this.enrollOne(student, true).subscribe((result) => {
-      this.results.update((list) =>
-        list.map((item) => (item.student.id === studentId ? result : item))
-      );
+    this.forceDialogRef = this.dialog.open(template, {
+      width: '480px',
+      maxWidth: '95vw',
     });
   }
 
-  private enrollOne(student: Student, forced: boolean): Observable<EnrollResult> {
+  cancelForce(): void {
+    this.forceDialogRef?.close();
+  }
+
+  confirmForce(): void {
+    const result = this.forcingResult();
+    const justification = this.forceJustification().trim();
+
+    if (!result || !justification || this.forcing()) {
+      return;
+    }
+
+    this.forcing.set(true);
+
+    if (this.forceDialogRef) {
+      this.forceDialogRef.disableClose = true;
+    }
+
+    this.enrollOne(result.student, true, justification).subscribe((updated) => {
+      this.results.update((list) =>
+        list.map((item) => (item.student.id === result.student.id ? updated : item))
+      );
+
+      this.forcing.set(false);
+      this.forceDialogRef?.close();
+    });
+  }
+
+  private enrollOne(student: Student, forced: boolean, justification?: string): Observable<EnrollResult> {
     const mode = this.activeMode();
     const targetId = this.activeTargetId()!;
 
     const request$: Observable<CohortEnrollment | ScheduledCourseEnrollment> =
       mode === 'cohort'
         ? this.enrollmentService.enrollmentToCohort(targetId, student.id)
-        : this.enrollmentService.enrollmentToScheduledCourse(student.id, targetId, forced);
+        : this.enrollmentService.enrollmentToScheduledCourse(student.id, targetId, forced, justification);
 
     return request$.pipe(
       map(() => ({

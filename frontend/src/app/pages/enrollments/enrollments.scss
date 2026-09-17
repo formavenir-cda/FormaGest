@@ -166,6 +166,11 @@
   min-width: 200px;
 }
 
+.force-dialog__field {
+  width: 100%;
+  margin-top: t.$fg-space-sm;
+}
+
 @include t.fg-tablet-up {
   .enrollments-columns {
     grid-template-columns: 1fr 1fr;

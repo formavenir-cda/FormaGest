@@ -129,7 +129,7 @@
             <button
               mat-button
               type="button"
-              (click)="retryForced(result.student.id)"
+              (click)="openForceDialog(result, forceDialog)"
             >
               Forcer l'inscription
             </button>
@@ -139,3 +139,58 @@
     </section>
   }
 </section>
+
+<ng-template #forceDialog>
+  <h2 mat-dialog-title>Forcer l'inscription</h2>
+
+  <form (ngSubmit)="confirmForce()">
+    <mat-dialog-content>
+      <p>
+        <strong>
+          {{ forcingResult()?.student?.lastName }} {{ forcingResult()?.student?.firstName }}
+        </strong>
+        — {{ forcingResult()?.message }}
+      </p>
+
+      <p>
+        La référente administrative peut forcer une inscription qui enfreint l'ordre
+        pédagogique du cursus. Indiquez le motif de ce forçage.
+      </p>
+
+      <mat-form-field appearance="outline" class="force-dialog__field">
+        <mat-label>Justification</mat-label>
+
+        <textarea
+          matInput
+          name="forceJustification"
+          rows="3"
+          maxlength="200"
+          required
+          [disabled]="forcing()"
+          [ngModel]="forceJustification()"
+          (ngModelChange)="forceJustification.set($event)"
+        ></textarea>
+      </mat-form-field>
+    </mat-dialog-content>
+
+    <mat-dialog-actions align="end">
+      <button
+        mat-button
+        type="button"
+        [disabled]="forcing()"
+        (click)="cancelForce()"
+      >
+        Annuler
+      </button>
+
+      <button
+        mat-flat-button
+        class="fg-btn-primary"
+        type="submit"
+        [disabled]="forcing() || !forceJustification().trim()"
+      >
+        {{ forcing() ? 'Enregistrement...' : 'Forcer l\'inscription' }}
+      </button>
+    </mat-dialog-actions>
+  </form>
+</ng-template>

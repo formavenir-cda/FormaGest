@@ -13,8 +13,18 @@ export class EnrollmentService {
     return this.http.post<CohortEnrollment>(`${this.apiUrl}/cohorts`, { cohortId, studentId })
   }
 
-  enrollmentToScheduledCourse(studentId: number, scheduledCourseId: number, forced = false): Observable<ScheduledCourseEnrollment> {
-    return this.http.post<ScheduledCourseEnrollment>(`${this.apiUrl}/scheduled-courses`, { studentId, scheduledCourseId, forced })
+  enrollmentToScheduledCourse(
+    studentId: number,
+    scheduledCourseId: number,
+    forced = false,
+    justificationForced?: string
+  ): Observable<ScheduledCourseEnrollment> {
+    return this.http.post<ScheduledCourseEnrollment>(`${this.apiUrl}/scheduled-courses`, {
+      studentId,
+      scheduledCourseId,
+      forced,
+      justificationForced,
+    })
   }
 
   findCohortEnrollmentByStudent(studentId: number): Observable<CohortEnrollment | null> {
