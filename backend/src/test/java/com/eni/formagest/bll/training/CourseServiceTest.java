@@ -36,6 +36,7 @@ class CourseServiceTest {
     void findAllReturnsCourses() {
         Course course = courseRepository.save(Course.builder()
                 .name("Java")
+                .durationInDays(5)
                 .build());
 
         List<CourseDto> result = courseService.findAll();
@@ -43,6 +44,7 @@ class CourseServiceTest {
         assertEquals(1, result.size());
         assertEquals(course.getId(), result.getFirst().getId());
         assertEquals("Java", result.getFirst().getName());
+        assertEquals(5, result.getFirst().getDurationInDays());
     }
 
     @Test
@@ -57,6 +59,7 @@ class CourseServiceTest {
         CourseDto dto = CourseDto.builder()
                 .id(99L)
                 .name("  Java  ")
+                .durationInDays(5)
                 .build();
 
         CourseDto result = courseService.create(dto);
@@ -64,16 +67,19 @@ class CourseServiceTest {
         assertNotNull(result.getId());
         assertNotEquals(99L, result.getId());
         assertEquals("Java", result.getName());
+        assertEquals(5, result.getDurationInDays());
     }
 
     @Test
     void createRejectsDuplicateName() {
         courseRepository.save(Course.builder()
                 .name("Java")
+                .durationInDays(5)
                 .build());
 
         CourseDto dto = CourseDto.builder()
                 .name("  Java  ")
+                .durationInDays(5)
                 .build();
 
         assertThrows(IllegalArgumentException.class,
@@ -84,30 +90,38 @@ class CourseServiceTest {
     void updateChangesNameAndKeepsId() {
         Course course = courseRepository.save(Course.builder()
                 .name("Ancien nom")
+                .durationInDays(5)
                 .build());
 
         CourseDto dto = CourseDto.builder()
                 .id(99L)
                 .name("  Nouveau nom  ")
+                .durationInDays(7)
                 .build();
 
         CourseDto result = courseService.update(course.getId(), dto);
 
         assertEquals(course.getId(), result.getId());
         assertEquals("Nouveau nom", result.getName());
+        assertEquals(7, result.getDurationInDays());
         assertEquals("Nouveau nom", courseRepository.findById(course.getId())
                 .orElseThrow()
                 .getName());
+        assertEquals(7, courseRepository.findById(course.getId())
+                .orElseThrow()
+                .getDurationInDays());
     }
 
     @Test
     void updateAllowsUnchangedName() {
         Course course = courseRepository.save(Course.builder()
                 .name("Java")
+                .durationInDays(5)
                 .build());
 
         CourseDto dto = CourseDto.builder()
                 .name("Java")
+                .durationInDays(5)
                 .build();
 
         CourseDto result = courseService.update(course.getId(), dto);
@@ -120,13 +134,16 @@ class CourseServiceTest {
     void updateRejectsDuplicateName() {
         Course course = courseRepository.save(Course.builder()
                 .name("Java")
+                .durationInDays(5)
                 .build());
         courseRepository.save(Course.builder()
                 .name("Angular")
+                .durationInDays(5)
                 .build());
 
         CourseDto dto = CourseDto.builder()
                 .name("Angular")
+                .durationInDays(5)
                 .build();
 
         assertThrows(IllegalArgumentException.class,
@@ -141,6 +158,7 @@ class CourseServiceTest {
     void updateRejectsMissingCourse() {
         CourseDto dto = CourseDto.builder()
                 .name("Java")
+                .durationInDays(5)
                 .build();
 
         assertThrows(NoSuchElementException.class,
@@ -151,6 +169,7 @@ class CourseServiceTest {
     void deleteRemovesExistingCourse() {
         Course course = courseRepository.saveAndFlush(Course.builder()
                 .name("Java")
+                .durationInDays(5)
                 .build());
 
         assertDoesNotThrow(() -> courseService.delete(course.getId()));
@@ -168,6 +187,7 @@ class CourseServiceTest {
     void deleteThrowsDataIntegrityViolationWhenCourseIsReferenced() {
         Course course = courseRepository.saveAndFlush(Course.builder()
                 .name("Java")
+                .durationInDays(5)
                 .build());
         Sector sector = Sector.builder()
                 .name("Secteur test cours service")

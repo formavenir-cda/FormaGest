@@ -18,6 +18,7 @@ public final class CourseMapper {
         return CourseDto.builder()
                 .id(course.getId())
                 .name(course.getName())
+                .durationInDays(course.getDurationInDays())
                 .associations(toAssociationDtoList(course.getTrackCourses()))
                 .build();
     }

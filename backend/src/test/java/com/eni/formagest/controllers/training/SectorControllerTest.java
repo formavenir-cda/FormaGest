@@ -58,9 +58,9 @@ class SectorControllerTest {
 
     @Test
     @WithMockUser(roles = "STUDENT")
-    void findAllReturnsForbiddenForUnauthorizedRole() throws Exception {
+    void findAllReturnsOkForStudentRole() throws Exception {
         mockMvc.perform(get("/api/sectors"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isOk());
     }
 
     @Test

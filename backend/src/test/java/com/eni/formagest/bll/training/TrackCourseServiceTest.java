@@ -187,6 +187,7 @@ class TrackCourseServiceTest {
         for (int index = 0; index < courseNames.length; index++) {
             Course course = Course.builder()
                     .name(courseNames[index] + " " + trackName)
+                    .durationInDays(5)
                     .build();
             entityManager.persist(course);
             entityManager.persist(TrackCourse.builder()

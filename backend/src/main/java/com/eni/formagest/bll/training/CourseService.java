@@ -40,6 +40,7 @@ public class CourseService {
 
         Course course = new Course();
         course.setName(name);
+        course.setDurationInDays(dto.getDurationInDays());
 
         Course savedCourse = courseRepository.save(course);
 
@@ -58,6 +59,7 @@ public class CourseService {
         }
 
         course.setName(name);
+        course.setDurationInDays(dto.getDurationInDays());
 
         Course savedCourse = courseRepository.save(course);
 

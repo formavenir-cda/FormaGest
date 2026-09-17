@@ -24,6 +24,9 @@ public class Course {
     @Column(name = "NAME", nullable = false, unique = true)
     private String name;
 
+    @Column(name = "DURATION_IN_DAYS", nullable = false)
+    private int durationInDays;
+
     @OneToMany(mappedBy = "course")
     @Builder.Default
     private List<TrackCourse> trackCourses = new ArrayList<>();
