@@ -29,7 +29,8 @@ export class Sidebar {
   }
 
   protected readonly mainNavItems: SidebarNavItem[] = [
-    { label: 'Accueil', icon: 'home' },
+    { label: 'Accueil', icon: 'home', route: '/home' },
+    { label: 'Promotions', icon: 'groups' },
     { label: 'Mon calendrier', icon: 'calendar_month', roles: ['STUDENT'] },
     { label: 'Mes inscriptions', icon: 'assignment' },
     { label: 'Mes cours', icon: 'menu_book' },
@@ -40,14 +41,20 @@ export class Sidebar {
       roles: ['ADMINISTRATIVE_MANAGER'],
     },
     { label: 'Inscriptions', icon: 'how_to_reg', roles: ['ADMINISTRATIVE_MANAGER'] },
-    { label: 'Eleves', icon: 'person_search' },
+    { label: 'Élèves',
+      icon: 'person_search',
+      route: '/students',
+      roles: ['ADMINISTRATIVE_MANAGER'] },
     {
       label: 'Formation',
       icon: 'school',
       route: '/formation',
       roles: ['ADMINISTRATIVE_MANAGER'],
     },
-    { label: 'Formateurs', icon: 'badge' },
+    { label: 'Formateurs',
+      icon: 'badge',
+      route: '/teachers',
+      roles: ['ADMINISTRATIVE_MANAGER']  },
     { label: 'Utilisateurs', icon: 'manage_accounts', route: '/users', roles: ['ADMINISTRATOR'] },
   ];
 

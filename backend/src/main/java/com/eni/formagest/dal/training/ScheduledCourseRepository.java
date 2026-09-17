@@ -11,3 +11,5 @@ public interface ScheduledCourseRepository extends JpaRepository<ScheduledCourse
 
     boolean existsByCourseId(Long courseId);
 }
+    boolean existsByTeacherId(Long teacherId);
+}
