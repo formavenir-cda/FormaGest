@@ -7,6 +7,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTooltip } from '@angular/material/tooltip';
+import { DatePipe } from '@angular/common';
 
 import { UserService } from '../../../services/users/user.service';
 import type { Student, UserPayload } from '../../../models/users/user.model';
@@ -25,6 +26,7 @@ import type { Sector } from '../../../models/training/sector.model';
     MatInputModule,
     MatSelectModule,
     MatTooltip,
+    DatePipe
   ],
   styleUrl: './students.scss',
   templateUrl: './students.html',

@@ -13,6 +13,7 @@ import { Students as StudentsDirectory } from './pages/students/students';
 import { Teachers as TeachersDirectory } from './pages/teachers/teachers';
 import { AdministrativeManagers } from './pages/users/administrative-managers/administrative-managers';
 import { Administrators } from './pages/users/administrators/administrators';
+import { Home } from './pages/home/home';
 
 export const routes: Routes = [
   {
@@ -35,6 +36,9 @@ export const routes: Routes = [
         canActivate: [authGuard],
         data: {roles: ['ADMINISTRATIVE_MANAGER'] },
         title: "Formateurs"
+      },
+      {
+        path: '', component: Home, pathMatch: 'full'
       },
       {
         path: 'formation',
@@ -68,6 +72,9 @@ export const routes: Routes = [
       },
       { path: 'administrative-managers', redirectTo: 'users/administrative-managers' },
       { path: 'administrators', redirectTo: 'users/administrators' },
+      {
+        path: 'home', component: Home,
+      }
     ],
   },
 ];
