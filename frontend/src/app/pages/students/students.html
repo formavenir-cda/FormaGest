@@ -1,0 +1,92 @@
+<section class="students-page">
+  <section class="students-toolbar">
+    <mat-form-field appearance="outline">
+      <mat-label>Rechercher</mat-label>
+
+      <input
+        matInput
+        name="studentSearch"
+        [ngModel]="search()"
+        (ngModelChange)="search.set($event)"
+      />
+    </mat-form-field>
+  </section>
+
+  <section class="students-table" aria-label="Liste des élèves">
+    <div class="students-table__header">
+      <span>Nom</span>
+      <span>Prénom</span>
+      <span>Email</span>
+      <span>Naissance</span>
+      <span>Statut</span>
+      <span>Actions</span>
+    </div>
+
+    @if (loading()) {
+      <p>Chargement des élèves...</p>
+    } @else if (error()) {
+      <p role="alert">{{ error() }}</p>
+    } @else {
+      @for (student of filteredStudents(); track student.id) {
+        <div
+          class="students-table__row"
+          [class.students-table__row--inactive]="!student.active"
+        >
+          <span class="students-table__name">{{ student.lastName }}</span>
+          <span>{{ student.firstName }}</span>
+          <span>{{ student.email }}</span>
+          <span>{{ student.birthDate | date:'dd/MM/yyyy' }}</span>
+          <span>
+            <span
+              class="students-status"
+              [class.students-status--active]="student.active"
+            >
+              {{ student.active ? 'Actif' : 'Inactif' }}
+            </span>
+          </span>
+          <span class="students-table__actions">
+            <button
+              mat-button
+              type="button"
+              (click)="openDetails(student, studentDetailsDialog)"
+            >
+              Voir détails
+            </button>
+
+            <!-- TODO: brancher le choix promotion / cours à l'unité (RG06, RG07) -->
+            <button mat-button type="button" disabled>
+              Inscrire
+            </button>
+          </span>
+        </div>
+      } @empty {
+        <p>Aucun élève trouvé.</p>
+      }
+    }
+  </section>
+</section>
+
+<ng-template #studentDetailsDialog>
+  <h2 mat-dialog-title>
+    {{ viewingStudent()?.firstName }} {{ viewingStudent()?.lastName }}
+  </h2>
+
+  <mat-dialog-content>
+    <dl class="student-details">
+      <dt>Email</dt>
+      <dd>{{ viewingStudent()?.email }}</dd>
+
+      <dt>Date de naissance</dt>
+      <dd>{{ viewingStudent()?.birthDate | date:'dd/MM/yyyy' }}</dd>
+
+      <dt>Statut</dt>
+      <dd>{{ viewingStudent()?.active ? 'Actif' : 'Inactif' }}</dd>
+    </dl>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button type="button" (click)="closeDetails()">
+      Fermer
+    </button>
+  </mat-dialog-actions>
+</ng-template>

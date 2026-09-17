@@ -23,7 +23,7 @@ public class UserController {
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMINISTRATOR')")
+    @PreAuthorize("hasAnyRole('ADMINISTRATOR', 'ADMINISTRATIVE_MANAGER')")
     public List<UserDto> findAll(@RequestParam(required = false) UserRole role) {
         return userService.findAll(role);
     }
