@@ -9,6 +9,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
 import java.util.NoSuchElementException;
 
 @RestController
@@ -29,6 +30,12 @@ public class EnrollmentController {
             return enrollmentService.enrollToCohort(dto);
         } catch (NoSuchElementException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, notFoundMessage(e.getMessage()), e);
+        } catch (IllegalStateException e) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Cet élève est déjà inscrit à une promotion en cours ou à venir.",
+                    e
+            );
         }
     }
 
@@ -60,6 +67,24 @@ public class EnrollmentController {
     @PreAuthorize("hasRole('ADMINISTRATIVE_MANAGER')")
     public CohortEnrollmentDto findCohortEnrollmentByStudent(@PathVariable Long studentId) {
         return enrollmentService.findCohortEnrollmentByStudent(studentId);
+    }
+
+    @GetMapping("/students/{studentId}/scheduled-courses")
+    @PreAuthorize("hasRole('ADMINISTRATIVE_MANAGER')")
+    public List<ScheduledCourseEnrollmentDto> findScheduledCourseEnrollmentsByStudent(@PathVariable Long studentId) {
+        return enrollmentService.findScheduledCourseEnrollmentsByStudent(studentId);
+    }
+
+    @GetMapping("/students/active-cohort")
+    @PreAuthorize("hasRole('ADMINISTRATIVE_MANAGER')")
+    public List<CohortEnrollmentDto> findActiveCohortEnrollments() {
+        return enrollmentService.findActiveCohortEnrollments();
+    }
+
+    @GetMapping("/cohorts/{cohortId}/students")
+    @PreAuthorize("hasRole('ADMINISTRATIVE_MANAGER')")
+    public List<CohortEnrollmentDto> findCohortEnrollmentsByCohort(@PathVariable Long cohortId) {
+        return enrollmentService.findCohortEnrollmentsByCohort(cohortId);
     }
 
     private String notFoundMessage(String code) {

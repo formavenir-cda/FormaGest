@@ -1,18 +1,31 @@
-<section class="promotions-page">
-  <div class="promotions-page__actions">
+<section class="cohorts-page">
+  <div class="cohorts-page__actions">
     <button
       mat-flat-button
       class="fg-btn-primary"
       type="button"
-      (click)="openCreateForm(promotionDialog)"
+      (click)="openCreateForm(cohortDialog)"
     >
       <span class="material-icons" aria-hidden="true">add_circle_outline</span>
       Ajouter une promotion
     </button>
   </div>
 
-  <section class="promotions-table" aria-label="Liste des promotions">
-    <div class="promotions-table__header">
+  <section class="cohorts-toolbar">
+    <mat-form-field appearance="outline">
+      <mat-label>Rechercher</mat-label>
+
+      <input
+        matInput
+        name="cohortSearch"
+        [ngModel]="search()"
+        (ngModelChange)="search.set($event)"
+      />
+    </mat-form-field>
+  </section>
+
+  <section class="cohorts-table" aria-label="Liste des promotions">
+    <div class="cohorts-table__header">
       <span>Nom</span>
       <span>Cursus</span>
       <span>Date début</span>
@@ -26,18 +39,18 @@
     } @else if (error()) {
       <p role="alert">{{ error() }}</p>
     } @else {
-      @for (cohort of cohorts(); track cohort.id) {
-        <div class="promotions-table__row">
-          <span class="promotions-table__name">{{ cohort.name }}</span>
+      @for (cohort of filteredCohorts(); track cohort.id) {
+        <div class="cohorts-table__row">
+          <span class="cohorts-table__name">{{ cohort.name }}</span>
           <span>{{ trackName(cohort.trackId) }}</span>
-          <span>{{ cohort.startDate }}</span>
-          <span>{{ cohort.endDate }}</span>
+          <span>{{ cohort.startDate | date:'dd/MM/yyyy' }}</span>
+          <span>{{ cohort.endDate | date:'dd/MM/yyyy' }}</span>
           <span>{{ statusLabel(cohort.status) }}</span>
           <span>
             <button
               mat-stroked-button
               type="button"
-              (click)="openDetail(cohort, promotionDetailDialog)"
+              (click)="openDetail(cohort, cohortDetailDialog)"
             >
               Détail
             </button>
@@ -50,26 +63,26 @@
   </section>
 </section>
 
-<ng-template #promotionDialog>
+<ng-template #cohortDialog>
   <h2 mat-dialog-title>Ajouter une promotion</h2>
 
   <form (ngSubmit)="submitForm()">
     <mat-dialog-content>
-      <mat-form-field appearance="outline" class="promotion-field">
+      <mat-form-field appearance="outline" class="cohort-field">
         <mat-label>Nom de la promotion</mat-label>
 
         <input
           matInput
-          name="promotionName"
+          name="cohortName"
           required
           maxlength="255"
           [disabled]="saving()"
-          [ngModel]="promotionName()"
-          (ngModelChange)="promotionName.set($event)"
+          [ngModel]="cohortName()"
+          (ngModelChange)="cohortName.set($event)"
         />
       </mat-form-field>
 
-      <mat-form-field appearance="outline" class="promotion-field">
+      <mat-form-field appearance="outline" class="cohort-field">
         <mat-label>Cursus</mat-label>
 
         <mat-select
@@ -87,7 +100,7 @@
         </mat-select>
       </mat-form-field>
 
-      <div class="promotion-dates">
+      <div class="cohort-dates">
         <mat-form-field appearance="outline">
           <mat-label>Date de début</mat-label>
 
@@ -123,7 +136,7 @@
         mat-flat-button
         class="fg-btn-primary"
         type="submit"
-        [disabled]="saving() || !promotionName().trim() || !trackId() || !startDate()"
+        [disabled]="saving() || !cohortName().trim() || !trackId() || !startDate()"
       >
         {{ saving() ? 'Création...' : 'Créer' }}
       </button>
@@ -131,32 +144,53 @@
   </form>
 </ng-template>
 
-<ng-template #promotionDetailDialog>
+<ng-template #cohortDetailDialog>
   <h2 mat-dialog-title>{{ selectedCohort()?.name }}</h2>
 
-  <mat-dialog-content>
-    <section class="promotion-detail">
-      <p>
-        <strong>Cursus</strong>
-        {{ selectedCohort() ? trackName(selectedCohort()!.trackId) : '' }}
-      </p>
+  <mat-dialog-content class="cohort-detail">
+    <p>
+      <strong>Cursus</strong>
+      {{ selectedCohort() ? trackName(selectedCohort()!.trackId) : '' }}
+    </p>
 
-      <p>
-        <strong>Dates</strong>
-        {{ selectedCohort()?.startDate }} - {{ selectedCohort()?.endDate }}
-      </p>
+    <p>
+      <strong>Dates</strong>
+      {{ selectedCohort()?.startDate | date:'dd/MM/yyyy' }} - {{ selectedCohort()?.endDate | date:'dd/MM/yyyy' }}
+    </p>
 
-      <div class="promotion-detail__courses">
-        @for (scheduledCourse of selectedCohort()?.scheduledCourses ?? []; track scheduledCourse.id) {
-          <div class="promotion-detail__course">
-            <span>{{ scheduledCourse.courseName }}</span>
-            <span>{{ scheduledCourseDates(scheduledCourse.startDate, scheduledCourse.endDate) }}</span>
-          </div>
-        } @empty {
-          <p>Aucun cours planifié.</p>
-        }
-      </div>
-    </section>
+    <mat-tab-group>
+      <mat-tab label="Élèves">
+        <div class="cohort-detail__students">
+          @for (student of cohortStudents(); track student.id) {
+            <div class="cohort-detail__student">
+              <span>{{ student.lastName }} {{ student.firstName }}</span>
+              <span>{{ student.email }}</span>
+            </div>
+          } @empty {
+            <p>Aucun élève inscrit.</p>
+          }
+        </div>
+      </mat-tab>
+
+      <mat-tab label="Cours">
+        <div class="cohort-detail__courses">
+          @for (scheduledCourse of selectedCohort()?.scheduledCourses ?? []; track scheduledCourse.id) {
+            <div class="cohort-detail__course">
+              <span>{{ scheduledCourse.courseName }}</span>
+              <span>
+                @if (scheduledCourse.startDate && scheduledCourse.endDate) {
+                  {{ scheduledCourse.startDate | date:'dd/MM/yyyy' }} - {{ scheduledCourse.endDate | date:'dd/MM/yyyy' }}
+                } @else {
+                  Non daté
+                }
+              </span>
+            </div>
+          } @empty {
+            <p>Aucun cours planifié.</p>
+          }
+        </div>
+      </mat-tab>
+    </mat-tab-group>
   </mat-dialog-content>
 
   <mat-dialog-actions align="end">

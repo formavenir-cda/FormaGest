@@ -11,9 +11,10 @@ import { Students } from './pages/users/students/students';
 import { Teachers } from './pages/users/teachers/teachers';
 import { Students as StudentsDirectory } from './pages/students/students';
 import { Teachers as TeachersDirectory } from './pages/teachers/teachers';
+import { Enrollments } from './pages/enrollments/enrollments';
 import { AdministrativeManagers } from './pages/users/administrative-managers/administrative-managers';
 import { Administrators } from './pages/users/administrators/administrators';
-import { Promotions } from './pages/promotions/promotions';
+import { Cohorts } from './pages/cohorts/cohorts';
 import { Home } from './pages/home/home';
 
 export const routes: Routes = [
@@ -37,6 +38,13 @@ export const routes: Routes = [
         canActivate: [authGuard],
         data: {roles: ['ADMINISTRATIVE_MANAGER'] },
         title: "Formateurs"
+      },
+      {
+        path: 'enrollments',
+        component: Enrollments,
+        canActivate: [authGuard],
+        data: {roles: ['ADMINISTRATIVE_MANAGER'] },
+        title: "Inscriptions"
       },
       {
         path: '', component: Home, pathMatch: 'full'
@@ -74,12 +82,13 @@ export const routes: Routes = [
       { path: 'administrative-managers', redirectTo: 'users/administrative-managers' },
       { path: 'administrators', redirectTo: 'users/administrators' },
       {
-        path: 'promotions',
-        component: Promotions,
+        path: 'cohorts',
+        component: Cohorts,
         title: 'Promotions',
         canActivate: [authGuard],
         data: { roles: ['ADMINISTRATIVE_MANAGER'] }
       },
+      { path: 'promotions', redirectTo: 'cohorts' },
       {
         path: 'home', component: Home,
       }

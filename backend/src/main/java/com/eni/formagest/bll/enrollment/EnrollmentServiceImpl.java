@@ -4,6 +4,7 @@ import com.eni.formagest.bo.enrollment.CohortEnrollment;
 import com.eni.formagest.bo.enrollment.EnrollmentStatus;
 import com.eni.formagest.bo.enrollment.ScheduledCourseEnrollment;
 import com.eni.formagest.bo.training.Cohort;
+import com.eni.formagest.bo.training.CohortStatus;
 import com.eni.formagest.bo.training.ScheduledCourse;
 import com.eni.formagest.bo.training.Track;
 import com.eni.formagest.bo.training.TrackCourse;
@@ -36,6 +37,10 @@ public class EnrollmentServiceImpl implements EnrollmentService {
     public static final String MISSING_SCHEDULED_COURSE = "scheduledCourse";
     public static final String DUPLICATE_COURSE = "duplicate";
     public static final String PEDAGOGICAL_ORDER = "order";
+    public static final String ALREADY_ENROLLED_COHORT = "already-enrolled-cohort";
+
+    private static final List<CohortStatus> ACTIVE_COHORT_STATUSES =
+            List.of(CohortStatus.UPCOMING, CohortStatus.IN_PROGRESS);
 
     private final CohortEnrollmentRepository cohortEnrollmentRepository;
     private final ScheduledCourseEnrollmentRepository scheduledCourseEnrollmentRepository;
@@ -65,6 +70,10 @@ public class EnrollmentServiceImpl implements EnrollmentService {
         Student student = findStudent(dto.getStudentId());
         Cohort cohort = cohortRepository.findById(dto.getCohortId())
                 .orElseThrow(() -> new NoSuchElementException(MISSING_COHORT));
+
+        if (cohortEnrollmentRepository.existsByStudentIdAndCohortStatusIn(student.getId(), ACTIVE_COHORT_STATUSES)) {
+            throw new IllegalStateException(ALREADY_ENROLLED_COHORT);
+        }
 
         CohortEnrollment enrollment = CohortEnrollment.builder()
                 .student(student)
@@ -113,6 +122,26 @@ public class EnrollmentServiceImpl implements EnrollmentService {
         return cohortEnrollmentRepository.findFirstByStudentIdOrderByEnrollmentDateDesc(studentId)
                 .map(CohortEnrollmentMapper::toDto)
                 .orElse(null);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ScheduledCourseEnrollmentDto> findScheduledCourseEnrollmentsByStudent(Long studentId) {
+        return ScheduledCourseEnrollmentMapper.toDtoList(
+                scheduledCourseEnrollmentRepository.findByStudentId(studentId));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CohortEnrollmentDto> findActiveCohortEnrollments() {
+        return CohortEnrollmentMapper.toDtoList(
+                cohortEnrollmentRepository.findByCohortStatusIn(ACTIVE_COHORT_STATUSES));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CohortEnrollmentDto> findCohortEnrollmentsByCohort(Long cohortId) {
+        return CohortEnrollmentMapper.toDtoList(cohortEnrollmentRepository.findByCohortId(cohortId));
     }
 
     private boolean isCourseAlreadyCovered(Long studentId, Long courseId) {

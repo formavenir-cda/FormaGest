@@ -5,7 +5,9 @@
 }
 
 .students-page {
-  max-width: t.$fg-content-max;
+  // Un peu plus large que le gabarit standard : l'email et la date de naissance
+  // se chevauchaient sinon sur les adresses les plus longues.
+  max-width: 1280px;
   margin-inline: auto;
 
   p {
@@ -30,7 +32,7 @@
 .students-table__header,
 .students-table__row {
   display: grid;
-  grid-template-columns: minmax(120px, 1fr) minmax(120px, 1fr) minmax(180px, 1.4fr) minmax(110px, 1fr) 96px minmax(200px, auto);
+  grid-template-columns: minmax(120px, 1fr) minmax(120px, 1fr) minmax(180px, 1.4fr) minmax(110px, 1fr) 96px minmax(140px, 1fr) minmax(200px, auto);
   align-items: center;
   gap: t.$fg-space-md;
   padding: t.$fg-space-md t.$fg-space-lg;
@@ -42,6 +44,11 @@
   font-size: 0.8125rem;
   font-weight: 700;
   text-transform: uppercase;
+
+  // Colonne Actions : centrée au-dessus de « Voir détails » / « Inscrire ».
+  > span:last-child {
+    text-align: center;
+  }
 }
 
 .students-table__row {
@@ -60,8 +67,13 @@
   overflow-wrap: anywhere;
 }
 
+.students-table__email {
+  overflow-wrap: anywhere;
+}
+
 .students-table__actions {
   display: flex;
+  justify-content: center;
   gap: t.$fg-space-xs;
 }
 
@@ -96,6 +108,11 @@
   }
 }
 
+.student-details__courses {
+  margin: 0;
+  padding-left: t.$fg-space-lg;
+}
+
 @include t.fg-tablet-up {
   .students-toolbar {
     grid-template-columns: minmax(240px, 360px);
@@ -109,6 +126,6 @@
 
   .students-table__header,
   .students-table__row {
-    min-width: 780px;
+    min-width: 920px;
   }
 }

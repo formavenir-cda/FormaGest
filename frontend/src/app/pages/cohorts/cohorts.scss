@@ -4,7 +4,7 @@
   display: block;
 }
 
-.promotions-page {
+.cohorts-page {
   max-width: t.$fg-content-max;
   margin-inline: auto;
 
@@ -14,7 +14,7 @@
   }
 }
 
-.promotions-page__actions {
+.cohorts-page__actions {
   display: flex;
   justify-content: flex-end;
   margin-bottom: t.$fg-space-lg;
@@ -31,15 +31,25 @@
   }
 }
 
-.promotions-table {
+.cohorts-toolbar {
+  display: grid;
+  grid-template-columns: 1fr;
+  margin-bottom: t.$fg-space-lg;
+
+  mat-form-field {
+    width: 100%;
+  }
+}
+
+.cohorts-table {
   border: 1px solid t.$fg-border;
   border-radius: t.$fg-radius-md;
   background: t.$fg-surface;
   overflow: hidden;
 }
 
-.promotions-table__header,
-.promotions-table__row {
+.cohorts-table__header,
+.cohorts-table__row {
   display: grid;
   grid-template-columns: minmax(180px, 2fr) minmax(180px, 2fr) 140px 140px 120px 96px;
   align-items: center;
@@ -47,7 +57,7 @@
   padding: t.$fg-space-md t.$fg-space-lg;
 }
 
-.promotions-table__header {
+.cohorts-table__header {
   background: t.$fg-surface-variant;
   color: t.$fg-text-secondary;
   font-size: 0.8125rem;
@@ -55,23 +65,23 @@
   text-transform: uppercase;
 }
 
-.promotions-table__row {
+.cohorts-table__row {
   min-height: 64px;
   border-top: 1px solid t.$fg-divider;
   color: t.$fg-text-primary;
 }
 
-.promotions-table__name {
+.cohorts-table__name {
   font-weight: 600;
   overflow-wrap: anywhere;
 }
 
-.promotion-field {
+.cohort-field {
   width: 100%;
   margin-top: t.$fg-space-sm;
 }
 
-.promotion-dates {
+.cohort-dates {
   display: grid;
   grid-template-columns: 1fr;
   gap: t.$fg-space-sm;
@@ -81,22 +91,37 @@
   color: t.$fg-error;
 }
 
-.promotion-detail {
-  display: grid;
+// La pop-up a une hauteur fixe (voir dialog.open()) ; ce contenu doit occuper tout
+// l'espace disponible sans jamais défiler lui-même — sinon on obtient un double
+// scroll (celui-ci + celui de la liste active). Seul mat-tab-group défile.
+// !important nécessaire : Angular Material fixe display/max-height sur
+// .mat-mdc-dialog-content avec une spécificité que .cohort-detail seul ne bat pas.
+mat-dialog-content.cohort-detail {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: flex-start !important;
+  flex: 1;
+  min-height: 0;
+  max-height: none !important;
+  overflow: hidden !important;
   gap: t.$fg-space-sm;
 
   p {
     margin: 0;
+    flex-shrink: 0;
+    flex-grow: 0;
   }
 }
 
-.promotion-detail__courses {
+.cohort-detail__students,
+.cohort-detail__courses {
   display: grid;
   gap: t.$fg-space-xs;
   margin-top: t.$fg-space-md;
 }
 
-.promotion-detail__course {
+.cohort-detail__student,
+.cohort-detail__course {
   display: grid;
   grid-template-columns: minmax(180px, 1fr) minmax(180px, auto);
   gap: t.$fg-space-md;
@@ -104,19 +129,26 @@
   border-top: 1px solid t.$fg-divider;
 }
 
+// Prend tout l'espace restant sous les paragraphes Cursus/Dates : la pop-up ne
+// change donc jamais de taille en passant de l'onglet Élèves à l'onglet Cours.
+mat-tab-group {
+  flex: 1 1 0;
+  min-height: 0;
+}
+
 @include t.fg-tablet-up {
-  .promotion-dates {
+  .cohort-dates {
     grid-template-columns: 1fr 1fr;
   }
 }
 
 @media (max-width: 640px) {
-  .promotions-table {
+  .cohorts-table {
     overflow-x: auto;
   }
 
-  .promotions-table__header,
-  .promotions-table__row {
+  .cohorts-table__header,
+  .cohorts-table__row {
     min-width: 820px;
   }
 }

@@ -6,6 +6,7 @@ import {
   signal,
   TemplateRef,
 } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import {
@@ -16,28 +17,37 @@ import {
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+import { MatTabsModule } from '@angular/material/tabs';
 
 import type { Cohort } from '../../models/training/cohort.model';
 import type { Track } from '../../models/training/track.model';
+import type { Student } from '../../models/users/user.model';
+import type { CohortEnrollment } from '../../models/enrollment/enrollment.model';
 import { CohortService } from '../../services/training/cohort.service';
 import { TrackService } from '../../services/training/track.service';
+import { UserService } from '../../services/users/user.service';
+import { EnrollmentService } from '../../services/enrollment/enrollment.service';
 
 @Component({
-  selector: 'app-promotions',
+  selector: 'app-cohorts',
   imports: [
+    DatePipe,
     FormsModule,
     MatButtonModule,
     MatDialogModule,
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
+    MatTabsModule,
   ],
-  templateUrl: './promotions.html',
-  styleUrl: './promotions.scss',
+  templateUrl: './cohorts.html',
+  styleUrl: './cohorts.scss',
 })
-export class Promotions implements OnInit {
+export class Cohorts implements OnInit {
   private readonly cohortService = inject(CohortService);
   private readonly trackService = inject(TrackService);
+  private readonly userService = inject(UserService);
+  private readonly enrollmentService = inject(EnrollmentService);
   private readonly dialog = inject(MatDialog);
   private detailDialogRef?: MatDialogRef<unknown>;
 
@@ -46,10 +56,13 @@ export class Promotions implements OnInit {
   readonly cohorts = signal<Cohort[]>([]);
   readonly selectedCohort = signal<Cohort | null>(null);
   readonly tracks = signal<Track[]>([]);
+  readonly students = signal<Student[]>([]);
+  readonly cohortEnrollments = signal<CohortEnrollment[]>([]);
   readonly loading = signal(true);
   readonly error = signal('');
+  readonly search = signal('');
 
-  readonly promotionName = signal('');
+  readonly cohortName = signal('');
   readonly trackId = signal<number | null>(null);
   readonly startDate = signal('');
   readonly formError = signal('');
@@ -59,6 +72,22 @@ export class Promotions implements OnInit {
   readonly trackOptions = computed(() =>
     this.tracks().sort((a, b) => a.name.localeCompare(b.name))
   );
+
+  readonly cohortStudents = computed(() => {
+    const students = this.students();
+
+    return this.cohortEnrollments()
+      .map((enrollment) => students.find((student) => student.id === enrollment.studentId))
+      .filter((student): student is Student => !!student);
+  });
+
+  readonly filteredCohorts = computed(() => {
+    const search = this.normalizeSearch(this.search());
+
+    return this.cohorts().filter((cohort) =>
+      search ? this.normalizeSearch(cohort.name).includes(search) : true
+    );
+  });
 
   ngOnInit(): void {
     this.cohortService.findAll().subscribe({
@@ -75,10 +104,14 @@ export class Promotions implements OnInit {
     this.trackService.findAll().subscribe({
       next: (tracks) => this.tracks.set(tracks),
     });
+
+    this.userService.findAll('STUDENT').subscribe({
+      next: (students) => this.students.set(students as Student[]),
+    });
   }
 
   openCreateForm(template: TemplateRef<unknown>): void {
-    this.promotionName.set('');
+    this.cohortName.set('');
     this.trackId.set(null);
     this.startDate.set('');
     this.formError.set('');
@@ -96,7 +129,7 @@ export class Promotions implements OnInit {
   submitForm(): void {
     if (this.saving()) return;
 
-    const name = this.promotionName().trim();
+    const name = this.cohortName().trim();
     const trackId = this.trackId();
     const startDate = this.startDate();
 
@@ -136,19 +169,17 @@ export class Promotions implements OnInit {
 
   openDetail(cohort: Cohort, template: TemplateRef<unknown>): void {
     this.selectedCohort.set(cohort);
+    this.cohortEnrollments.set([]);
+
+    this.enrollmentService.findCohortEnrollmentsByCohort(cohort.id).subscribe({
+      next: (enrollments) => this.cohortEnrollments.set(enrollments),
+    });
 
     this.detailDialogRef = this.dialog.open(template, {
-      width: '640px',
-      maxWidth: '95vw',
+      width: '90vw',
+      maxWidth: '1100px',
+      height: '85vh',
     });
-  }
-
-  scheduledCourseDates(startDate: string | null, endDate: string | null): string {
-    if (!startDate || !endDate) {
-      return 'Non daté';
-    }
-
-    return `${startDate} - ${endDate}`;
   }
 
   closeDetail(): void {
@@ -168,5 +199,13 @@ export class Promotions implements OnInit {
       case 'COMPLETED':
         return 'Terminée';
     }
+  }
+
+  private normalizeSearch(value: string): string {
+    return value
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[̀-ͯ]/g, '');
   }
 }

@@ -6,4 +6,13 @@
   align-items: center;
   justify-content: space-between;
   margin-bottom: t.$fg-space-lg;
+
+  h1 {
+    margin: 0;
+    font-family: t.$fg-font-display;
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.2;
+    color: t.$fg-text-primary;
+  }
 }
