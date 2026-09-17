@@ -1,1 +1,87 @@
-<p>teachers works!</p>
+<section class="teachers-page">
+  <section class="teachers-toolbar">
+    <mat-form-field appearance="outline">
+      <mat-label>Rechercher</mat-label>
+
+      <input
+        matInput
+        name="teacherSearch"
+        [ngModel]="search()"
+        (ngModelChange)="search.set($event)"
+      />
+    </mat-form-field>
+  </section>
+
+  <section class="teachers-table" aria-label="Liste des formateurs">
+    <div class="teachers-table__header">
+      <span>Nom</span>
+      <span>Prénom</span>
+      <span>Email</span>
+      <span>Filière</span>
+      <span>Statut</span>
+      <span>Actions</span>
+    </div>
+
+    @if (loading()) {
+      <p>Chargement des formateurs...</p>
+    } @else if (error()) {
+      <p role="alert">{{ error() }}</p>
+    } @else {
+      @for (teacher of filteredTeachers(); track teacher.id) {
+        <div
+          class="teachers-table__row"
+          [class.teachers-table__row--inactive]="!teacher.active"
+        >
+          <span class="teachers-table__name">{{ teacher.lastName }}</span>
+          <span>{{ teacher.firstName }}</span>
+          <span>{{ teacher.email }}</span>
+          <span>{{ sectorName(teacher.sectorId) }}</span>
+          <span>
+            <span
+              class="teachers-status"
+              [class.teachers-status--active]="teacher.active"
+            >
+              {{ teacher.active ? 'Actif' : 'Inactif' }}
+            </span>
+          </span>
+          <span class="teachers-table__actions">
+            <button
+              mat-button
+              type="button"
+              (click)="openDetails(teacher, teacherDetailsDialog)"
+            >
+              Voir détails
+            </button>
+          </span>
+        </div>
+      } @empty {
+        <p>Aucun formateur trouvé.</p>
+      }
+    }
+  </section>
+</section>
+
+<ng-template #teacherDetailsDialog>
+  <h2 mat-dialog-title>
+    {{ viewingTeacher()?.firstName }} {{ viewingTeacher()?.lastName }}
+  </h2>
+
+  <mat-dialog-content>
+    <dl class="teacher-details">
+      <dt>Email</dt>
+      <dd>{{ viewingTeacher()?.email }}</dd>
+
+      <dt>Filière</dt>
+      <dd>{{ viewingTeacher() ? sectorName(viewingTeacher()!.sectorId) : '' }}</dd>
+
+      <dt>Statut</dt>
+      <dd>{{ viewingTeacher()?.active ? 'Actif' : 'Inactif' }}</dd>
+    </dl>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button type="button" (click)="closeDetails()">
+      Fermer
+    </button>
+  </mat-dialog-actions>
+</ng-template>
