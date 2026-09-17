@@ -80,6 +80,7 @@ export const routes: Routes = [
         canActivate: [authGuard],
         data: { roles: ['ADMINISTRATIVE_MANAGER'] }
       },
+      {
         path: 'home', component: Home,
       }
     ],

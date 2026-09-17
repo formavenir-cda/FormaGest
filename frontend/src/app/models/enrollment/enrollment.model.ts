@@ -10,7 +10,8 @@ export interface CohortEnrollment extends BaseEnrollment {
 
 export interface ScheduledCourseEnrollment extends BaseEnrollment {
   scheduledCourseId: number;
-  force: boolean;
+  forced: boolean;
+  justificationForced?: string;
 }
 
 export type Enrollment =
