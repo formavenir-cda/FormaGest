@@ -10,6 +10,6 @@ public interface ScheduledCourseRepository extends JpaRepository<ScheduledCourse
     List<ScheduledCourse> findByCohortId(Long cohortId);
 
     boolean existsByCourseId(Long courseId);
-}
+
     boolean existsByTeacherId(Long teacherId);
 }
