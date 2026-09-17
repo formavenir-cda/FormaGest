@@ -2,6 +2,7 @@ package com.eni.formagest.bll.training;
 
 import com.eni.formagest.bo.training.Sector;
 import com.eni.formagest.bo.training.Track;
+import com.eni.formagest.dal.training.CohortRepository;
 import com.eni.formagest.dal.training.SectorRepository;
 import com.eni.formagest.dal.training.TrackRepository;
 import com.eni.formagest.dto.training.TrackDto;
@@ -17,15 +18,19 @@ public class TrackService {
 
     public static final String MISSING_TRACK = "track";
     public static final String MISSING_SECTOR = "sector";
+    public static final String TRACK_USED_IN_COHORT = "track-used-in-cohort";
 
     private final TrackRepository trackRepository;
     private final SectorRepository sectorRepository;
+    private final CohortRepository cohortRepository;
 
     public TrackService(
             TrackRepository trackRepository,
-            SectorRepository sectorRepository) {
+            SectorRepository sectorRepository,
+            CohortRepository cohortRepository) {
         this.trackRepository = trackRepository;
         this.sectorRepository = sectorRepository;
+        this.cohortRepository = cohortRepository;
     }
 
     @Transactional(readOnly = true)
@@ -67,6 +72,10 @@ public class TrackService {
         Track track = trackRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException(MISSING_TRACK));
 
+        if (cohortRepository.existsByTrackId(id)) {
+            throw new IllegalStateException(TRACK_USED_IN_COHORT);
+        }
+
         String name = dto.getName().strip();
 
         if (trackRepository.existsByNameAndIdNot(name, id)) {
@@ -88,6 +97,10 @@ public class TrackService {
     public void delete(Long id) {
         Track track = trackRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException(MISSING_TRACK));
+
+        if (cohortRepository.existsByTrackId(id)) {
+            throw new IllegalStateException(TRACK_USED_IN_COHORT);
+        }
 
         trackRepository.delete(track);
         trackRepository.flush();

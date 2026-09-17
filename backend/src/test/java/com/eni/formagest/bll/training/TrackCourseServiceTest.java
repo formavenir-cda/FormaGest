@@ -1,6 +1,9 @@
 package com.eni.formagest.bll.training;
 
+import com.eni.formagest.bo.training.Cohort;
+import com.eni.formagest.bo.training.CohortStatus;
 import com.eni.formagest.bo.training.Course;
+import com.eni.formagest.bo.training.ScheduledCourse;
 import com.eni.formagest.bo.training.Sector;
 import com.eni.formagest.bo.training.Track;
 import com.eni.formagest.bo.training.TrackCourse;
@@ -14,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -172,6 +176,77 @@ class TrackCourseServiceTest {
                 exception.getMessage());
     }
 
+    @Test
+    void reorderCoursesRejectsTrackUsedInCohort() {
+        Track track = saveTrackWithCourses(
+                "Service ordre cursus utilise",
+                "Java",
+                "Angular"
+        );
+        saveCohort(track, "Promotion ordre cursus utilise");
+        List<TrackCourse> courses =
+                trackCourseRepository.findByTrackIdOrderByPositionAsc(track.getId());
+
+        IllegalStateException exception = assertThrows(
+                IllegalStateException.class,
+                () -> trackCourseService.reorderCourses(
+                        track.getId(),
+                        List.of(
+                                order(courses.get(1).getCourse().getId(), 1),
+                                order(courses.get(0).getCourse().getId(), 2)
+                        )
+                )
+        );
+
+        assertEquals(TrackCourseService.TRACK_USED_IN_COHORT, exception.getMessage());
+    }
+
+    @Test
+    void updateCourseTracksRejectsCourseUsedInCohort() {
+        Track track = saveTrackWithCourses(
+                "Service association cours utilise",
+                "Java"
+        );
+        TrackCourse trackCourse =
+                trackCourseRepository.findByTrackIdOrderByPositionAsc(track.getId()).getFirst();
+        saveScheduledCourse(
+                track,
+                trackCourse.getCourse(),
+                "Promotion association cours utilise"
+        );
+
+        IllegalStateException exception = assertThrows(
+                IllegalStateException.class,
+                () -> trackCourseService.updateCourseTracks(
+                        trackCourse.getCourse().getId(),
+                        List.of()
+                )
+        );
+
+        assertEquals(TrackCourseService.COURSE_USED_IN_COHORT, exception.getMessage());
+    }
+
+    @Test
+    void updateCourseTracksRejectsChangedTrackUsedInCohort() {
+        Track track = saveTrackWithCourses(
+                "Service association cursus utilise",
+                "Java"
+        );
+        saveCohort(track, "Promotion association cursus utilise");
+        TrackCourse trackCourse =
+                trackCourseRepository.findByTrackIdOrderByPositionAsc(track.getId()).getFirst();
+
+        IllegalStateException exception = assertThrows(
+                IllegalStateException.class,
+                () -> trackCourseService.updateCourseTracks(
+                        trackCourse.getCourse().getId(),
+                        List.of()
+                )
+        );
+
+        assertEquals(TrackCourseService.TRACK_USED_IN_COHORT, exception.getMessage());
+    }
+
     private Track saveTrackWithCourses(String trackName, String... courseNames) {
         Sector sector = Sector.builder()
                 .name("Secteur " + trackName)
@@ -201,6 +276,42 @@ class TrackCourseServiceTest {
         entityManager.clear();
 
         return track;
+    }
+
+    private Cohort saveCohort(Track track, String name) {
+        Cohort cohort = Cohort.builder()
+                .name(name)
+                .startDate(LocalDate.of(2026, 9, 1))
+                .endDate(LocalDate.of(2026, 9, 7))
+                .status(CohortStatus.UPCOMING)
+                .track(track)
+                .build();
+
+        entityManager.persist(cohort);
+        entityManager.flush();
+        entityManager.clear();
+
+        return cohort;
+    }
+
+    private void saveScheduledCourse(Track track, Course course, String cohortName) {
+        Cohort cohort = Cohort.builder()
+                .name(cohortName)
+                .startDate(LocalDate.of(2026, 9, 1))
+                .endDate(LocalDate.of(2026, 9, 7))
+                .status(CohortStatus.UPCOMING)
+                .track(track)
+                .build();
+
+        entityManager.persist(cohort);
+        entityManager.persist(ScheduledCourse.builder()
+                .cohort(cohort)
+                .course(course)
+                .startDate(LocalDate.of(2026, 9, 1))
+                .endDate(LocalDate.of(2026, 9, 7))
+                .build());
+        entityManager.flush();
+        entityManager.clear();
     }
 
     private TrackCourseOrderDto order(Long courseId, int position) {

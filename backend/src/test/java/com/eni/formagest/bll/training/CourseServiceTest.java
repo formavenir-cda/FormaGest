@@ -1,6 +1,9 @@
 package com.eni.formagest.bll.training;
 
 import com.eni.formagest.bo.training.Course;
+import com.eni.formagest.bo.training.Cohort;
+import com.eni.formagest.bo.training.CohortStatus;
+import com.eni.formagest.bo.training.ScheduledCourse;
 import com.eni.formagest.bo.training.Sector;
 import com.eni.formagest.bo.training.Track;
 import com.eni.formagest.bo.training.TrackCourse;
@@ -14,6 +17,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -166,6 +170,22 @@ class CourseServiceTest {
     }
 
     @Test
+    void updateRejectsCourseUsedInCohort() {
+        Course course = saveScheduledCourse("Java cours utilise update");
+        CourseDto dto = CourseDto.builder()
+                .name("Java modifie")
+                .durationInDays(7)
+                .build();
+
+        IllegalStateException exception = assertThrows(
+                IllegalStateException.class,
+                () -> courseService.update(course.getId(), dto)
+        );
+
+        assertEquals(CourseService.COURSE_USED_IN_COHORT, exception.getMessage());
+    }
+
+    @Test
     void deleteRemovesExistingCourse() {
         Course course = courseRepository.saveAndFlush(Course.builder()
                 .name("Java")
@@ -181,6 +201,18 @@ class CourseServiceTest {
     void deleteRejectsMissingCourse() {
         assertThrows(NoSuchElementException.class,
                 () -> courseService.delete(42L));
+    }
+
+    @Test
+    void deleteRejectsCourseUsedInCohort() {
+        Course course = saveScheduledCourse("Java cours utilise delete");
+
+        IllegalStateException exception = assertThrows(
+                IllegalStateException.class,
+                () -> courseService.delete(course.getId())
+        );
+
+        assertEquals(CourseService.COURSE_USED_IN_COHORT, exception.getMessage());
     }
 
     @Test
@@ -209,5 +241,41 @@ class CourseServiceTest {
 
         assertThrows(DataIntegrityViolationException.class,
                 () -> courseService.delete(course.getId()));
+    }
+
+    private Course saveScheduledCourse(String courseName) {
+        Course course = Course.builder()
+                .name(courseName)
+                .durationInDays(5)
+                .build();
+        Sector sector = Sector.builder()
+                .name("Secteur " + courseName)
+                .build();
+        Track track = Track.builder()
+                .name("Cursus " + courseName)
+                .sector(sector)
+                .build();
+        Cohort cohort = Cohort.builder()
+                .name("Promotion " + courseName)
+                .startDate(LocalDate.of(2026, 9, 1))
+                .endDate(LocalDate.of(2026, 9, 7))
+                .status(CohortStatus.UPCOMING)
+                .track(track)
+                .build();
+
+        entityManager.persist(sector);
+        entityManager.persist(track);
+        entityManager.persist(course);
+        entityManager.persist(cohort);
+        entityManager.persist(ScheduledCourse.builder()
+                .cohort(cohort)
+                .course(course)
+                .startDate(LocalDate.of(2026, 9, 1))
+                .endDate(LocalDate.of(2026, 9, 7))
+                .build());
+        entityManager.flush();
+        entityManager.clear();
+
+        return course;
     }
 }

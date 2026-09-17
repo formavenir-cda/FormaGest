@@ -2,6 +2,7 @@ package com.eni.formagest.bll.training;
 
 import com.eni.formagest.bo.training.Course;
 import com.eni.formagest.dal.training.CourseRepository;
+import com.eni.formagest.dal.training.ScheduledCourseRepository;
 import com.eni.formagest.dto.training.CourseDto;
 import com.eni.formagest.mappers.CourseMapper;
 import org.springframework.stereotype.Service;
@@ -15,13 +16,17 @@ import java.util.NoSuchElementException;
 @Service
 public class CourseService {
 
+    public static final String COURSE_USED_IN_COHORT = "course-used-in-cohort";
 
     private final CourseRepository courseRepository;
+    private final ScheduledCourseRepository scheduledCourseRepository;
 
     public CourseService(
-            CourseRepository courseRepository
+            CourseRepository courseRepository,
+            ScheduledCourseRepository scheduledCourseRepository
             ) {
         this.courseRepository = courseRepository;
+        this.scheduledCourseRepository = scheduledCourseRepository;
 
     }
 
@@ -52,6 +57,10 @@ public class CourseService {
         Course course = courseRepository.findById(id)
                 .orElseThrow(NoSuchElementException::new);
 
+        if (scheduledCourseRepository.existsByCourseId(id)) {
+            throw new IllegalStateException(COURSE_USED_IN_COHORT);
+        }
+
         String name = dto.getName().strip();
 
         if (courseRepository.existsByNameAndIdNot(name, id)) {
@@ -70,6 +79,10 @@ public class CourseService {
     public void delete(Long id) {
         Course course = courseRepository.findById(id)
                 .orElseThrow(NoSuchElementException::new);
+
+        if (scheduledCourseRepository.existsByCourseId(id)) {
+            throw new IllegalStateException(COURSE_USED_IN_COHORT);
+        }
 
         courseRepository.delete(course);
         courseRepository.flush();

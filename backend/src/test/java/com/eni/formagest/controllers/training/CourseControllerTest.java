@@ -1,6 +1,9 @@
 package com.eni.formagest.controllers.training;
 
+import com.eni.formagest.bo.training.Cohort;
+import com.eni.formagest.bo.training.CohortStatus;
 import com.eni.formagest.bo.training.Course;
+import com.eni.formagest.bo.training.ScheduledCourse;
 import com.eni.formagest.bo.training.Sector;
 import com.eni.formagest.bo.training.Track;
 import com.eni.formagest.bo.training.TrackCourse;
@@ -19,6 +22,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import static org.hamcrest.Matchers.containsString;
@@ -235,6 +239,22 @@ class CourseControllerTest {
 
     @Test
     @WithMockUser(roles = "ADMINISTRATIVE_MANAGER")
+    void updateReturnsConflictWhenCourseIsUsedInCohort() throws Exception {
+        Course course = saveScheduledCourse("Java cours utilise controller update");
+
+        mockMvc.perform(put("/api/courses/{id}", course.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"name": "Java modifie", "durationInDays": 7}
+                                """))
+                .andExpect(status().isConflict())
+                .andExpect(content().string(
+                        "Impossible de modifier ce cours : il est utilisé dans une promotion."
+                ));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMINISTRATIVE_MANAGER")
     void updateTracksReturnsCourseWithAssociations() throws Exception {
         Course course = courseRepository.save(Course.builder()
                 .name("Java")
@@ -377,5 +397,53 @@ class CourseControllerTest {
                         "Impossible de supprimer ce cours : "
                                 + "il est encore utilisé par des données associées."
                 ));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMINISTRATIVE_MANAGER")
+    void deleteReturnsConflictWhenCourseIsUsedInCohort() throws Exception {
+        Course course = saveScheduledCourse("Java cours utilise controller delete");
+
+        mockMvc.perform(delete("/api/courses/{id}", course.getId()))
+                .andExpect(status().isConflict())
+                .andExpect(content().string(
+                        "Impossible de modifier ce cours : il est utilisé dans une promotion."
+                ));
+    }
+
+    private Course saveScheduledCourse(String courseName) {
+        Course course = Course.builder()
+                .name(courseName)
+                .durationInDays(5)
+                .build();
+        Sector sector = Sector.builder()
+                .name("Secteur " + courseName)
+                .build();
+        Track track = Track.builder()
+                .name("Cursus " + courseName)
+                .sector(sector)
+                .build();
+        Cohort cohort = Cohort.builder()
+                .name("Promotion " + courseName)
+                .startDate(LocalDate.of(2026, 9, 1))
+                .endDate(LocalDate.of(2026, 9, 7))
+                .status(CohortStatus.UPCOMING)
+                .track(track)
+                .build();
+
+        entityManager.persist(sector);
+        entityManager.persist(track);
+        entityManager.persist(course);
+        entityManager.persist(cohort);
+        entityManager.persist(ScheduledCourse.builder()
+                .cohort(cohort)
+                .course(course)
+                .startDate(LocalDate.of(2026, 9, 1))
+                .endDate(LocalDate.of(2026, 9, 7))
+                .build());
+        entityManager.flush();
+        entityManager.clear();
+
+        return course;
     }
 }

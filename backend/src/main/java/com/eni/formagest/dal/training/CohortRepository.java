@@ -8,4 +8,6 @@ public interface CohortRepository extends JpaRepository<Cohort, Long> {
     boolean existsByName(String name);
 
     boolean existsByNameAndIdNot(String name, Long id);
+
+    boolean existsByTrackId(Long trackId);
 }

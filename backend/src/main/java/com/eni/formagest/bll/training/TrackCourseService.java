@@ -3,7 +3,9 @@ package com.eni.formagest.bll.training;
 import com.eni.formagest.bo.training.Course;
 import com.eni.formagest.bo.training.Track;
 import com.eni.formagest.bo.training.TrackCourse;
+import com.eni.formagest.dal.training.CohortRepository;
 import com.eni.formagest.dal.training.CourseRepository;
+import com.eni.formagest.dal.training.ScheduledCourseRepository;
 import com.eni.formagest.dal.training.TrackCourseRepository;
 import com.eni.formagest.dal.training.TrackRepository;
 import com.eni.formagest.dto.training.CourseDto;
@@ -28,24 +30,36 @@ public class TrackCourseService {
 
     public static final String MISSING_TRACK = "track";
     public static final String MISSING_COURSE = "course";
+    public static final String COURSE_USED_IN_COHORT = "course-used-in-cohort";
+    public static final String TRACK_USED_IN_COHORT = "track-used-in-cohort";
 
     private final CourseRepository courseRepository;
     private final TrackRepository trackRepository;
     private final TrackCourseRepository trackCourseRepository;
+    private final CohortRepository cohortRepository;
+    private final ScheduledCourseRepository scheduledCourseRepository;
 
     public TrackCourseService(
             CourseRepository courseRepository,
             TrackRepository trackRepository,
-            TrackCourseRepository trackCourseRepository) {
+            TrackCourseRepository trackCourseRepository,
+            CohortRepository cohortRepository,
+            ScheduledCourseRepository scheduledCourseRepository) {
         this.courseRepository = courseRepository;
         this.trackRepository = trackRepository;
         this.trackCourseRepository = trackCourseRepository;
+        this.cohortRepository = cohortRepository;
+        this.scheduledCourseRepository = scheduledCourseRepository;
     }
 
     @Transactional
     public CourseDto updateCourseTracks(Long courseId, List<Long> trackIds) {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new NoSuchElementException(MISSING_COURSE));
+
+        if (scheduledCourseRepository.existsByCourseId(courseId)) {
+            throw new IllegalStateException(COURSE_USED_IN_COHORT);
+        }
 
         Set<Long> requestedTrackIds = validateTrackIds(trackIds);
         List<TrackCourse> existingTrackCourses =
@@ -56,6 +70,12 @@ public class TrackCourseService {
                 .map(trackCourse -> trackCourse.getTrack().getId())
                 .filter(trackId -> !requestedTrackIds.contains(trackId))
                 .collect(Collectors.toSet());
+        Set<Long> changedTrackIds = new HashSet<>(removedTrackIds);
+        requestedTrackIds.stream()
+                .filter(trackId -> !existingTrackCoursesByTrackId.containsKey(trackId))
+                .forEach(changedTrackIds::add);
+
+        validateTracksAreNotUsedInCohorts(changedTrackIds);
 
         existingTrackCourses.stream()
                 .filter(trackCourse ->
@@ -87,6 +107,7 @@ public class TrackCourseService {
             List<TrackCourseOrderDto> order) {
 
         validateTrackExists(trackId);
+        validateTrackIsNotUsedInCohort(trackId);
 
         List<TrackCourse> trackCourses =
                 trackCourseRepository.findByTrackIdOrderByPositionAsc(trackId);
@@ -114,6 +135,21 @@ public class TrackCourseService {
     private void validateTrackExists(Long trackId) {
         if (!trackRepository.existsById(trackId)) {
             throw new NoSuchElementException(MISSING_TRACK);
+        }
+    }
+
+    private void validateTrackIsNotUsedInCohort(Long trackId) {
+        if (cohortRepository.existsByTrackId(trackId)) {
+            throw new IllegalStateException(TRACK_USED_IN_COHORT);
+        }
+    }
+
+    private void validateTracksAreNotUsedInCohorts(Set<Long> trackIds) {
+        boolean hasUsedTrack = trackIds.stream()
+                .anyMatch(cohortRepository::existsByTrackId);
+
+        if (hasUsedTrack) {
+            throw new IllegalStateException(TRACK_USED_IN_COHORT);
         }
     }
 
