@@ -65,16 +65,22 @@ Le fichier `.env` n'est lu que par Docker Compose. Pour lancer le back-end direc
 
 ## Authentification
 
-Connexion par identifiant (email) et mot de passe, sur `POST /api/auth/login`. La réponse contient un token et le profil de l'utilisateur ; le token est ensuite à transmettre dans l'en-tête `Authorization: Bearer <token>` sur les routes protégées.
+Connexion par identifiant (email) et mot de passe, sur `POST /api/auth/login`. La réponse contient le profil de l'utilisateur dans son corps ; le jeton JWT est posé par le back dans un cookie `HttpOnly` (`Set-Cookie`, nom configurable via `APP_JWT_COOKIE_NAME`, `formagest_token` par défaut). Le navigateur le renvoie automatiquement sur les requêtes suivantes : il n'y a pas d'en-tête `Authorization` à positionner à la main.
 
 ```
-curl -X POST http://localhost:8080/api/auth/login \
+curl -c cookies.txt -X POST http://localhost:8080/api/auth/login \
   -H 'Content-Type: application/json' \
   -d '{"email":"referente.demo@formagest.fr","password":"Formagest2026!"}'
 ```
 
-`GET /api/auth/me` renvoie l'utilisateur courant à partir du token et sert à vérifier qu'il est toujours valide :
+`GET /api/auth/me` renvoie l'utilisateur courant à partir du cookie et sert à vérifier qu'il est toujours valide :
 
 ```
-curl http://localhost:8080/api/auth/me -H "Authorization: Bearer <token>"
+curl -b cookies.txt http://localhost:8080/api/auth/me
+```
+
+`POST /api/auth/logout` vide le cookie côté serveur :
+
+```
+curl -b cookies.txt -X POST http://localhost:8080/api/auth/logout
 ```

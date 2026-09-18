@@ -15,7 +15,7 @@ indépendamment de toute technologie de base de données.
 Le MLD traduit le modèle conceptuel sous forme relationnelle avec les tables,
 les clés primaires et les clés étrangères.
 
-![Modèle logique de données de FormaGest](./MLD.jpg)
+![Modèle logique de données de FormaGest](./MLD.png)
 
 ## 3. Modèle physique de données (MPD)
 

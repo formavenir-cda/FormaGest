@@ -72,7 +72,7 @@ sequenceDiagram
 
     Student->>Page: Ouvrir « Mon calendrier »
     activate Page
-    Page->>+Controller: GET /api/me/calendar<br/>Authorization: Bearer JWT
+    Page->>+Controller: GET /api/me/calendar<br/>Cookie: jwt (HttpOnly, envoyé automatiquement)
 
     Controller->>+Service: getCalendar(studentId)
 
@@ -103,11 +103,13 @@ heure de début. Le diagramme montre la responsabilité de chaque couche jusqu'a
 service métier, sans détailler les repositories ni les traitements techniques
 internes d'accès aux données.
 
-Le token JWT est transmis dans l'en-tête HTTP `Authorization` avec le schéma
-`Bearer`. Sa validité est contrôlée avant l'exécution du cas d'utilisation. Le
-contrôleur utilise ensuite l'identité authentifiée issue du contexte de sécurité,
-ce qui empêche l'élève de demander le calendrier d'un autre utilisateur en
-modifiant un identifiant dans l'URL.
+Le token JWT est transmis dans un cookie `HttpOnly` (`SameSite=Lax`), envoyé
+automatiquement par le navigateur à chaque requête vers l'API — le front ne
+manipule aucun en-tête `Authorization`, il se contente de passer
+`withCredentials: true`. Sa validité est contrôlée avant l'exécution du cas
+d'utilisation. Le contrôleur utilise ensuite l'identité authentifiée issue du
+contexte de sécurité, ce qui empêche l'élève de demander le calendrier d'un
+autre utilisateur en modifiant un identifiant dans l'URL.
 
 | Situation | Résultat attendu |
 | --- | --- |
