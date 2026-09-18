@@ -11,4 +11,6 @@ export interface Course {
   name: string;
   durationInDays: number;
   associations: CourseAssociation[];
+  hasInProgressCohort: boolean;
+  usedInCohort: boolean;
 }

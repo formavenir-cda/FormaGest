@@ -62,6 +62,8 @@ public class TrackCourseServiceImpl implements TrackCourseService {
                 .filter(trackId -> !existingTrackCoursesByTrackId.containsKey(trackId))
                 .forEach(changedTrackIds::add);
 
+        validateTracksHaveNoInProgressCohort(changedTrackIds);
+
         existingTrackCourses.stream()
                 .filter(trackCourse ->
                         !requestedTrackIds.contains(trackCourse.getTrack().getId())
@@ -95,6 +97,7 @@ public class TrackCourseServiceImpl implements TrackCourseService {
             List<TrackCourseOrderDto> order) {
 
         validateTrackExists(trackId);
+        validateTrackHasNoInProgressCohort(trackId);
 
         List<TrackCourse> trackCourses =
                 trackCourseRepository.findByTrackIdOrderByPositionAsc(trackId);
@@ -125,6 +128,21 @@ public class TrackCourseServiceImpl implements TrackCourseService {
     private void validateTrackExists(Long trackId) {
         if (!trackRepository.existsById(trackId)) {
             throw new NoSuchElementException(MISSING_TRACK);
+        }
+    }
+
+    private void validateTrackHasNoInProgressCohort(Long trackId) {
+        if (cohortService.hasInProgressCohortForTrack(trackId)) {
+            throw new IllegalStateException(TRACK_USED_IN_COHORT);
+        }
+    }
+
+    private void validateTracksHaveNoInProgressCohort(Set<Long> trackIds) {
+        boolean hasInProgressCohort = trackIds.stream()
+                .anyMatch(cohortService::hasInProgressCohortForTrack);
+
+        if (hasInProgressCohort) {
+            throw new IllegalStateException(TRACK_USED_IN_COHORT);
         }
     }
 

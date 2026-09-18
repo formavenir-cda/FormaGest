@@ -56,7 +56,6 @@ export class Courses implements OnInit {
   private readonly route = inject(ActivatedRoute);
 
   private formDialogRef?: MatDialogRef<unknown>;
-  private deleteDialogRef?: MatDialogRef<unknown>;
 
   readonly courses = signal<Course[]>([]);
   readonly sectors = signal<Sector[]>([]);
@@ -64,7 +63,6 @@ export class Courses implements OnInit {
   readonly selectedCourse = signal<Course | null>(null);
   readonly loading = signal(true);
   readonly error = signal('');
-  readonly search = signal('');
   readonly selectedSectorFilter = signal<number | null>(null);
   readonly selectedTrackFilter = signal<number | null>(null);
 
@@ -74,9 +72,6 @@ export class Courses implements OnInit {
   readonly saving = signal(false);
   readonly editingCourse = signal<Course | null>(null);
 
-  readonly courseToDelete = signal<Course | null>(null);
-  readonly deleting = signal(false);
-  readonly deleteError = signal('');
   readonly reordering = signal(false);
   readonly reorderError = signal('');
 
@@ -117,77 +112,18 @@ export class Courses implements OnInit {
       .sort((a, b) => a.name.localeCompare(b.name));
   });
 
-  readonly sectorOptions = computed(() => {
-    return this.sectors()
-      .map((sector) => ({
-        id: sector.id,
-        name: sector.name,
-      }))
-      .sort((a, b) => a.name.localeCompare(b.name));
-  });
-
-  readonly trackOptions = computed(() => {
-    const sectorId = this.selectedSectorFilter();
-    const options = new Map<number, string>();
-
-    this.courses().forEach((course) => {
-      course.associations.forEach((association) => {
-        if (!sectorId || association.sectorId === sectorId) {
-          options.set(association.trackId, association.trackName);
-        }
-      });
-    });
-
-    return [...options.entries()]
-      .map(([id, name]) => ({ id, name }))
-      .sort((a, b) => a.name.localeCompare(b.name));
-  });
-
   readonly canDragReorder = computed(() =>
     !!this.selectedTrackFilter()
-    && !this.normalizeSearch(this.search())
     && !this.reordering()
+    && !this.currentTrack()?.hasInProgressCohort
   );
 
   readonly filteredCourses = computed(() => {
-    const search = this.normalizeSearch(this.search());
-    const sectorId = this.selectedSectorFilter();
     const trackId = this.selectedTrackFilter();
 
-    const filtered = this.courses().filter((course) => {
-      const visibleAssociations = this.visibleAssociations(course);
-      const searchableValues = [
-        course.name,
-        ...visibleAssociations.map((association) => association.sectorName),
-        ...visibleAssociations.map((association) => association.trackName),
-      ];
+    if (!trackId) return [];
 
-      const matchesSearch = search
-        ? searchableValues.some((value) =>
-          this.normalizeSearch(value).includes(search)
-        )
-        : true;
-
-      const matchesSector = sectorId
-        ? course.associations.some((association) =>
-          association.sectorId === sectorId
-        )
-        : true;
-
-      const matchesTrack = trackId
-        ? course.associations.some((association) =>
-          association.trackId === trackId
-        )
-        : true;
-
-      return matchesSearch && matchesSector && matchesTrack;
-    });
-
-    return trackId
-      ? filtered.sort((a, b) =>
-        this.positionForTrack(a, trackId) - this.positionForTrack(b, trackId)
-      )
-      : filtered.sort((a, b) => a.name.localeCompare(b.name));
+    return this.coursesForTrack(trackId);
   });
 
   ngOnInit(): void {
@@ -385,83 +321,6 @@ export class Courses implements OnInit {
     });
   }
 
-  deleteCourse(course: Course, template: TemplateRef<unknown>): void {
-    this.selectedCourse.set(course);
-    this.openDeleteForm(template);
-  }
-
-  openDeleteForm(template: TemplateRef<unknown>): void {
-    const course = this.selectedCourse();
-
-    if (!course) return;
-
-    this.courseToDelete.set(course);
-    this.deleteError.set('');
-
-    this.deleteDialogRef = this.dialog.open(template, {
-      width: '480px',
-      maxWidth: '95vw',
-      autoFocus: '[data-cancel-delete-course]',
-    });
-  }
-
-  cancelDelete(): void {
-    this.deleteDialogRef?.close();
-  }
-
-  confirmDelete(): void {
-    const course = this.courseToDelete();
-
-    if (!course || this.deleting()) return;
-
-    this.deleting.set(true);
-    this.deleteError.set('');
-
-    if (this.deleteDialogRef) {
-      this.deleteDialogRef.disableClose = true;
-    }
-
-    this.courseService.delete(course.id).subscribe({
-      next: () => {
-        this.courses.update((list) =>
-          list.filter((item) => item.id !== course.id)
-        );
-
-        if (this.selectedCourse()?.id === course.id) {
-          this.selectedCourse.set(null);
-        }
-
-        this.deleting.set(false);
-        this.deleteDialogRef?.close();
-        this.courseToDelete.set(null);
-      },
-      error: (err) => {
-        this.deleting.set(false);
-        if (err.status === 409) {
-          this.deleteError.set(this.errorMessage(
-            err,
-            'Impossible de supprimer le cours. Veuillez réessayer.'
-          ));
-
-          if (this.deleteDialogRef) {
-            this.deleteDialogRef.disableClose = false;
-          }
-
-          return;
-        }
-        this.deleteError.set(
-          typeof err.error === 'string' && err.error.trim()
-            ? err.error
-            : 'Impossible de supprimer le cours. Veuillez réessayer.'
-        );
-
-        if (this.deleteDialogRef) {
-          this.deleteDialogRef.disableClose = false;
-        }
-      },
-    });
-  }
-
   openEditTrackForm(template: TemplateRef<unknown>): void {
     const track = this.currentTrack();
 
@@ -536,17 +395,6 @@ export class Courses implements OnInit {
     });
   }
 
-  selectSectorFilter(sectorId: number | null): void {
-    this.selectedSectorFilter.set(sectorId);
-    this.selectedTrackFilter.set(null);
-    this.reorderError.set('');
-  }
-
-  selectTrackFilter(trackId: number | null): void {
-    this.selectedTrackFilter.set(trackId);
-    this.reorderError.set('');
-  }
-
   dropCourse(event: CdkDragDrop<Course[]>): void {
     const trackId = this.selectedTrackFilter();
 
@@ -586,6 +434,35 @@ export class Courses implements OnInit {
         this.reorderError.set(
           'Impossible de modifier l’ordre des cours. Veuillez réessayer.'
         );
+      },
+    });
+  }
+
+  removeCourseFromTrack(course: Course): void {
+    const track = this.currentTrack();
+
+    if (!track || this.reordering()) return;
+
+    const remainingTrackIds = course.associations
+      .filter((association) => association.trackId !== track.id)
+      .map((association) => association.trackId);
+
+    this.reordering.set(true);
+    this.reorderError.set('');
+
+    this.courseService.updateTracks(course.id, remainingTrackIds).subscribe({
+      next: (updatedCourse) => {
+        this.courses.update((list) =>
+          list.map((item) => item.id === updatedCourse.id ? updatedCourse : item)
+        );
+        this.reordering.set(false);
+      },
+      error: (err) => {
+        this.reordering.set(false);
+        this.reorderError.set(this.errorMessage(
+          err,
+          'Impossible de retirer ce cours du cursus. Veuillez réessayer.'
+        ));
       },
     });
   }
@@ -672,14 +549,6 @@ export class Courses implements OnInit {
     const distinct = [...new Set(names)].filter(Boolean);
 
     return distinct.length ? distinct.join(', ') : 'Non associé';
-  }
-
-  private normalizeSearch(value: string): string {
-    return value
-      .trim()
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '');
   }
 
   private errorMessage(err: unknown, fallback: string): string {

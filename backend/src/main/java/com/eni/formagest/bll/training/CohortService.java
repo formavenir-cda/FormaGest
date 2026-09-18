@@ -13,6 +13,10 @@ public interface CohortService {
 
     CohortDto create(CohortDto dto);
 
+    boolean hasInProgressCohortForTrack(Long trackId);
+
+    boolean hasInProgressCohortForCourse(Long courseId);
+
     /**
      * Recalcule le planning des promotions à venir d’un cursus après une modification
      * de sa composition (réordonnancement, ajout ou retrait d’un cours).

@@ -58,7 +58,7 @@
 .tracks-table__header,
 .tracks-table__row {
   display: grid;
-  grid-template-columns: minmax(180px, 2fr) minmax(160px, 1.4fr) 80px 104px;
+  grid-template-columns: minmax(180px, 2fr) minmax(160px, 1.4fr) 80px 160px;
   align-items: center;
   gap: t.$fg-space-md;
   padding: t.$fg-space-md t.$fg-space-lg;
@@ -90,6 +90,7 @@
 
 .tracks-table__actions {
   display: flex;
+  justify-content: flex-end;
   gap: t.$fg-space-xs;
 
   button {

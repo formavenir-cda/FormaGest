@@ -75,6 +75,21 @@ public class CohortServiceImpl implements CohortService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public boolean hasInProgressCohortForTrack(Long trackId) {
+        return cohortRepository.existsByTrackIdAndStatus(trackId, CohortStatus.IN_PROGRESS);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean hasInProgressCohortForCourse(Long courseId) {
+        return scheduledCourseRepository.existsByCourseIdAndCohort_Status(
+                courseId,
+                CohortStatus.IN_PROGRESS
+        );
+    }
+
+    @Override
     @Transactional
     public void recalculateUpcomingCohortsForTrack(Long trackId) {
         cohortRepository.findByTrackIdAndStatus(trackId, CohortStatus.UPCOMING)

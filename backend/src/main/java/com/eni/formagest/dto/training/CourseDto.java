@@ -27,4 +27,10 @@ public class CourseDto {
 
     @Builder.Default
     private List<CourseAssociationDto> associations = new ArrayList<>();
+
+    @Builder.Default
+    private Boolean hasInProgressCohort = false;
+
+    @Builder.Default
+    private Boolean usedInCohort = false;
 }
