@@ -25,4 +25,7 @@ public class TrackDto {
 
     @Builder.Default
     private List<TrackCourseDto> courses = new ArrayList<>();
+
+    @Builder.Default
+    private Boolean hasInProgressCohort = false;
 }

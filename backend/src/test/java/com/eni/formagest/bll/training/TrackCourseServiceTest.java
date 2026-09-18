@@ -9,6 +9,7 @@ import com.eni.formagest.bo.training.Track;
 import com.eni.formagest.bo.training.TrackCourse;
 import com.eni.formagest.dal.training.ScheduledCourseRepository;
 import com.eni.formagest.dal.training.TrackCourseRepository;
+import com.eni.formagest.dto.training.CourseDto;
 import com.eni.formagest.dto.training.TrackCourseDto;
 import com.eni.formagest.dto.training.TrackCourseOrderDto;
 import jakarta.persistence.EntityManager;
@@ -234,7 +235,7 @@ class TrackCourseServiceTest {
     }
 
     @Test
-    void updateCourseTracksRejectsCourseUsedInStartedCohort() {
+    void updateCourseTracksRejectsRemovingFromTrackUsedInStartedCohort() {
         Track track = saveTrackWithCourses(
                 "Service association cours utilise",
                 "Java"
@@ -256,7 +257,44 @@ class TrackCourseServiceTest {
                 )
         );
 
-        assertEquals(TrackCourseService.COURSE_USED_IN_COHORT, exception.getMessage());
+        assertEquals(TrackCourseService.TRACK_USED_IN_COHORT, exception.getMessage());
+    }
+
+    @Test
+    void updateCourseTracksAllowsRemovingFromOtherTrackWhenCourseUsedElsewhere() {
+        Track lockedTrack = saveTrackWithCourses(
+                "Service cours partage verrouille",
+                "Java"
+        );
+        Track freeTrack = saveTrackWithCourses(
+                "Service cours partage libre",
+                "Angular"
+        );
+        Course sharedCourse =
+                trackCourseRepository.findByTrackIdOrderByPositionAsc(lockedTrack.getId())
+                        .getFirst()
+                        .getCourse();
+        saveScheduledCourse(
+                lockedTrack,
+                sharedCourse,
+                "Promotion cours partage",
+                CohortStatus.IN_PROGRESS
+        );
+        trackCourseRepository.save(TrackCourse.builder()
+                .track(freeTrack)
+                .course(sharedCourse)
+                .position(
+                        trackCourseRepository.findMaxPositionByTrackId(freeTrack.getId()) + 1
+                )
+                .build());
+
+        CourseDto result = trackCourseService.updateCourseTracks(
+                sharedCourse.getId(),
+                List.of(lockedTrack.getId())
+        );
+
+        assertEquals(1, result.getAssociations().size());
+        assertEquals(lockedTrack.getId(), result.getAssociations().getFirst().getTrackId());
     }
 
     @Test

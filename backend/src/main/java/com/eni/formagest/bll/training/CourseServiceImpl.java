@@ -1,5 +1,6 @@
 package com.eni.formagest.bll.training;
 
+import com.eni.formagest.bo.training.CohortStatus;
 import com.eni.formagest.bo.training.Course;
 import com.eni.formagest.dal.training.CourseRepository;
 import com.eni.formagest.dal.training.ScheduledCourseRepository;
@@ -9,8 +10,10 @@ import com.eni.formagest.mappers.CourseMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Set;
 
 @Service
 public class CourseServiceImpl implements CourseService {
@@ -35,7 +38,21 @@ public class CourseServiceImpl implements CourseService {
     @Override
     @Transactional(readOnly = true)
     public List<CourseDto> findAll() {
-        return CourseMapper.toDtoList(courseRepository.findAll());
+        List<CourseDto> courses = CourseMapper.toDtoList(courseRepository.findAll());
+
+        Set<Long> courseIdsWithInProgressCohort = new HashSet<>(
+                scheduledCourseRepository.findCourseIdsByCohortStatus(CohortStatus.IN_PROGRESS)
+        );
+        Set<Long> courseIdsUsedInAnyCohort = new HashSet<>(
+                scheduledCourseRepository.findCourseIdsUsedInAnyCohort()
+        );
+
+        courses.forEach(course -> {
+            course.setHasInProgressCohort(courseIdsWithInProgressCohort.contains(course.getId()));
+            course.setUsedInCohort(courseIdsUsedInAnyCohort.contains(course.getId()));
+        });
+
+        return courses;
     }
 
     @Override
@@ -61,6 +78,10 @@ public class CourseServiceImpl implements CourseService {
     public CourseDto update(Long id, CourseDto dto) {
         Course course = courseRepository.findById(id)
                 .orElseThrow(NoSuchElementException::new);
+
+        if (cohortService.hasInProgressCohortForCourse(id)) {
+            throw new IllegalStateException(COURSE_USED_IN_COHORT);
+        }
 
         String name = dto.getName().strip();
 

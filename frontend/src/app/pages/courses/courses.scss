@@ -67,13 +67,6 @@
   }
 }
 
-.courses-toolbar {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: t.$fg-space-md;
-  margin-bottom: t.$fg-space-lg;
-}
-
 .courses-table {
   border: 1px solid t.$fg-border;
   border-radius: t.$fg-radius-md;
@@ -84,7 +77,7 @@
 .courses-table__header,
 .courses-table__row {
   display: grid;
-  grid-template-columns: minmax(180px, 2fr) 88px minmax(150px, 1fr) minmax(150px, 1fr) 80px 128px;
+  grid-template-columns: minmax(180px, 2fr) 88px 80px 220px;
   align-items: center;
   gap: t.$fg-space-md;
   padding: t.$fg-space-md t.$fg-space-lg;
@@ -111,6 +104,7 @@
 
 .courses-table__actions {
   display: flex;
+  justify-content: flex-end;
   gap: t.$fg-space-xs;
 
   button {
@@ -130,10 +124,6 @@
 
   button:disabled {
     color: t.$fg-text-disabled;
-  }
-
-  .course-delete-icon:hover {
-    color: t.$fg-error;
   }
 }
 
@@ -171,17 +161,6 @@ p.courses-table__error {
   color: t.$fg-error;
 }
 
-.course-delete-button {
-  color: t.$fg-error;
-}
-
-@include t.fg-tablet-up {
-  .courses-toolbar {
-    grid-template-columns: minmax(240px, 1fr) minmax(180px, 260px) minmax(180px, 260px);
-    align-items: start;
-  }
-}
-
 @media (max-width: 560px) {
   .courses-table {
     overflow-x: auto;
@@ -189,6 +168,6 @@ p.courses-table__error {
 
   .courses-table__header,
   .courses-table__row {
-    min-width: 880px;
+    min-width: 640px;
   }
 }

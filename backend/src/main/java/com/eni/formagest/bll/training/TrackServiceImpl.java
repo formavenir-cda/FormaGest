@@ -1,5 +1,6 @@
 package com.eni.formagest.bll.training;
 
+import com.eni.formagest.bo.training.CohortStatus;
 import com.eni.formagest.bo.training.Sector;
 import com.eni.formagest.bo.training.Track;
 import com.eni.formagest.dal.training.CohortRepository;
@@ -10,8 +11,10 @@ import com.eni.formagest.mappers.TrackMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Set;
 
 @Service
 public class TrackServiceImpl implements TrackService {
@@ -32,7 +35,7 @@ public class TrackServiceImpl implements TrackService {
     @Override
     @Transactional(readOnly = true)
     public List<TrackDto> findAll() {
-        return TrackMapper.toDtoList(trackRepository.findAll());
+        return withInProgressCohortFlag(TrackMapper.toDtoList(trackRepository.findAll()));
     }
 
     @Override
@@ -42,7 +45,23 @@ public class TrackServiceImpl implements TrackService {
             throw new NoSuchElementException(MISSING_SECTOR);
         }
 
-        return TrackMapper.toDtoList(trackRepository.findBySectorId(sectorId));
+        return withInProgressCohortFlag(
+                TrackMapper.toDtoList(trackRepository.findBySectorId(sectorId))
+        );
+    }
+
+    /**
+     * Indique, pour chaque cursus, s’il est utilisé par une promotion en cours.
+     */
+    private List<TrackDto> withInProgressCohortFlag(List<TrackDto> tracks) {
+        Set<Long> trackIdsWithInProgressCohort =
+                new HashSet<>(cohortRepository.findTrackIdsByStatus(CohortStatus.IN_PROGRESS));
+
+        tracks.forEach(track ->
+                track.setHasInProgressCohort(trackIdsWithInProgressCohort.contains(track.getId()))
+        );
+
+        return tracks;
     }
 
     @Override

@@ -69,26 +69,38 @@
           <span>{{ sectorName(track.sectorId) }}</span>
           <span>{{ track.courses.length }}</span>
           <span class="tracks-table__actions">
-            <button
-              mat-icon-button
-              type="button"
-              aria-label="Modifier le cursus"
-              matTooltip="Modifier"
-              (click)="editTrackCourses(track); $event.stopPropagation()"
+            <span
+              [matTooltip]="track.hasInProgressCohort
+                ? 'Une promotion est en cours sur ce cursus'
+                : 'Modifier'"
             >
-              <span class="material-icons" aria-hidden="true">edit</span>
-            </button>
+              <button
+                mat-icon-button
+                type="button"
+                aria-label="Modifier le cursus"
+                [disabled]="track.hasInProgressCohort"
+                (click)="editTrackCourses(track); $event.stopPropagation()"
+              >
+                <span class="material-icons" aria-hidden="true">edit</span>
+              </button>
+            </span>
 
-            <button
-              mat-icon-button
-              class="track-delete-icon"
-              type="button"
-              aria-label="Supprimer le cursus"
-              matTooltip="Supprimer"
-              (click)="deleteTrack(track, deleteTrackDialog); $event.stopPropagation()"
+            <span
+              [matTooltip]="track.hasInProgressCohort
+                ? 'Une promotion est en cours sur ce cursus'
+                : 'Supprimer'"
             >
-              <span class="material-icons" aria-hidden="true">delete_outline</span>
-            </button>
+              <button
+                mat-icon-button
+                class="track-delete-icon"
+                type="button"
+                aria-label="Supprimer le cursus"
+                [disabled]="track.hasInProgressCohort"
+                (click)="deleteTrack(track, deleteTrackDialog); $event.stopPropagation()"
+              >
+                <span class="material-icons" aria-hidden="true">delete_outline</span>
+              </button>
+            </span>
           </span>
         </div>
       } @empty {

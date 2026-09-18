@@ -1,31 +1,4 @@
 <section class="courses-page">
-  <div class="courses-page__actions">
-    @if (currentTrack()) {
-      <button
-        mat-stroked-button
-        type="button"
-        (click)="openAttachCourseForm(attachCourseDialog)"
-      >
-        <span class="material-icons" aria-hidden="true">
-          playlist_add
-        </span>
-        Ajouter un cours existant
-      </button>
-    }
-
-    <button
-      mat-flat-button
-      class="fg-btn-primary"
-      type="button"
-      (click)="openCreateForm(courseDialog)"
-    >
-      <span class="material-icons" aria-hidden="true">
-        add_circle_outline
-      </span>
-      Nouveau cours
-    </button>
-  </div>
-
   @if (currentTrack(); as track) {
     <section class="courses-page__track-banner">
       <div>
@@ -34,105 +7,95 @@
         <span>{{ currentTrackSectorName() }}</span>
       </div>
 
-      <button
-        mat-icon-button
-        type="button"
-        aria-label="Renommer le cursus"
-        matTooltip="Renommer"
-        (click)="openEditTrackForm(editTrackDialog)"
+      <span
+        [matTooltip]="track.hasInProgressCohort
+          ? 'Une promotion est en cours sur ce cursus'
+          : 'Renommer'"
       >
-        <span class="material-icons" aria-hidden="true">edit</span>
-      </button>
-    </section>
-  } @else {
-    <section class="courses-toolbar">
-      <mat-form-field appearance="outline" class="courses-toolbar__search">
-        <mat-label>Rechercher</mat-label>
-
-        <input
-          matInput
-          name="courseSearch"
-          [ngModel]="search()"
-          (ngModelChange)="search.set($event)"
-        />
-      </mat-form-field>
-
-      <mat-form-field appearance="outline" class="courses-toolbar__sector">
-        <mat-label>Filière</mat-label>
-
-        <mat-select
-          name="courseSectorFilter"
-          [ngModel]="selectedSectorFilter()"
-          (ngModelChange)="selectSectorFilter($event)"
+        <button
+          mat-icon-button
+          type="button"
+          aria-label="Renommer le cursus"
+          [disabled]="track.hasInProgressCohort"
+          (click)="openEditTrackForm(editTrackDialog)"
         >
-          <mat-option [value]="null">Toutes les filières</mat-option>
-
-          @for (sector of sectorOptions(); track sector.id) {
-            <mat-option [value]="sector.id">
-              {{ sector.name }}
-            </mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
-
-      <mat-form-field appearance="outline" class="courses-toolbar__track">
-        <mat-label>Cursus</mat-label>
-
-        <mat-select
-          name="courseTrackFilter"
-          [ngModel]="selectedTrackFilter()"
-          (ngModelChange)="selectTrackFilter($event)"
-        >
-          <mat-option [value]="null">Tous les cursus</mat-option>
-
-          @for (track of trackOptions(); track track.id) {
-            <mat-option [value]="track.id">
-              {{ track.name }}
-            </mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
+          <span class="material-icons" aria-hidden="true">edit</span>
+        </button>
+      </span>
     </section>
-  }
 
-  <section class="courses-table" aria-label="Liste des cours">
-    @if (reorderError()) {
-      <p class="courses-table__error" role="alert">{{ reorderError() }}</p>
-    }
+    <div class="courses-page__actions">
+      <span
+        [matTooltip]="track.hasInProgressCohort
+          ? 'Une promotion est en cours sur ce cursus'
+          : ''"
+      >
+        <button
+          mat-stroked-button
+          type="button"
+          [disabled]="track.hasInProgressCohort"
+          (click)="openAttachCourseForm(attachCourseDialog)"
+        >
+          <span class="material-icons" aria-hidden="true">
+            playlist_add
+          </span>
+          Ajouter un cours existant
+        </button>
+      </span>
 
-    <div class="courses-table__header">
-      <span>Nom</span>
-      <span>Durée</span>
-      <span>Filière</span>
-      <span>Cursus</span>
-      <span>Position</span>
-      <span>Actions</span>
+      <span
+        [matTooltip]="track.hasInProgressCohort
+          ? 'Une promotion est en cours sur ce cursus'
+          : ''"
+      >
+        <button
+          mat-flat-button
+          class="fg-btn-primary"
+          type="button"
+          [disabled]="track.hasInProgressCohort"
+          (click)="openCreateForm(courseDialog)"
+        >
+          <span class="material-icons" aria-hidden="true">
+            add_circle_outline
+          </span>
+          Nouveau cours
+        </button>
+      </span>
     </div>
 
-    <div
-      cdkDropList
-      [cdkDropListData]="filteredCourses()"
-      [cdkDropListDisabled]="!canDragReorder()"
-      (cdkDropListDropped)="dropCourse($event)"
-    >
-      @if (loading()) {
-        <p>Chargement des cours...</p>
-      } @else if (error()) {
-        <p role="alert">{{ error() }}</p>
-      } @else {
-        @for (course of filteredCourses(); track course.id) {
-          <div
-            cdkDrag
-            class="courses-table__row"
-            [cdkDragDisabled]="!canDragReorder()"
-          >
-          <span class="courses-table__name">{{ course.name }}</span>
-          <span>{{ course.durationInDays }} j</span>
-          <span>{{ associatedSectorNames(course) }}</span>
-          <span>{{ associatedTrackNames(course) }}</span>
-          <span>{{ associatedPositions(course) }}</span>
-          <span class="courses-table__actions">
-            @if (selectedTrackFilter()) {
+    <section class="courses-table" aria-label="Liste des cours">
+      @if (reorderError()) {
+        <p class="courses-table__error" role="alert">{{ reorderError() }}</p>
+      }
+
+      <div class="courses-table__header">
+        <span>Nom</span>
+        <span>Durée</span>
+        <span>Position</span>
+        <span>Actions</span>
+      </div>
+
+      <div
+        cdkDropList
+        [cdkDropListData]="filteredCourses()"
+        [cdkDropListDisabled]="!canDragReorder()"
+        (cdkDropListDropped)="dropCourse($event)"
+      >
+        @if (loading()) {
+          <p>Chargement des cours...</p>
+        } @else if (error()) {
+          <p role="alert">{{ error() }}</p>
+        } @else {
+          @for (course of filteredCourses(); track course.id) {
+            <div
+              cdkDrag
+              class="courses-table__row"
+              [cdkDragDisabled]="!canDragReorder()"
+            >
+            <span class="courses-table__name">{{ course.name }}</span>
+            <span>{{ course.durationInDays }} j</span>
+            <span>{{ associatedPositions(course) }}</span>
+            <span class="courses-table__actions">
               <button
                 mat-icon-button
                 cdkDragHandle
@@ -143,36 +106,49 @@
               >
                 <span class="material-icons" aria-hidden="true">drag_indicator</span>
               </button>
-            }
 
-            <button
-              mat-icon-button
-              type="button"
-              aria-label="Modifier le cours"
-              matTooltip="Modifier"
-              (click)="editCourse(course, courseDialog)"
-            >
-              <span class="material-icons" aria-hidden="true">edit</span>
-            </button>
+              <span
+                [matTooltip]="course.hasInProgressCohort
+                  ? 'Une promotion est en cours sur ce cours'
+                  : 'Modifier'"
+              >
+                <button
+                  mat-icon-button
+                  type="button"
+                  aria-label="Modifier le cours"
+                  [disabled]="course.hasInProgressCohort"
+                  (click)="editCourse(course, courseDialog)"
+                >
+                  <span class="material-icons" aria-hidden="true">edit</span>
+                </button>
+              </span>
 
-            <button
-              mat-icon-button
-              class="course-delete-icon"
-              type="button"
-              aria-label="Supprimer le cours"
-              matTooltip="Supprimer"
-              (click)="deleteCourse(course, deleteCourseDialog)"
-            >
-              <span class="material-icons" aria-hidden="true">delete_outline</span>
-            </button>
-          </span>
-        </div>
-      } @empty {
-        <p>Aucun cours trouvé.</p>
+              <span
+                [matTooltip]="track.hasInProgressCohort
+                  ? 'Une promotion est en cours sur ce cursus'
+                  : 'Retirer du cursus'"
+              >
+                <button
+                  mat-icon-button
+                  type="button"
+                  aria-label="Retirer le cours de ce cursus"
+                  [disabled]="track.hasInProgressCohort || reordering()"
+                  (click)="removeCourseFromTrack(course)"
+                >
+                  <span class="material-icons" aria-hidden="true">link_off</span>
+                </button>
+              </span>
+            </span>
+          </div>
+        } @empty {
+          <p>Aucun cours dans ce cursus.</p>
+        }
       }
-    }
-    </div>
-  </section>
+      </div>
+    </section>
+  } @else {
+    <p>Sélectionnez un cursus à modifier depuis la liste des cursus.</p>
+  }
 </section>
 
 <ng-template #courseDialog>
@@ -240,45 +216,6 @@
       </button>
     </mat-dialog-actions>
   </form>
-</ng-template>
-
-<ng-template #deleteCourseDialog>
-  <h2 mat-dialog-title>Supprimer le cours</h2>
-
-  <mat-dialog-content>
-    <p>
-      Voulez-vous supprimer le cours
-      <strong>{{ courseToDelete()?.name }}</strong> ?
-    </p>
-
-    <p>Cette action est définitive.</p>
-
-    @if (deleteError()) {
-      <p class="form-error" role="alert">{{ deleteError() }}</p>
-    }
-  </mat-dialog-content>
-
-  <mat-dialog-actions align="end">
-    <button
-      mat-button
-      type="button"
-      data-cancel-delete-course
-      [disabled]="deleting()"
-      (click)="cancelDelete()"
-    >
-      Annuler
-    </button>
-
-    <button
-      mat-stroked-button
-      class="course-delete-button"
-      type="button"
-      [disabled]="deleting()"
-      (click)="confirmDelete()"
-    >
-      {{ deleting() ? 'Suppression...' : 'Supprimer' }}
-    </button>
-  </mat-dialog-actions>
 </ng-template>
 
 <ng-template #attachCourseDialog>

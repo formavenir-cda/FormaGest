@@ -5,4 +5,5 @@ export interface Track {
   name: string;
   sectorId: number;
   courses: TrackCourse[];
+  hasInProgressCohort: boolean;
 }
