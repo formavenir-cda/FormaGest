@@ -16,12 +16,14 @@ export class CohortService {
   create(
     name: string,
     trackId: number,
-    startDate: string
+    startDate: string,
+    teacherAssignments: { courseId: number; teacherId: number }[] = []
   ): Observable<Cohort> {
     return this.http.post<Cohort>(this.apiUrl, {
       name,
       trackId,
       startDate,
+      teacherAssignments,
     });
   }
 

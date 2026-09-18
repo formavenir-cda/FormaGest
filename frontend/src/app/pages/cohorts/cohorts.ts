@@ -20,10 +20,12 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatTabsModule } from '@angular/material/tabs';
 
 import type { Cohort } from '../../models/training/cohort.model';
+import type { Course } from '../../models/training/course.model';
 import type { Track } from '../../models/training/track.model';
-import type { Student } from '../../models/users/user.model';
+import type { Student, Teacher } from '../../models/users/user.model';
 import type { CohortEnrollment } from '../../models/enrollment/enrollment.model';
 import { CohortService } from '../../services/training/cohort.service';
+import { CourseService } from '../../services/training/course.service';
 import { TrackService } from '../../services/training/track.service';
 import { UserService } from '../../services/users/user.service';
 import { EnrollmentService } from '../../services/enrollment/enrollment.service';
@@ -46,6 +48,7 @@ import { EnrollmentService } from '../../services/enrollment/enrollment.service'
 export class Cohorts implements OnInit {
   private readonly cohortService = inject(CohortService);
   private readonly trackService = inject(TrackService);
+  private readonly courseService = inject(CourseService);
   private readonly userService = inject(UserService);
   private readonly enrollmentService = inject(EnrollmentService);
   private readonly dialog = inject(MatDialog);
@@ -56,6 +59,8 @@ export class Cohorts implements OnInit {
   readonly cohorts = signal<Cohort[]>([]);
   readonly selectedCohort = signal<Cohort | null>(null);
   readonly tracks = signal<Track[]>([]);
+  readonly courses = signal<Course[]>([]);
+  readonly teachers = signal<Teacher[]>([]);
   readonly students = signal<Student[]>([]);
   readonly cohortEnrollments = signal<CohortEnrollment[]>([]);
   readonly loading = signal(true);
@@ -65,6 +70,7 @@ export class Cohorts implements OnInit {
   readonly cohortName = signal('');
   readonly trackId = signal<number | null>(null);
   readonly startDate = signal('');
+  readonly teacherByCourseId = signal<Map<number, number | null>>(new Map());
   readonly formError = signal('');
   readonly saving = signal(false);
 
@@ -72,6 +78,20 @@ export class Cohorts implements OnInit {
   readonly trackOptions = computed(() =>
     this.tracks().sort((a, b) => a.name.localeCompare(b.name))
   );
+
+  readonly selectedTrackCourses = computed(() => {
+    const track = this.tracks().find((item) => item.id === this.trackId());
+
+    if (!track) return [];
+
+    return [...track.courses]
+      .sort((a, b) => a.position - b.position)
+      .map((trackCourse) => ({
+        courseId: trackCourse.courseId,
+        courseName: this.courses().find((course) => course.id === trackCourse.courseId)?.name
+          ?? 'Cours inconnu',
+      }));
+  });
 
   readonly cohortStudents = computed(() => {
     const students = this.students();
@@ -105,6 +125,14 @@ export class Cohorts implements OnInit {
       next: (tracks) => this.tracks.set(tracks),
     });
 
+    this.courseService.findAll().subscribe({
+      next: (courses) => this.courses.set(courses),
+    });
+
+    this.userService.findAll('TEACHER').subscribe({
+      next: (teachers) => this.teachers.set(teachers as Teacher[]),
+    });
+
     this.userService.findAll('STUDENT').subscribe({
       next: (students) => this.students.set(students as Student[]),
     });
@@ -114,11 +142,25 @@ export class Cohorts implements OnInit {
     this.cohortName.set('');
     this.trackId.set(null);
     this.startDate.set('');
+    this.teacherByCourseId.set(new Map());
     this.formError.set('');
 
     this.formDialogRef = this.dialog.open(template, {
       width: '520px',
       maxWidth: '95vw',
+    });
+  }
+
+  selectTrack(trackId: number | null): void {
+    this.trackId.set(trackId);
+    this.teacherByCourseId.set(new Map());
+  }
+
+  selectTeacherForCourse(courseId: number, teacherId: number | null): void {
+    this.teacherByCourseId.update((map) => {
+      const updated = new Map(map);
+      updated.set(courseId, teacherId);
+      return updated;
     });
   }
 
@@ -145,7 +187,11 @@ export class Cohorts implements OnInit {
       this.formDialogRef.disableClose = true;
     }
 
-    this.cohortService.create(name, trackId, startDate).subscribe({
+    const teacherAssignments = [...this.teacherByCourseId().entries()]
+      .filter(([, teacherId]) => teacherId !== null)
+      .map(([courseId, teacherId]) => ({ courseId, teacherId: teacherId! }));
+
+    this.cohortService.create(name, trackId, startDate, teacherAssignments).subscribe({
       next: (cohort) => {
         this.cohorts.update((list) => [...list, cohort]);
         this.saving.set(false);
@@ -154,11 +200,13 @@ export class Cohorts implements OnInit {
       error: (err) => {
         this.saving.set(false);
 
-        this.formError.set(
-          err.status === 409
-            ? 'Une promotion portant ce nom existe déjà.'
-            : 'Impossible de créer la promotion. Veuillez réessayer.'
-        );
+        if (err.status === 409) {
+          this.formError.set('Une promotion portant ce nom existe déjà.');
+        } else if (err.status === 404 && typeof err.error === 'string' && err.error.trim()) {
+          this.formError.set(err.error);
+        } else {
+          this.formError.set('Impossible de créer la promotion. Veuillez réessayer.');
+        }
 
         if (this.formDialogRef) {
           this.formDialogRef.disableClose = false;

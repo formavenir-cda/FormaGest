@@ -4,6 +4,9 @@ import com.eni.formagest.bo.training.Course;
 import com.eni.formagest.bo.training.Sector;
 import com.eni.formagest.bo.training.Track;
 import com.eni.formagest.bo.training.TrackCourse;
+import com.eni.formagest.bo.users.Student;
+import com.eni.formagest.bo.users.Teacher;
+import com.eni.formagest.bo.users.UserRole;
 import com.eni.formagest.dal.training.CohortRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -146,6 +149,73 @@ class CohortControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "ADMINISTRATIVE_MANAGER")
+    void createAssignsTeachersToScheduledCourses() throws Exception {
+        Track track = saveTrackWithCourses(
+                "CDA affectation formateur",
+                "Java"
+        );
+        Course course =
+                entityManager.createQuery(
+                                "select tc.course from TrackCourse tc where tc.track.id = :trackId",
+                                Course.class
+                        )
+                        .setParameter("trackId", track.getId())
+                        .getSingleResult();
+        Teacher teacher = saveTeacher("CDA affectation formateur");
+
+        mockMvc.perform(post("/api/cohorts")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "name": "CDA affectation formateur 2026",
+                                  "startDate": "2026-09-01",
+                                  "trackId": %d,
+                                  "teacherAssignments": [
+                                    {"courseId": %d, "teacherId": %d}
+                                  ]
+                                }
+                                """.formatted(track.getId(), course.getId(), teacher.getId())))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.scheduledCourses[0].teacherId").value(teacher.getId()))
+                .andExpect(jsonPath("$.scheduledCourses[0].teacherName").value(
+                        teacher.getFirstName() + " " + teacher.getLastName()
+                ));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMINISTRATIVE_MANAGER")
+    void createRejectsNonTeacherAsAssignedTeacher() throws Exception {
+        Track track = saveTrackWithCourses(
+                "CDA formateur invalide",
+                "Java"
+        );
+        Course course =
+                entityManager.createQuery(
+                                "select tc.course from TrackCourse tc where tc.track.id = :trackId",
+                                Course.class
+                        )
+                        .setParameter("trackId", track.getId())
+                        .getSingleResult();
+        Student student = saveStudent("CDA formateur invalide");
+
+        mockMvc.perform(post("/api/cohorts")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "name": "CDA formateur invalide 2026",
+                                  "startDate": "2026-09-01",
+                                  "trackId": %d,
+                                  "teacherAssignments": [
+                                    {"courseId": %d, "teacherId": %d}
+                                  ]
+                                }
+                                """.formatted(track.getId(), course.getId(), student.getId())))
+                .andExpect(status().isNotFound())
+                .andExpect(content().string("Le formateur sélectionné n'existe pas."));
+    }
+
+    @Test
     @WithMockUser(roles = "STUDENT")
     void createReturnsForbiddenForUnauthorizedRole() throws Exception {
         mockMvc.perform(post("/api/cohorts")
@@ -190,6 +260,47 @@ class CohortControllerTest {
         entityManager.clear();
 
         return track;
+    }
+
+    private Teacher saveTeacher(String name) {
+        Sector sector = Sector.builder()
+                .name("Secteur formateur " + name)
+                .build();
+        entityManager.persist(sector);
+
+        Teacher teacher = Teacher.builder()
+                .email("formateur." + name.replace(" ", "-").toLowerCase() + "@formagest.test")
+                .lastName("Formateur")
+                .firstName(name)
+                .password("password")
+                .active(true)
+                .role(UserRole.TEACHER)
+                .sector(sector)
+                .build();
+
+        entityManager.persist(teacher);
+        entityManager.flush();
+        entityManager.clear();
+
+        return teacher;
+    }
+
+    private Student saveStudent(String name) {
+        Student student = Student.builder()
+                .email("eleve." + name.replace(" ", "-").toLowerCase() + "@formagest.test")
+                .lastName("Élève")
+                .firstName(name)
+                .password("password")
+                .active(true)
+                .role(UserRole.STUDENT)
+                .birthDate(java.time.LocalDate.of(2000, 1, 1))
+                .build();
+
+        entityManager.persist(student);
+        entityManager.flush();
+        entityManager.clear();
+
+        return student;
     }
 
     @Test

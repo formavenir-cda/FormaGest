@@ -120,13 +120,40 @@ mat-dialog-content.cohort-detail {
   margin-top: t.$fg-space-md;
 }
 
-.cohort-detail__student,
-.cohort-detail__course {
+.cohort-detail__student {
   display: grid;
   grid-template-columns: minmax(180px, 1fr) minmax(180px, auto);
   gap: t.$fg-space-md;
   padding: t.$fg-space-sm 0;
   border-top: 1px solid t.$fg-divider;
+}
+
+.cohort-detail__course {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) minmax(180px, auto) minmax(140px, auto);
+  gap: t.$fg-space-md;
+  padding: t.$fg-space-sm 0;
+  border-top: 1px solid t.$fg-divider;
+}
+
+.cohort-teachers {
+  margin-top: t.$fg-space-sm;
+}
+
+.cohort-teachers__title {
+  margin: 0 0 t.$fg-space-xs;
+  color: t.$fg-text-secondary;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.cohort-teachers__row {
+  display: grid;
+  grid-template-columns: minmax(140px, 1fr) minmax(180px, 1fr);
+  align-items: center;
+  gap: t.$fg-space-sm;
+  margin-bottom: t.$fg-space-xs;
 }
 
 // Prend tout l'espace restant sous les paragraphes Cursus/Dates : la pop-up ne

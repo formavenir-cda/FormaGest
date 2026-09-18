@@ -34,4 +34,7 @@ public class CohortDto {
 
     @Builder.Default
     private List<ScheduledCourseDto> scheduledCourses = new ArrayList<>();
+
+    @Builder.Default
+    private List<CourseTeacherAssignmentDto> teacherAssignments = new ArrayList<>();
 }

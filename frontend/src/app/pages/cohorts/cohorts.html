@@ -90,7 +90,7 @@
           required
           [disabled]="saving()"
           [ngModel]="trackId()"
-          (ngModelChange)="trackId.set($event)"
+          (ngModelChange)="selectTrack($event)"
         >
           @for (track of trackOptions(); track track.id) {
             <mat-option [value]="track.id">
@@ -116,6 +116,37 @@
         </mat-form-field>
 
       </div>
+
+      @if (selectedTrackCourses().length) {
+        <section class="cohort-teachers" aria-label="Formateurs par cours">
+          <p class="cohort-teachers__title">Formateur par cours (facultatif)</p>
+
+          @for (course of selectedTrackCourses(); track course.courseId) {
+            <div class="cohort-teachers__row">
+              <span>{{ course.courseName }}</span>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Formateur</mat-label>
+
+                <mat-select
+                  [name]="'teacher-' + course.courseId"
+                  [disabled]="saving()"
+                  [ngModel]="teacherByCourseId().get(course.courseId) ?? null"
+                  (ngModelChange)="selectTeacherForCourse(course.courseId, $event)"
+                >
+                  <mat-option [value]="null">Non assigné</mat-option>
+
+                  @for (teacher of teachers(); track teacher.id) {
+                    <mat-option [value]="teacher.id">
+                      {{ teacher.firstName }} {{ teacher.lastName }}
+                    </mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+            </div>
+          }
+        </section>
+      }
 
       @if (formError()) {
         <p class="form-error" role="alert">{{ formError() }}</p>
@@ -184,6 +215,7 @@
                   Non daté
                 }
               </span>
+              <span>{{ scheduledCourse.teacherName ?? 'Formateur non assigné' }}</span>
             </div>
           } @empty {
             <p>Aucun cours planifié.</p>
