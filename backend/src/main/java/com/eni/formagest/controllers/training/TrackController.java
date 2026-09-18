@@ -80,6 +80,7 @@ public class TrackController {
     }
 
     @PutMapping("/{id}/courses/order")
+    @PreAuthorize("hasRole('ADMINISTRATIVE_MANAGER')")
     public List<TrackCourseDto> reorderCourses(
             @PathVariable Long id,
             @Valid @RequestBody List<TrackCourseOrderDto> order) {

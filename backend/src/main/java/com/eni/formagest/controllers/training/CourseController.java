@@ -61,6 +61,7 @@ public class CourseController {
     }
 
     @PutMapping("/{id}/tracks")
+    @PreAuthorize("hasRole('ADMINISTRATIVE_MANAGER')")
     public CourseDto updateTracks(
             @PathVariable Long id,
             @RequestBody List<Long> trackIds) {
