@@ -1,0 +1,19 @@
+@use '../tokens' as t;
+
+// Titres de pop-up alignés sur le titre de page (.app-header h1) : même famille,
+// même taille, même graisse, pour une identité visuelle cohérente dans toute l'appli.
+.mat-mdc-dialog-title {
+  font-family: t.$fg-font-display;
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: t.$fg-text-primary;
+}
+
+// Feuille globale : seul endroit qui peut atteindre le DOM interne de mat-tab-group
+// (généré par son propre composant, hors de la portée des styles de la page hôte)
+// pour que son contenu remplisse bien la hauteur donnée par .cohort-detail.
+.cohort-detail .mat-mdc-tab-body-wrapper {
+  flex: 1;
+  min-height: 0;
+}

@@ -19,6 +19,7 @@
       <span>Email</span>
       <span>Naissance</span>
       <span>Statut</span>
+      <span>Promotion</span>
       <span>Actions</span>
     </div>
 
@@ -34,7 +35,7 @@
         >
           <span class="students-table__name">{{ student.lastName }}</span>
           <span>{{ student.firstName }}</span>
-          <span>{{ student.email }}</span>
+          <span class="students-table__email">{{ student.email }}</span>
           <span>{{ student.birthDate | date:'dd/MM/yyyy' }}</span>
           <span>
             <span
@@ -44,6 +45,7 @@
               {{ student.active ? 'Actif' : 'Inactif' }}
             </span>
           </span>
+          <span>{{ inProgressCohortNameByStudentId().get(student.id) ?? '—' }}</span>
           <span class="students-table__actions">
             <button
               mat-button
@@ -53,8 +55,11 @@
               Voir détails
             </button>
 
-            <!-- TODO: brancher le choix promotion / cours à l'unité (RG06, RG07) -->
-            <button mat-button type="button" disabled>
+            <button
+              mat-stroked-button
+              type="button"
+              (click)="openEnroll(student)"
+            >
               Inscrire
             </button>
           </span>
@@ -81,6 +86,28 @@
 
       <dt>Statut</dt>
       <dd>{{ viewingStudent()?.active ? 'Actif' : 'Inactif' }}</dd>
+
+      <dt>Promotion</dt>
+      <dd>
+        @if (viewingCohortEnrollment(); as enrollment) {
+          {{ cohortName(enrollment.cohortId) }}
+        } @else {
+          Aucune promotion
+        }
+      </dd>
+
+      <dt>Cours à l'unité</dt>
+      <dd>
+        @if (viewingScheduledCourseEnrollments().length) {
+          <ul class="student-details__courses">
+            @for (enrollment of viewingScheduledCourseEnrollments(); track enrollment.id) {
+              <li>{{ scheduledCourseLabels().get(enrollment.scheduledCourseId) ?? '—' }}</li>
+            }
+          </ul>
+        } @else {
+          Aucun
+        }
+      </dd>
     </dl>
   </mat-dialog-content>
 

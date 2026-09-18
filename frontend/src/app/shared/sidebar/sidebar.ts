@@ -30,32 +30,45 @@ export class Sidebar {
 
   protected readonly mainNavItems: SidebarNavItem[] = [
     { label: 'Accueil', icon: 'home', route: '/home' },
-    { label: 'Promotions', icon: 'groups' },
-    { label: 'Mon calendrier', icon: 'calendar_month', roles: ['STUDENT'] },
-    { label: 'Mes inscriptions', icon: 'assignment' },
-    { label: 'Mes cours', icon: 'menu_book' },
-    {
-      label: 'Promotions',
-      icon: 'groups',
-      route: '/promotions',
-      roles: ['ADMINISTRATIVE_MANAGER'],
+    { label: 'Mon calendrier',
+      icon: 'calendar_month',
+      roles: ['STUDENT']
     },
-    { label: 'Inscriptions', icon: 'how_to_reg', roles: ['ADMINISTRATIVE_MANAGER'] },
-    { label: 'Élèves',
-      icon: 'person_search',
-      route: '/students',
-      roles: ['ADMINISTRATIVE_MANAGER'] },
+    { label: 'Mes cours',
+      icon: 'menu_book',
+      roles: ['STUDENT', 'TEACHER']
+    },
     {
       label: 'Formation',
       icon: 'school',
       route: '/formation',
       roles: ['ADMINISTRATIVE_MANAGER'],
     },
+    { label: 'Inscriptions',
+      icon: 'how_to_reg',
+      route: '/enrollments',
+      roles: ['ADMINISTRATIVE_MANAGER']
+    },
+    {
+      label: 'Promotions',
+      icon: 'groups',
+      route: '/cohorts',
+      roles: ['ADMINISTRATIVE_MANAGER'],
+    },
+    { label: 'Élèves',
+      icon: 'person_search',
+      route: '/students',
+      roles: ['ADMINISTRATIVE_MANAGER']
+    },
     { label: 'Formateurs',
       icon: 'badge',
       route: '/teachers',
       roles: ['ADMINISTRATIVE_MANAGER']  },
-    { label: 'Utilisateurs', icon: 'manage_accounts', route: '/users', roles: ['ADMINISTRATOR'] },
+    { label: 'Utilisateurs',
+      icon: 'manage_accounts',
+      route: '/users',
+      roles: ['ADMINISTRATOR']
+    },
   ];
 
   protected readonly visibleNavItems = computed(() => {

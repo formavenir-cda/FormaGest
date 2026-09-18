@@ -1,0 +1,178 @@
+@use '../../../styles/tokens' as t;
+
+:host {
+  display: block;
+}
+
+.enrollments-page {
+  // Plus large que le gabarit standard ($fg-content-max) : les deux listes ont besoin
+  // de place pour rester lisibles avec beaucoup d'élèves ou de promotions.
+  max-width: 1440px;
+  margin-inline: auto;
+
+  // Calé sur les dimensions du Layout partagé (padding haut/bas de .app-main, marge
+  // et hauteur de l'en-tête) pour occuper toute la hauteur visible sans scroll de
+  // page : seules les listes (et les résultats, s'ils sont longs) défilent.
+  height: calc(100dvh - #{t.$fg-toolbar-height} - #{t.$fg-space-lg * 3});
+  display: flex;
+  flex-direction: column;
+
+  p {
+    color: t.$fg-text-secondary;
+    line-height: 1.5;
+  }
+
+  h2 {
+    margin: 0 0 t.$fg-space-md;
+    font-size: 1rem;
+    color: t.$fg-text-primary;
+  }
+}
+
+.enrollments-columns {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: t.$fg-space-lg;
+  margin-bottom: t.$fg-space-lg;
+  flex: 1;
+  min-height: 0;
+}
+
+.enrollments-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border: 1px solid t.$fg-border;
+  border-radius: t.$fg-radius-md;
+  background: t.$fg-surface;
+  padding: t.$fg-space-lg;
+
+  mat-form-field {
+    width: 100%;
+    flex-shrink: 0;
+  }
+}
+
+.enrollments-mode {
+  display: flex;
+  gap: t.$fg-space-lg;
+  margin-bottom: t.$fg-space-md;
+  flex-shrink: 0;
+}
+
+.enrollments-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  border: 1px solid t.$fg-divider;
+  border-radius: t.$fg-radius-sm;
+}
+
+.enrollments-list__row {
+  display: flex;
+  align-items: center;
+  gap: t.$fg-space-sm;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: t.$fg-touch-target;
+  padding: t.$fg-space-sm t.$fg-space-md;
+  border: none;
+  border-bottom: 1px solid t.$fg-divider;
+  background: none;
+  color: t.$fg-text-primary;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &--button:hover {
+    background: t.$fg-surface-variant;
+  }
+
+  &--selected {
+    background: t.$fg-surface-variant;
+    color: t.$fg-primary;
+    font-weight: 600;
+  }
+
+  &--disabled {
+    color: t.$fg-text-secondary;
+    cursor: not-allowed;
+  }
+
+  &--stacked {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    padding-block: t.$fg-space-sm;
+  }
+}
+
+.enrollments-list__row-main {
+  font-weight: 600;
+}
+
+.enrollments-list__row-meta {
+  display: block;
+  font-size: 0.8125rem;
+  color: t.$fg-text-secondary;
+}
+
+.enrollments-list__hint {
+  margin-left: auto;
+  font-size: 0.8125rem;
+  color: t.$fg-text-secondary;
+  font-style: italic;
+}
+
+.enrollments-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: t.$fg-space-lg;
+  flex-shrink: 0;
+}
+
+.enrollments-results {
+  flex-shrink: 0;
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid t.$fg-border;
+  border-radius: t.$fg-radius-md;
+  background: t.$fg-surface;
+}
+
+.enrollments-results__row {
+  display: flex;
+  align-items: center;
+  gap: t.$fg-space-md;
+  padding: t.$fg-space-md t.$fg-space-lg;
+  border-top: 1px solid t.$fg-divider;
+  color: t.$fg-text-primary;
+
+  &:first-child {
+    border-top: none;
+  }
+
+  &--error {
+    color: t.$fg-error;
+  }
+}
+
+.enrollments-results__name {
+  font-weight: 600;
+  min-width: 200px;
+}
+
+.force-dialog__field {
+  width: 100%;
+  margin-top: t.$fg-space-sm;
+}
+
+@include t.fg-tablet-up {
+  .enrollments-columns {
+    grid-template-columns: 1fr 1fr;
+  }
+}

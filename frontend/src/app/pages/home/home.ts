@@ -22,7 +22,11 @@ export class Home {
   protected readonly user = toSignal(this.authService.user$);
 
   protected readonly quickAccessCards: QuickAccessCard[] = [
+    { label: 'Calendrier', icon: 'calendar_month', route: '/home', roles: ['STUDENT'] },
+    { label: 'Cours', icon: 'menu_book', route: '/home', roles: ['STUDENT', "TEACHER"] },
     { label: 'Formation', icon: 'school', route: '/formation', roles: ['ADMINISTRATIVE_MANAGER'] },
+    { label: 'Inscriptions', icon: 'how_to_reg', route: '/enrollments', roles: ['ADMINISTRATIVE_MANAGER'] },
+    { label: 'Promotions', icon: 'groups', route: '/cohorts', roles: ['ADMINISTRATIVE_MANAGER'] },
     { label: 'Utilisateurs', icon: 'manage_accounts', route: '/users', roles: ['ADMINISTRATOR'] },
   ];
 

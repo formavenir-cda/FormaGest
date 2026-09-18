@@ -1,0 +1,196 @@
+<section class="enrollments-page">
+  <div class="enrollments-columns">
+    <section class="enrollments-panel" aria-label="Élèves">
+      <h2>Élèves</h2>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Rechercher</mat-label>
+
+        <input
+          matInput
+          name="enrollmentStudentSearch"
+          [ngModel]="search()"
+          (ngModelChange)="search.set($event)"
+        />
+      </mat-form-field>
+
+      @if (loading()) {
+        <p>Chargement des élèves...</p>
+      } @else if (error()) {
+        <p role="alert">{{ error() }}</p>
+      } @else {
+        <div class="enrollments-list">
+          @for (student of sortedStudents(); track student.id) {
+            <label
+              class="enrollments-list__row"
+              [class.enrollments-list__row--disabled]="disabledStudentIds().has(student.id)"
+            >
+              <mat-checkbox
+                [checked]="selectedStudentIds().has(student.id)"
+                [disabled]="disabledStudentIds().has(student.id)"
+                (change)="toggleStudent(student.id)"
+              ></mat-checkbox>
+              <span>{{ student.lastName }} {{ student.firstName }}</span>
+              @if (activeCohortByStudentId().get(student.id); as enrollment) {
+                <span class="enrollments-list__hint">{{ cohortName(enrollment.cohortId) }}</span>
+              }
+            </label>
+          } @empty {
+            <p>Aucun élève trouvé.</p>
+          }
+        </div>
+      }
+    </section>
+
+    <section class="enrollments-panel" aria-label="Cible de l'inscription">
+      <h2>Sélectionner le type d'inscription</h2>
+
+      <mat-radio-group
+        class="enrollments-mode"
+        [ngModel]="mode()"
+        (ngModelChange)="setMode($event)"
+      >
+        <mat-radio-button value="cohort">Promotion</mat-radio-button>
+        <mat-radio-button value="scheduledCourse">Cours à l'unité</mat-radio-button>
+      </mat-radio-group>
+
+      <mat-form-field appearance="outline">
+        <mat-label>{{ mode() === 'cohort' ? 'Rechercher une promotion' : 'Rechercher un cours' }}</mat-label>
+
+        <input
+          matInput
+          name="enrollmentTargetSearch"
+          [ngModel]="targetSearch()"
+          (ngModelChange)="targetSearch.set($event)"
+        />
+      </mat-form-field>
+
+      <div class="enrollments-list">
+        @if (mode() === 'cohort') {
+          @for (cohort of filteredCohorts(); track cohort.id) {
+            <button
+              type="button"
+              class="enrollments-list__row enrollments-list__row--button enrollments-list__row--stacked"
+              [class.enrollments-list__row--selected]="selectedCohortId() === cohort.id"
+              (click)="selectedCohortId.set(cohort.id)"
+            >
+              <span class="enrollments-list__row-main">{{ cohort.name }}</span>
+              <span class="enrollments-list__row-meta">{{ statusLabel(cohort.status) }}</span>
+              <span class="enrollments-list__row-meta">
+                {{ cohort.startDate | date:'dd/MM/yyyy' }} → {{ cohort.endDate | date:'dd/MM/yyyy' }}
+              </span>
+            </button>
+          } @empty {
+            <p>Aucune promotion disponible.</p>
+          }
+        } @else {
+          @for (scheduledCourse of filteredScheduledCourseOptions(); track scheduledCourse.id) {
+            <button
+              type="button"
+              class="enrollments-list__row enrollments-list__row--button"
+              [class.enrollments-list__row--selected]="selectedScheduledCourseId() === scheduledCourse.id"
+              (click)="selectedScheduledCourseId.set(scheduledCourse.id)"
+            >
+              {{ scheduledCourse.courseName }} — {{ scheduledCourse.cohortName }}
+            </button>
+          } @empty {
+            <p>Aucun cours planifié disponible.</p>
+          }
+        }
+      </div>
+    </section>
+  </div>
+
+  <div class="enrollments-actions">
+    <button
+      mat-flat-button
+      class="fg-btn-primary"
+      type="button"
+      [disabled]="!canSubmit()"
+      (click)="submit()"
+    >
+      {{ submitting() ? 'Enregistrement...' : 'Enregistrer' }}
+    </button>
+  </div>
+
+  @if (results().length) {
+    <section class="enrollments-results" aria-label="Résultats de l'inscription">
+      @for (result of results(); track result.student.id) {
+        <div
+          class="enrollments-results__row"
+          [class.enrollments-results__row--error]="!result.success"
+        >
+          <span class="enrollments-results__name">
+            {{ result.student.lastName }} {{ result.student.firstName }}
+          </span>
+          <span>{{ result.message }}</span>
+
+          @if (result.canForce) {
+            <button
+              mat-button
+              type="button"
+              (click)="openForceDialog(result, forceDialog)"
+            >
+              Forcer l'inscription
+            </button>
+          }
+        </div>
+      }
+    </section>
+  }
+</section>
+
+<ng-template #forceDialog>
+  <h2 mat-dialog-title>Forcer l'inscription</h2>
+
+  <form (ngSubmit)="confirmForce()">
+    <mat-dialog-content>
+      <p>
+        <strong>
+          {{ forcingResult()?.student?.lastName }} {{ forcingResult()?.student?.firstName }}
+        </strong>
+        — {{ forcingResult()?.message }}
+      </p>
+
+      <p>
+        La référente administrative peut forcer une inscription qui enfreint l'ordre
+        pédagogique du cursus. Indiquez le motif de ce forçage.
+      </p>
+
+      <mat-form-field appearance="outline" class="force-dialog__field">
+        <mat-label>Justification</mat-label>
+
+        <textarea
+          matInput
+          name="forceJustification"
+          rows="3"
+          maxlength="200"
+          required
+          [disabled]="forcing()"
+          [ngModel]="forceJustification()"
+          (ngModelChange)="forceJustification.set($event)"
+        ></textarea>
+      </mat-form-field>
+    </mat-dialog-content>
+
+    <mat-dialog-actions align="end">
+      <button
+        mat-button
+        type="button"
+        [disabled]="forcing()"
+        (click)="cancelForce()"
+      >
+        Annuler
+      </button>
+
+      <button
+        mat-flat-button
+        class="fg-btn-primary"
+        type="submit"
+        [disabled]="forcing() || !forceJustification().trim()"
+      >
+        {{ forcing() ? 'Enregistrement...' : 'Forcer l\'inscription' }}
+      </button>
+    </mat-dialog-actions>
+  </form>
+</ng-template>
