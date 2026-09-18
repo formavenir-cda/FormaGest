@@ -4,6 +4,7 @@ export interface ScheduledCourse {
   courseId: number;
   courseName: string;
   teacherId: number | null;
+  teacherName: string | null;
   startDate: string | null;
   endDate: string | null;
 }

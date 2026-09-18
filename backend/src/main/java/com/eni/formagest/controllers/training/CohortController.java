@@ -33,11 +33,11 @@ public class CohortController {
         try {
             return cohortService.create(dto);
         } catch (NoSuchElementException e) {
-            throw new ResponseStatusException(
-                    HttpStatus.NOT_FOUND,
-                    "Ce cursus n'existe pas.",
-                    e
-            );
+            String message = CohortService.MISSING_TEACHER.equals(e.getMessage())
+                    ? "Le formateur sélectionné n'existe pas."
+                    : "Ce cursus n'existe pas.";
+
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, message, e);
         } catch (IllegalArgumentException e) {
             if (CohortService.EMPTY_TRACK.equals(e.getMessage())) {
                 throw new ResponseStatusException(

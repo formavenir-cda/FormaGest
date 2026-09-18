@@ -19,6 +19,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     List<User> findByRole(UserRole role);
 
+    Optional<User> findByIdAndRole(Long id, UserRole role);
+
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query(value = "DELETE FROM student WHERE id = :id", nativeQuery = true)
     void deleteStudentRow(@Param("id") Long id);

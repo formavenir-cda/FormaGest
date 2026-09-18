@@ -8,6 +8,7 @@ public interface CohortService {
 
     String MISSING_TRACK = "track";
     String EMPTY_TRACK = "empty-track";
+    String MISSING_TEACHER = "teacher";
 
     List<CohortDto> findAll();
 

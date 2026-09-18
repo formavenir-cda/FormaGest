@@ -15,6 +15,7 @@ public class ScheduledCourseDto {
     private Long courseId;
     private String courseName;
     private Long teacherId;
+    private String teacherName;
     private LocalDate startDate;
     private LocalDate endDate;
 }
