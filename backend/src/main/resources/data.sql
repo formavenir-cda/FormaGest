@@ -578,7 +578,7 @@ AND NOT EXISTS (SELECT 1 FROM scheduled_course sc WHERE sc.cohort_id = co.cohort
 -- --- Promotions (cohort) et cours planifiés (scheduled_course) : CDA ---
 
 INSERT INTO cohort (name, start_date, end_date, status, track_id)
-SELECT 'CDA 2026', '2026-01-12', '2026-10-10', 'IN_PROGRESS', t.track_id FROM track t
+SELECT 'CDA 2026', '2026-01-12', '2026-10-09', 'IN_PROGRESS', t.track_id FROM track t
 WHERE t.name = 'CDA'
 AND NOT EXISTS (SELECT 1 FROM cohort WHERE name = 'CDA 2026');
 
@@ -604,14 +604,14 @@ AND te.id = au.id AND au.email = 'formateur.demo@formagest.fr'
 AND NOT EXISTS (SELECT 1 FROM scheduled_course sc WHERE sc.cohort_id = co.cohort_id AND sc.course_id = c.course_id);
 
 INSERT INTO scheduled_course (cohort_id, course_id, teacher_id, start_date, end_date)
-SELECT co.cohort_id, c.course_id, te.id, '2026-09-01', '2026-09-19'
+SELECT co.cohort_id, c.course_id, te.id, '2026-08-31', '2026-09-18'
 FROM cohort co, course c, teacher te, app_user au
 WHERE co.name = 'CDA 2026' AND c.name = 'Programmation Orientée Objet / Java (partie 1)'
 AND te.id = au.id AND au.email = 'formateur2.demo@formagest.fr'
 AND NOT EXISTS (SELECT 1 FROM scheduled_course sc WHERE sc.cohort_id = co.cohort_id AND sc.course_id = c.course_id);
 
 INSERT INTO scheduled_course (cohort_id, course_id, teacher_id, start_date, end_date)
-SELECT co.cohort_id, c.course_id, te.id, '2026-09-22', '2026-10-10'
+SELECT co.cohort_id, c.course_id, te.id, '2026-09-21', '2026-10-09'
 FROM cohort co, course c, teacher te, app_user au
 WHERE co.name = 'CDA 2026' AND c.name = 'Programmation Orientée Objet / Java (partie 2)'
 AND te.id = au.id AND au.email = 'formateur.demo@formagest.fr'
@@ -1047,7 +1047,7 @@ UPDATE cohort SET end_date = '2027-01-29' WHERE name = 'D2WM 2026';
 -- --- Cours planifiés supplémentaires : CDA 2026 (suite) ---
 
 INSERT INTO scheduled_course (cohort_id, course_id, teacher_id, start_date, end_date)
-SELECT co.cohort_id, c.course_id, te.id, '2026-10-13', '2026-10-23'
+SELECT co.cohort_id, c.course_id, te.id, '2026-10-12', '2026-10-23'
 FROM cohort co, course c, teacher te, app_user au
 WHERE co.name = 'CDA 2026' AND c.name = 'Langage SQL / SQL Server'
 AND te.id = au.id AND au.email = 'formateur53.demo@formagest.fr'

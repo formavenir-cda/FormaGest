@@ -1,0 +1,15 @@
+<section class="calendar-page">
+  <h1 class="calendar-page__title">Mon calendrier</h1>
+
+  @if (loading()) {
+    <p>Chargement du calendrier...</p>
+  } @else if (error()) {
+    <p role="alert">{{ error() }}</p>
+  } @else {
+    <full-calendar [options]="calendarOptions()" />
+
+    @if (entries().length === 0) {
+      <p class="calendar-page__empty">Aucun cours planifié.</p>
+    }
+  }
+</section>
