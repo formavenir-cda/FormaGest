@@ -16,6 +16,7 @@ import { AdministrativeManagers } from './pages/users/administrative-managers/ad
 import { Administrators } from './pages/users/administrators/administrators';
 import { Cohorts } from './pages/cohorts/cohorts';
 import { Home } from './pages/home/home';
+import { CalendarPage } from './pages/calendar/calendar';
 
 export const routes: Routes = [
   {
@@ -91,6 +92,13 @@ export const routes: Routes = [
       { path: 'promotions', redirectTo: 'cohorts' },
       {
         path: 'home', component: Home,
+      },
+      {
+        path: 'calendar',
+        component: CalendarPage,
+        canActivate: [authGuard],
+        data: { roles: ['STUDENT'] },
+        title: 'Mon calendrier',
       }
     ],
   },

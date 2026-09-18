@@ -1,0 +1,39 @@
+@use '../../../styles/tokens' as t;
+
+:host {
+  display: block;
+}
+
+.calendar-page {
+  max-width: t.$fg-content-max;
+  margin-inline: auto;
+
+  p {
+    color: t.$fg-text-secondary;
+    line-height: 1.5;
+  }
+}
+
+.calendar-page__title {
+  margin-bottom: t.$fg-space-lg;
+}
+
+.calendar-page__empty {
+  margin-top: t.$fg-space-md;
+}
+
+// Surcharge des couleurs de marque sur la palette par défaut du thème "classic"
+// (chargée globalement dans angular.json), plutôt que d'écrire une palette dédiée.
+full-calendar {
+  display: block;
+
+  --fc-classic-primary: #{t.$fg-primary};
+  --fc-classic-primary-foreground: #{t.$fg-on-primary};
+  --fc-classic-event: #{t.$fg-primary};
+  --fc-classic-event-contrast: #{t.$fg-on-primary};
+  --fc-classic-foreground: #{t.$fg-text-primary};
+  --fc-classic-muted-foreground: #{t.$fg-text-secondary};
+  --fc-classic-border: #{t.$fg-border};
+  --fc-classic-background: #{t.$fg-surface};
+  --fc-classic-today: #{t.$fg-primary-container};
+}

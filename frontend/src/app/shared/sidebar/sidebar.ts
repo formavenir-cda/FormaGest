@@ -29,9 +29,13 @@ export class Sidebar {
   }
 
   protected readonly mainNavItems: SidebarNavItem[] = [
-    { label: 'Accueil', icon: 'home', route: '/home' },
+    { label: 'Accueil',
+      icon: 'home',
+      route: '/home'
+    },
     { label: 'Mon calendrier',
       icon: 'calendar_month',
+      route: '/calendar',
       roles: ['STUDENT']
     },
     { label: 'Mes cours',
@@ -63,7 +67,8 @@ export class Sidebar {
     { label: 'Formateurs',
       icon: 'badge',
       route: '/teachers',
-      roles: ['ADMINISTRATIVE_MANAGER']  },
+      roles: ['ADMINISTRATIVE_MANAGER']
+    },
     { label: 'Utilisateurs',
       icon: 'manage_accounts',
       route: '/users',
